@@ -1,17 +1,11 @@
 import Home from './inner';
 import { preloadQuery, preloadedQueryResult } from 'convex/nextjs';
-import { api } from '@/convex/_generated/api';
+import { api, internal } from '@/convex/_generated/api';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 
 export default async function ServerPage() {
   const { accessToken } = await withAuth();
-  const preloaded = await preloadQuery(
-    api.myFunctions.listNumbers,
-    {
-      count: 3,
-    },
-    { token: accessToken },
-  );
+  const preloaded = await preloadQuery(api.companies.list, {}, { token: accessToken });
 
   const data = preloadedQueryResult(preloaded);
 

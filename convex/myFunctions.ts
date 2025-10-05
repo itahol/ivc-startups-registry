@@ -1,51 +1,338 @@
 import { v } from 'convex/values';
-import { query, mutation, action } from './_generated/server';
-import { api } from './_generated/api';
+import { internal } from './_generated/api';
+import { action, mutation, query } from './_generated/server';
+import { createEntity } from './entity';
+import { dealRole, entityType, positionType } from './schema';
 
-// Write your Convex functions in any file inside this directory (`convex`).
-// See https://docs.convex.dev/functions for more.
+// ===== COMPANIES =====
 
-// You can read data from the database via a query:
-export const listNumbers = query({
-  // Validators for arguments.
+// Create a company (requires existing entity)
+export const createCompany = mutation({
   args: {
-    count: v.number(),
+    name: v.string(),
+    websiteUrl: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string()),
+    yearEstablished: v.optional(v.number()),
+    description: v.optional(v.string()),
+    stageId: v.optional(v.id('companyStages')),
+    sectorId: v.optional(v.id('sectors')),
   },
-
-  // Query implementation.
+  returns: v.id('companies'),
   handler: async (ctx, args) => {
-    //// Read the database as many times as you need here.
-    //// See https://docs.convex.dev/database/reading-data.
-    const numbers = await ctx.db
-      .query('numbers')
-      // Ordered by _creationTime, return most recent
-      .order('desc')
-      .take(args.count);
-    return {
-      viewer: (await ctx.auth.getUserIdentity())?.subject ?? null,
-      numbers: numbers.reverse().map((number) => number.value),
-    };
+    // Verify the entity exists and is a Company
+    const entityId = await createEntity({ args: { entityType: 'Company' }, ctx });
+
+    return await ctx.db.insert('companies', {
+      entityId: entityId,
+      name: args.name,
+      websiteUrl: args.websiteUrl,
+      linkedinUrl: args.linkedinUrl,
+      yearEstablished: args.yearEstablished,
+      description: args.description,
+      stageId: args.stageId,
+      sectorId: args.sectorId,
+    });
   },
 });
 
-// You can write data to the database via a mutation:
-export const addNumber = mutation({
-  // Validators for arguments.
-  args: {
-    value: v.number(),
-  },
-
-  // Mutation implementation.
+// Get company by entity ID
+export const getCompanyByEntity = query({
+  args: { entityId: v.id('entities') },
+  returns: v.union(
+    v.object({
+      _id: v.id('companies'),
+      _creationTime: v.number(),
+      entityId: v.id('entities'),
+      name: v.string(),
+      websiteUrl: v.optional(v.string()),
+      linkedinUrl: v.optional(v.string()),
+      yearEstablished: v.optional(v.number()),
+      description: v.optional(v.string()),
+      stageId: v.optional(v.id('companyStages')),
+      sectorId: v.optional(v.id('sectors')),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
-    //// Insert or modify documents in the database here.
-    //// Mutations can also read from the database like queries.
-    //// See https://docs.convex.dev/database/writing-data.
+    return await ctx.db
+      .query('companies')
+      .withIndex('by_entity', (q) => q.eq('entityId', args.entityId))
+      .unique();
+  },
+});
 
-    const id = await ctx.db.insert('numbers', { value: args.value });
+// ===== PEOPLE =====
 
-    console.log('Added new document with id:', id);
-    // Optionally, return a value from your mutation.
-    // return id;
+// Create a person (requires existing entity)
+export const createPerson = mutation({
+  args: {
+    entityId: v.id('entities'),
+    fullName: v.string(),
+    email: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string()),
+    bio: v.optional(v.string()),
+  },
+  returns: v.id('people'),
+  handler: async (ctx, args) => {
+    // Verify the entity exists and is a Person
+    const entity = await ctx.db.get(args.entityId);
+    if (!entity || entity.entityType !== 'Person') {
+      throw new Error('Entity must exist and be of type Person');
+    }
+
+    return await ctx.db.insert('people', {
+      entityId: args.entityId,
+      fullName: args.fullName,
+      email: args.email,
+      linkedinUrl: args.linkedinUrl,
+      bio: args.bio,
+    });
+  },
+});
+
+// ===== DEALS =====
+
+// Create a deal
+export const createDeal = mutation({
+  args: {
+    dealTypeId: v.id('dealTypes'),
+    dealDate: v.optional(v.number()),
+    amountUsd: v.optional(v.number()),
+    valuationUsd: v.optional(v.number()),
+    remarks: v.optional(v.string()),
+  },
+  returns: v.id('deals'),
+  handler: async (ctx, args) => {
+    return await ctx.db.insert('deals', {
+      dealTypeId: args.dealTypeId,
+      dealDate: args.dealDate,
+      amountUsd: args.amountUsd,
+      valuationUsd: args.valuationUsd,
+      remarks: args.remarks,
+    });
+  },
+});
+
+// Add participant to deal
+export const addDealParticipant = mutation({
+  args: {
+    dealId: v.id('deals'),
+    participantEntityId: v.id('entities'),
+    role: dealRole,
+    investorAmountUsd: v.optional(v.number()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.insert('dealParticipants', {
+      dealId: args.dealId,
+      participantEntityId: args.participantEntityId,
+      role: args.role,
+      investorAmountUsd: args.investorAmountUsd,
+    });
+    return null;
+  },
+});
+
+// Get deal participants
+export const getDealParticipants = query({
+  args: { dealId: v.id('deals') },
+  returns: v.array(
+    v.object({
+      _id: v.id('dealParticipants'),
+      _creationTime: v.number(),
+      dealId: v.id('deals'),
+      participantEntityId: v.id('entities'),
+      role: dealRole,
+      investorAmountUsd: v.optional(v.number()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('dealParticipants')
+      .withIndex('by_deal', (q) => q.eq('dealId', args.dealId))
+      .collect();
+  },
+});
+
+// ===== POSITIONS =====
+
+// Create a position (person at an organization)
+export const createPosition = mutation({
+  args: {
+    personEntityId: v.id('people'),
+    organizationEntityId: v.id('entities'),
+    title: v.string(),
+    positionType: v.optional(positionType),
+    isCurrent: v.boolean(),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  returns: v.id('positions'),
+  handler: async (ctx, args) => {
+    return await ctx.db.insert('positions', {
+      personEntityId: args.personEntityId,
+      organizationEntityId: args.organizationEntityId,
+      title: args.title,
+      positionType: args.positionType,
+      isCurrent: args.isCurrent,
+      startDate: args.startDate,
+      endDate: args.endDate,
+    });
+  },
+});
+
+// Get current positions for a person
+export const getPersonCurrentPositions = query({
+  args: { personEntityId: v.id('people') },
+  returns: v.array(
+    v.object({
+      _id: v.id('positions'),
+      _creationTime: v.number(),
+      personEntityId: v.id('people'),
+      organizationEntityId: v.id('entities'),
+      title: v.string(),
+      positionType: v.optional(positionType),
+      isCurrent: v.boolean(),
+      startDate: v.optional(v.number()),
+      endDate: v.optional(v.number()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('positions')
+      .withIndex('by_person_and_current', (q) => q.eq('personEntityId', args.personEntityId).eq('isCurrent', true))
+      .collect();
+  },
+});
+
+// ===== LOOKUP TABLES =====
+
+// Get all sectors
+export const getSectors = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id('sectors'),
+      _creationTime: v.number(),
+      name: v.string(),
+    }),
+  ),
+  handler: async (ctx) => {
+    return await ctx.db.query('sectors').collect();
+  },
+});
+
+// Get all deal types
+export const getDealTypes = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id('dealTypes'),
+      _creationTime: v.number(),
+      name: v.string(),
+    }),
+  ),
+  handler: async (ctx) => {
+    return await ctx.db.query('dealTypes').collect();
+  },
+});
+
+// ===== UTILITY FUNCTIONS =====
+
+// Search companies by name
+export const searchCompanies = query({
+  args: {
+    searchTerm: v.string(),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id('companies'),
+      _creationTime: v.number(),
+      entityId: v.id('entities'),
+      name: v.string(),
+      websiteUrl: v.optional(v.string()),
+      linkedinUrl: v.optional(v.string()),
+      yearEstablished: v.optional(v.number()),
+      description: v.optional(v.string()),
+      stageId: v.optional(v.id('companyStages')),
+      sectorId: v.optional(v.id('sectors')),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    // Simple search - in production you might want full-text search
+    const companies = await ctx.db.query('companies').collect();
+    return companies
+      .filter((company) => company.name.toLowerCase().includes(args.searchTerm.toLowerCase()))
+      .slice(0, args.limit ?? 10);
+  },
+});
+
+// Get complete entity information (polymorphic)
+export const getCompleteEntity = query({
+  args: { entityId: v.id('entities') },
+  returns: v.union(
+    v.object({
+      entity: v.object({
+        _id: v.id('entities'),
+        _creationTime: v.number(),
+        entityType: entityType,
+        ivcNumber: v.optional(v.string()),
+        createdAt: v.optional(v.number()),
+        lastUpdatedAt: v.optional(v.number()),
+      }),
+      details: v.union(
+        v.object({ type: v.literal('Company'), data: v.any() }),
+        v.object({ type: v.literal('Person'), data: v.any() }),
+        v.object({ type: v.literal('InvestmentFirm'), data: v.any() }),
+        v.object({ type: v.literal('ServiceProvider'), data: v.any() }),
+        v.object({ type: v.literal('Fund'), data: v.any() }),
+      ),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const entity = await ctx.db.get(args.entityId);
+    if (!entity) return null;
+
+    let details = null;
+    switch (entity.entityType) {
+      case 'Company':
+        details = await ctx.db
+          .query('companies')
+          .withIndex('by_entity', (q) => q.eq('entityId', args.entityId))
+          .unique();
+        break;
+      case 'Person':
+        details = await ctx.db
+          .query('people')
+          .withIndex('by_entity', (q) => q.eq('entityId', args.entityId))
+          .unique();
+        break;
+      case 'InvestmentFirm':
+        details = await ctx.db
+          .query('investmentFirms')
+          .withIndex('by_entity', (q) => q.eq('entityId', args.entityId))
+          .unique();
+        break;
+      case 'ServiceProvider':
+        details = await ctx.db
+          .query('serviceProviders')
+          .withIndex('by_entity', (q) => q.eq('entityId', args.entityId))
+          .unique();
+        break;
+      case 'Fund':
+        details = await ctx.db
+          .query('funds')
+          .withIndex('by_entity', (q) => q.eq('entityId', args.entityId))
+          .unique();
+        break;
+    }
+
+    return {
+      entity,
+      details: { type: entity.entityType, data: details },
+    };
   },
 });
 
@@ -65,14 +352,12 @@ export const myAction = action({
     // const data = await response.json();
 
     //// Query data by running Convex queries.
-    const data = await ctx.runQuery(api.myFunctions.listNumbers, {
-      count: 10,
+    const data = await ctx.runQuery(internal.entity.listEntities, {
+      limit: 10,
     });
-    console.log(data);
+    console.log('Entities found:', data.length);
 
     //// Write data by running Convex mutations.
-    await ctx.runMutation(api.myFunctions.addNumber, {
-      value: args.first,
-    });
+    // await createEntity({ args: { entityType: 'Company' }, ctx });
   },
 });
