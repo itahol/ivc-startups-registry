@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { internal } from './_generated/api';
 import { action, mutation, query } from './_generated/server';
-import { createEntity } from './entity';
+import { createCompany as createCompanyInternal } from './model/company';
 import { dealRole, entityType, positionType } from './schema';
 
 // ===== COMPANIES =====
@@ -19,19 +19,7 @@ export const createCompany = mutation({
   },
   returns: v.id('companies'),
   handler: async (ctx, args) => {
-    // Verify the entity exists and is a Company
-    const entityId = await createEntity({ args: { entityType: 'Company' }, ctx });
-
-    return await ctx.db.insert('companies', {
-      entityId: entityId,
-      name: args.name,
-      websiteUrl: args.websiteUrl,
-      linkedinUrl: args.linkedinUrl,
-      yearEstablished: args.yearEstablished,
-      description: args.description,
-      stageId: args.stageId,
-      sectorId: args.sectorId,
-    });
+    return await createCompanyInternal({ ctx, args: { companyData: args } });
   },
 });
 

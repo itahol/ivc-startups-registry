@@ -113,13 +113,6 @@ export const addresses = defineTable({
   .index('by_entity_and_main', ['entityId', 'isMain']);
 
 // Relationships & Events
-export const entityTechVerticals = defineTable({
-  entityId: v.id('entities'),
-  techVerticalId: v.id('techVerticals'),
-})
-  .index('by_entity', ['entityId'])
-  .index('by_tech_vertical', ['techVerticalId']);
-
 export const positions = defineTable({
   personEntityId: v.id('people'),
   organizationEntityId: v.id('entities'),
@@ -180,7 +173,6 @@ export default defineSchema({
   investmentFirms,
   serviceProviders,
   addresses,
-  entityTechVerticals,
   positions,
   deals,
   dealParticipants,
