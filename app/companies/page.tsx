@@ -2,10 +2,11 @@
 
 import { useQuery } from 'convex/react';
 import * as React from 'react';
-import { api } from '../../convex/_generated/api';
+import { api, internal } from '../../convex/_generated/api';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Doc } from '../../convex/_generated/dataModel';
 
 /* -------------------------------------------------------------------------- */
 /*                            Helpers / utilities                             */
@@ -18,23 +19,30 @@ const slugify = (str: string) =>
     .replace(/[^\w-]+/g, '');
 
 export default function CompaniesPage() {
-  const companies =
+  const [selectedVertical, setSelectedVertical] = React.useState<'All' | Doc<'techVerticals'>>('All');
+
+  const techVerticals = useQuery(api.techVerticals.list, {}) ?? [];
+  const veticalsNames = techVerticals.map((tv) => tv.name);
+  const dynamic = veticalsNames.sort();
+  const verticals = ['All', ...dynamic];
+
+  const filteredCompanies =
     useQuery(api.companies.list, {
+      techVerticals:
+        selectedVertical !== 'All'
+          ? {
+              ids: [selectedVertical._id],
+              operator: 'OR',
+            }
+          : undefined,
       limit: 20,
     }) ?? [];
 
-  const veticalsNames = new Set(companies.flatMap((p) => p.techVerticals).map((tv) => tv.name));
-  console.log({ veticalsNames });
-  const dynamic = Array.from(new Set(companies.flatMap((p) => p.techVerticals).map((tv) => tv.name))).sort();
-  const verticals = ['All', ...dynamic];
-
-  const [selectedVertical, setSelectedVertical] = React.useState('All');
-
   /* --------------------- Filtered products (memo) ----------------------- */
-  const filteredCompanies =
-    selectedVertical === 'All'
-      ? companies
-      : companies.filter((company) => company.techVerticals.map((tv) => tv.name).includes(selectedVertical));
+  // const filteredCompanies =
+  //   selectedVertical === 'All'
+  //     ? companies
+  //     : companies.filter((company) => company.techVerticals.map((tv) => tv.name).includes(selectedVertical));
   /* ----------------------------- Render --------------------------------- */
   return (
     <div className="flex min-h-screen flex-col">
@@ -66,10 +74,14 @@ export default function CompaniesPage() {
                   aria-pressed={vertical === selectedVertical}
                   className="rounded-full"
                   key={slugify(vertical)}
-                  onClick={() => setSelectedVertical(vertical)}
+                  onClick={() => setSelectedVertical(techVerticals.find((tv) => tv.name === vertical) ?? 'All')}
                   size="sm"
                   title={`Filter by ${vertical}`}
-                  variant={vertical === selectedVertical ? 'default' : 'outline'}
+                  variant={
+                    vertical === (selectedVertical === 'All' ? selectedVertical : selectedVertical.name)
+                      ? 'default'
+                      : 'outline'
+                  }
                 >
                   {vertical}
                 </Button>
