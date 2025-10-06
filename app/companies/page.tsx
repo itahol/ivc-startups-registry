@@ -2,10 +2,11 @@
 
 import { useQuery } from 'convex/react';
 import * as React from 'react';
-import { api, internal } from '../../convex/_generated/api';
+import { api } from '../../convex/_generated/api';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Doc } from '../../convex/_generated/dataModel';
 
 /* -------------------------------------------------------------------------- */
@@ -18,31 +19,30 @@ const slugify = (str: string) =>
     .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '');
 
+const TECH_VERTICALS_LIMIT = 5;
+
 export default function CompaniesPage() {
   const [selectedVertical, setSelectedVertical] = React.useState<'All' | Doc<'techVerticals'>>('All');
 
-  const techVerticals = useQuery(api.techVerticals.list, {}) ?? [];
-  const veticalsNames = techVerticals.map((tv) => tv.name);
+  // Raw query results (undefined while loading)
+  const techVerticals = useQuery(api.techVerticals.list, { limit: TECH_VERTICALS_LIMIT });
+  const techVerticalsLoading = techVerticals === undefined;
+  const veticalsNames = techVerticalsLoading ? [] : techVerticals.map((tv) => tv.name);
   const dynamic = veticalsNames.sort();
   const verticals = ['All', ...dynamic];
 
-  const filteredCompanies =
-    useQuery(api.companies.list, {
-      techVerticals:
-        selectedVertical !== 'All'
-          ? {
-              ids: [selectedVertical._id],
-              operator: 'OR',
-            }
-          : undefined,
-      limit: 20,
-    }) ?? [];
+  const companies = useQuery(api.companies.list, {
+    techVerticals:
+      selectedVertical !== 'All'
+        ? {
+            ids: [selectedVertical._id],
+            operator: 'OR',
+          }
+        : undefined,
+    limit: 20,
+  });
+  const companiesLoading = companies === undefined;
 
-  /* --------------------- Filtered products (memo) ----------------------- */
-  // const filteredCompanies =
-  //   selectedVertical === 'All'
-  //     ? companies
-  //     : companies.filter((company) => company.techVerticals.map((tv) => tv.name).includes(selectedVertical));
   /* ----------------------------- Render --------------------------------- */
   return (
     <div className="flex min-h-screen flex-col">
@@ -68,24 +68,31 @@ export default function CompaniesPage() {
             </div>
 
             {/* Category pills */}
-            <div className="flex flex-wrap gap-2">
-              {verticals.map((vertical) => (
-                <Button
-                  aria-pressed={vertical === selectedVertical}
-                  className="rounded-full"
-                  key={slugify(vertical)}
-                  onClick={() => setSelectedVertical(techVerticals.find((tv) => tv.name === vertical) ?? 'All')}
-                  size="sm"
-                  title={`Filter by ${vertical}`}
-                  variant={
-                    vertical === (selectedVertical === 'All' ? selectedVertical : selectedVertical.name)
-                      ? 'default'
-                      : 'outline'
-                  }
-                >
-                  {vertical}
-                </Button>
-              ))}
+            <div className="flex flex-wrap gap-2 min-h-8">
+              {techVerticalsLoading
+                ? // Skeleton pills (approximate size of buttons)
+                  Array.from({ length: TECH_VERTICALS_LIMIT + 1 }).map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                  ))
+                : verticals.map((vertical) => (
+                    <Button
+                      aria-pressed={
+                        vertical === (selectedVertical === 'All' ? selectedVertical : selectedVertical.name)
+                      }
+                      className="rounded-full"
+                      key={slugify(vertical)}
+                      onClick={() => setSelectedVertical(techVerticals?.find((tv) => tv.name === vertical) ?? 'All')}
+                      size="sm"
+                      title={`Filter by ${vertical}`}
+                      variant={
+                        vertical === (selectedVertical === 'All' ? selectedVertical : selectedVertical.name)
+                          ? 'default'
+                          : 'outline'
+                      }
+                    >
+                      {vertical}
+                    </Button>
+                  ))}
             </div>
           </div>
 
@@ -98,37 +105,55 @@ export default function CompaniesPage() {
               lg:grid-cols-4
             `}
           >
-            {filteredCompanies?.map((company) => {
-              const { name, description, techVerticals } = company;
-              const websiteUrl = company.websiteUrl ? new URL(company.websiteUrl) : undefined;
-              const tags = techVerticals.map((tv) => (
-                <Badge variant={'outline'} key={tv._id}>
-                  {tv.name}
-                </Badge>
-              ));
-              return (
-                <Card key={company._id}>
-                  <CardHeader>
-                    <CardTitle>{name}</CardTitle>
-                    {websiteUrl ? (
-                      <CardDescription>
-                        <a href={websiteUrl.href} target="_blank" rel="noopener noreferrer">
-                          {websiteUrl.hostname}
-                        </a>
-                      </CardDescription>
-                    ) : null}
-                  </CardHeader>
-                  <CardContent>
-                    {techVerticals.length > 0 ? tags : null}
-                    <p>{description}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {companiesLoading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <Card key={i} className="space-y-4 p-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-12" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                    </div>
+                  </Card>
+                ))
+              : companies.map((company) => {
+                  const { name, description, techVerticals } = company;
+                  const websiteUrl = company.websiteUrl ? new URL(company.websiteUrl) : undefined;
+                  const tags = techVerticals.map((tv) => (
+                    <Badge variant={'outline'} key={tv._id}>
+                      {tv.name}
+                    </Badge>
+                  ));
+                  return (
+                    <Card key={company._id}>
+                      <CardHeader>
+                        <CardTitle>{name}</CardTitle>
+                        {websiteUrl ? (
+                          <CardDescription>
+                            <a href={websiteUrl.href} target="_blank" rel="noopener noreferrer">
+                              {websiteUrl.hostname}
+                            </a>
+                          </CardDescription>
+                        ) : null}
+                      </CardHeader>
+                      <CardContent>
+                        {techVerticals.length > 0 ? tags : null}
+                        <p>{description}</p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
           </div>
 
           {/* Empty state */}
-          {filteredCompanies.length === 0 && (
+          {!companiesLoading && companies.length === 0 && (
             <div className="mt-8 text-center">
               <p className="text-muted-foreground">No products found in this category.</p>
             </div>

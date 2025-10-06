@@ -5,6 +5,6 @@ export const list = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const { limit } = args;
-    return ctx.db.query('techVerticals').take(limit ?? 5);
+    return ctx.db.query('techVerticals').take(limit ?? 100);
   },
 });
