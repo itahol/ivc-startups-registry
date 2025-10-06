@@ -54,7 +54,7 @@ function Combobox({ selected, allVerticals, visibleNames, onSelect }: ComboboxPr
     }
   }, [open]);
 
-  const display = selected === 'All' ? 'All' : selected.name;
+  const display = selected === 'All' ? 'More' : selected.name;
   const hidden = allVerticals.filter((tv) => !visibleNames.includes(tv.name));
   return (
     <div className="relative" ref={containerRef}>
