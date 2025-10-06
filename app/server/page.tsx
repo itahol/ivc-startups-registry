@@ -1,6 +1,6 @@
 import Home from './inner';
 import { preloadQuery, preloadedQueryResult } from 'convex/nextjs';
-import { api, internal } from '@/convex/_generated/api';
+import { api } from '@/convex/_generated/api';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 
 export default async function ServerPage() {
