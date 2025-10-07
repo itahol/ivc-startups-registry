@@ -53,7 +53,13 @@ export const list = query({
       const techVerticals = (
         await getManyVia(ctx.db, 'companyTechVerticals', 'techVerticalId', 'companyEntityId', company._id)
       ).filter((tv) => tv !== null);
-      return { ...company, techVerticals };
+
+      // Fetch related lookup docs (stage & sector) if present. These are small single fetches; if perf becomes
+      // a concern we can batch or denormalize the name fields.
+      const stage = company.stageId ? await ctx.db.get(company.stageId) : null;
+      const sector = company.sector;
+
+      return { ...company, techVerticals, stage, sector };
     });
     return companies;
   },

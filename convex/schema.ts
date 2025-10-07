@@ -20,11 +20,32 @@ export const dealRole = v.union(
   v.literal('Co-Lead Legal Advisor'),
 );
 
-// Lookup Tables
-export const sectors = defineTable({
-  name: v.string(),
-}).index('by_name', ['name']);
+export const COMPANY_STAGE = {
+  SEED: 'Seed',
+  RD: 'R&D',
+  INITIAL_REVENUES: 'Initial Revenues',
+  REVENUE_GROWTH: 'Revenue Growth',
+} as const;
 
+export const companyStage = v.union(...Object.values(COMPANY_STAGE).map((stage) => v.literal(stage)));
+
+export const SECTORS = {
+  AGRITECH: 'Agritech',
+  BIOMED: 'Biomed',
+  DIGITAL_HEALTH: 'Digital Health',
+  MEDICAL_DEVICES: 'Medical Devices',
+  CLEANTECH: 'Cleantech',
+  ENERGY: 'Energy',
+  CONSUMER_SOFTWARE: 'Consumer-Oriented Software',
+  ENTERPRISE_SOFTWARE: 'Enterprise Software & Infrastructure',
+  NETWORK_INFRASTRUCTURE: 'Network Infrastructure',
+  HARDWARE_INDUSTRIAL: 'Hardware & Industrial',
+  SEMICONDUCTOR: 'Semiconductor',
+} as const;
+
+export const sector = v.union(...Object.values(SECTORS).map((sector) => v.literal(sector)));
+
+// Lookup Tables
 export const techVerticals = defineTable({
   name: v.string(),
 }).index('by_name', ['name']);
@@ -53,12 +74,12 @@ export const companies = defineTable({
   yearEstablished: v.optional(v.number()),
   description: v.optional(v.string()),
   stageId: v.optional(v.id('companyStages')),
-  sectorId: v.optional(v.id('sectors')),
+  sector: v.optional(sector),
 })
   .index('by_entity', ['entityId'])
   .index('by_name', ['name'])
   .index('by_stage', ['stageId'])
-  .index('by_sector', ['sectorId']);
+  .index('by_sector', ['sector']);
 
 export const companyTechVerticals = defineTable({
   companyEntityId: v.id('companies'),
@@ -162,7 +183,6 @@ export const funds = defineTable({
   .index('by_status', ['status']);
 
 export default defineSchema({
-  sectors,
   techVerticals,
   companyStages,
   dealTypes,

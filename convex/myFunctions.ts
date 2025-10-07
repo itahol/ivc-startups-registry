@@ -1,8 +1,7 @@
 import { v } from 'convex/values';
-import { internal } from './_generated/api';
-import { action, mutation, query } from './_generated/server';
+import { mutation, query } from './_generated/server';
 import { createCompany as createCompanyInternal } from './model/company';
-import { dealRole, entityType, positionType } from './schema';
+import { dealRole, entityType, positionType, sector } from './schema';
 
 // ===== COMPANIES =====
 
@@ -10,12 +9,12 @@ import { dealRole, entityType, positionType } from './schema';
 export const createCompany = mutation({
   args: {
     name: v.string(),
+    sector: v.optional(sector),
     websiteUrl: v.optional(v.string()),
     linkedinUrl: v.optional(v.string()),
     yearEstablished: v.optional(v.number()),
     description: v.optional(v.string()),
     stageId: v.optional(v.id('companyStages')),
-    sectorId: v.optional(v.id('sectors')),
   },
   returns: v.id('companies'),
   handler: async (ctx, args) => {
@@ -37,7 +36,7 @@ export const getCompanyByEntity = query({
       yearEstablished: v.optional(v.number()),
       description: v.optional(v.string()),
       stageId: v.optional(v.id('companyStages')),
-      sectorId: v.optional(v.id('sectors')),
+      sector: v.optional(sector),
     }),
     v.null(),
   ),
@@ -193,69 +192,7 @@ export const getPersonCurrentPositions = query({
   },
 });
 
-// ===== LOOKUP TABLES =====
-
-// Get all sectors
-export const getSectors = query({
-  args: {},
-  returns: v.array(
-    v.object({
-      _id: v.id('sectors'),
-      _creationTime: v.number(),
-      name: v.string(),
-    }),
-  ),
-  handler: async (ctx) => {
-    return await ctx.db.query('sectors').collect();
-  },
-});
-
-// Get all deal types
-export const getDealTypes = query({
-  args: {},
-  returns: v.array(
-    v.object({
-      _id: v.id('dealTypes'),
-      _creationTime: v.number(),
-      name: v.string(),
-    }),
-  ),
-  handler: async (ctx) => {
-    return await ctx.db.query('dealTypes').collect();
-  },
-});
-
 // ===== UTILITY FUNCTIONS =====
-
-// Search companies by name
-export const searchCompanies = query({
-  args: {
-    searchTerm: v.string(),
-    limit: v.optional(v.number()),
-  },
-  returns: v.array(
-    v.object({
-      _id: v.id('companies'),
-      _creationTime: v.number(),
-      entityId: v.id('entities'),
-      name: v.string(),
-      websiteUrl: v.optional(v.string()),
-      linkedinUrl: v.optional(v.string()),
-      yearEstablished: v.optional(v.number()),
-      description: v.optional(v.string()),
-      stageId: v.optional(v.id('companyStages')),
-      sectorId: v.optional(v.id('sectors')),
-    }),
-  ),
-  handler: async (ctx, args) => {
-    // Simple search - in production you might want full-text search
-    const companies = await ctx.db.query('companies').collect();
-    return companies
-      .filter((company) => company.name.toLowerCase().includes(args.searchTerm.toLowerCase()))
-      .slice(0, args.limit ?? 10);
-  },
-});
-
 // Get complete entity information (polymorphic)
 export const getCompleteEntity = query({
   args: { entityId: v.id('entities') },
@@ -321,31 +258,5 @@ export const getCompleteEntity = query({
       entity,
       details: { type: entity.entityType, data: details },
     };
-  },
-});
-
-// You can fetch data from and send data to third-party APIs via an action:
-export const myAction = action({
-  // Validators for arguments.
-  args: {
-    first: v.number(),
-    second: v.string(),
-  },
-
-  // Action implementation.
-  handler: async (ctx, args) => {
-    //// Use the browser-like `fetch` API to send HTTP requests.
-    //// See https://docs.convex.dev/functions/actions#calling-third-party-apis-and-using-npm-packages.
-    // const response = await ctx.fetch("https://api.thirdpartyservice.com");
-    // const data = await response.json();
-
-    //// Query data by running Convex queries.
-    const data = await ctx.runQuery(internal.entity.listEntities, {
-      limit: 10,
-    });
-    console.log('Entities found:', data.length);
-
-    //// Write data by running Convex mutations.
-    // await createEntity({ args: { entityType: 'Company' }, ctx });
   },
 });
