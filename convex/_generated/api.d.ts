@@ -18,6 +18,7 @@ import type * as entity from "../entity.js";
 import type * as init from "../init.js";
 import type * as model_company from "../model/company.js";
 import type * as myFunctions from "../myFunctions.js";
+import type * as stats from "../stats.js";
 import type * as techVerticals from "../techVerticals.js";
 
 /**
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   init: typeof init;
   "model/company": typeof model_company;
   myFunctions: typeof myFunctions;
+  stats: typeof stats;
   techVerticals: typeof techVerticals;
 }>;
 export declare const api: FilterApi<

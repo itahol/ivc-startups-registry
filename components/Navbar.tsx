@@ -1,3 +1,4 @@
+// Server Component Navbar (no client hooks)
 import Logo from '@/components/navbar-components/logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,10 +8,10 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useAuth } from '@workos-inc/authkit-nextjs/components';
-import { Authenticated, Unauthenticated } from 'convex/react';
-import { UserMenu } from './UserMenu';
-import { usePathname } from 'next/navigation';
+// (refactored)
+// removed Authenticated/Unauthenticated from server component
+// import { UserMenu } from './UserMenu'; // moved into isolated client component
+// Active route highlighting skipped in server version to avoid client hook usage.
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -18,9 +19,12 @@ const navigationLinks = [
   { href: '/companies', label: 'Companies' },
 ];
 
-export default function Navbar() {
-  const { user, signOut } = useAuth();
+// Server Component version of Navbar. Only the auth area is a client component now.
 
+import UserAuthArea from '@/components/navbar-components/UserAuthArea';
+
+export default function Navbar() {
+  const pathname = ''; // no dynamic active state in server version
   return (
     <header className="border-b px-4 md:px-6">
       <div className="flex h-16 justify-between gap-4">
@@ -63,7 +67,7 @@ export default function Navbar() {
                   <NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
                     {navigationLinks.map((link, index) => (
                       <NavigationMenuItem key={index} className="w-full">
-                        <NavigationMenuLink href={link.href} className="py-1.5" active={link.href === usePathname()}>
+                        <NavigationMenuLink href={link.href} className="py-1.5" active={link.href === pathname}>
                           {link.label}
                         </NavigationMenuLink>
                       </NavigationMenuItem>
@@ -84,7 +88,7 @@ export default function Navbar() {
                 {navigationLinks.map((link, index) => (
                   <NavigationMenuItem key={index} className="h-full">
                     <NavigationMenuLink
-                      active={link.href === usePathname()}
+                      active={link.href === pathname}
                       href={link.href}
                       className="text-muted-foreground hover:text-primary border-b-primary hover:border-b-primary data-[active]:border-b-primary h-full justify-center rounded-none border-y-2 border-transparent py-1.5 font-medium hover:bg-transparent data-[active]:bg-transparent!"
                     >
@@ -98,26 +102,8 @@ export default function Navbar() {
         </div>
         {/* Right side */}
         <div className="flex items-center gap-2">
-          <Authenticated>
-            <UserMenu
-              userName={user?.firstName ?? undefined}
-              userEmail={user?.email}
-              userAvatar={user?.profilePictureUrl ?? undefined}
-              onItemClick={(item) => {
-                if (item === 'logout') {
-                  signOut();
-                }
-              }}
-            />
-          </Authenticated>
-          <Unauthenticated>
-            <Button asChild variant="ghost" size="sm" className="text-sm">
-              <a href="/sign-in">Sign In</a>
-            </Button>
-            <Button asChild size="sm" className="text-sm">
-              <a href="/sign-up">Get Started</a>
-            </Button>
-          </Unauthenticated>
+          {/* Auth area (client) */}
+          <UserAuthArea />
         </div>
       </div>
     </header>
