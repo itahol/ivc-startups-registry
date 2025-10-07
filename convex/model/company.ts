@@ -39,15 +39,27 @@ export async function getCompanyIdsByTechVerticals({
   if (techVerticalsIds.length === 0) {
     throw new ConvexError('At least one tech vertical ID must be provided');
   }
-
   console.log('Filtering companies by tech verticals', args.techVerticals);
+
   if (operator === 'OR') {
-    const companyIds = (
-      await asyncMap(techVerticalsIds, async (techVerticalId) =>
-        getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } }),
-      )
-    ).flat();
-    return companyIds.slice(0, args.limit);
+    const companiesIds = await asyncMap(techVerticalsIds, async (techVerticalId) =>
+      getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } }),
+    );
+    const seen = new Set<string>();
+    const uniqueCompanyIds: Id<'companies'>[] = [];
+    for (const arr of companiesIds) {
+      for (const id of arr) {
+        const key = id;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueCompanyIds.push(id);
+          if (uniqueCompanyIds.length >= args.limit) {
+            return uniqueCompanyIds;
+          }
+        }
+      }
+    }
+    return uniqueCompanyIds;
   }
 
   const companiesSets = await asyncMap(

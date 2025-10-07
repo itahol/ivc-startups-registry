@@ -25,7 +25,16 @@ export const list = query({
         })
       : await ctx.db.query('companies').take(limit);
 
-    const companies = asyncMap(bareCompanies, async (company) => {
+    // Ensure no duplicate companies (defensive: OR path could previously duplicate IDs)
+    const seen = new Set<string>();
+    const deduped = bareCompanies.filter((c) => {
+      const key = c._id as unknown as string;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const companies = await asyncMap(deduped, async (company) => {
       const techVerticals = (
         await getManyVia(ctx.db, 'companyTechVerticals', 'techVerticalId', 'companyEntityId', company._id)
       ).filter((tv) => tv !== null);

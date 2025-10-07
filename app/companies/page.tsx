@@ -4,8 +4,9 @@ import { useQuery } from 'convex/react';
 import * as React from 'react';
 import { api } from '../../convex/_generated/api';
 import { Card } from '@/components/ui/card'; // For skeleton loading placeholder only
-import { CompanyCard, CompanyWithRelations } from '@/components/CompanyCard';
+import { CompanyCard } from '@/components/CompanyCard';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Doc } from '../../convex/_generated/dataModel';
@@ -146,6 +147,8 @@ function Combobox({ selected, allVerticals, visibleNames, onToggle }: ComboboxPr
 
 export default function CompaniesPage() {
   const [selectedVerticals, setSelectedVerticals] = React.useState<Doc<'techVerticals'>[]>([]);
+  // Controls whether selected verticals are combined with logical OR (any) or AND (all)
+  const [verticalOperator, setVerticalOperator] = React.useState<'AND' | 'OR'>('OR');
 
   // Full list for select (no limit)
   const allTechVerticals = useQuery(api.techVerticals.list, {});
@@ -157,12 +160,13 @@ export default function CompaniesPage() {
       selectedVerticals.length > 0
         ? {
             ids: selectedVerticals.map((vertical) => vertical._id),
-            operator: 'OR' as const,
+            operator: verticalOperator,
           }
         : undefined,
     limit: 20,
   });
   const companiesLoading = companies === undefined;
+  console.log(`Found ${companies?.length ?? 0} companies`);
 
   const toggleVertical = React.useCallback((vertical: Doc<'techVerticals'>) => {
     setSelectedVerticals((prev) =>
@@ -172,7 +176,10 @@ export default function CompaniesPage() {
     );
   }, []);
 
-  const clearAll = React.useCallback(() => setSelectedVerticals([]), []);
+  const clearAll = React.useCallback(() => {
+    setSelectedVerticals([]);
+    setVerticalOperator('OR');
+  }, []);
   const isSelected = React.useCallback(
     (vertical: Doc<'techVerticals'>) =>
       selectedVerticals.some((selectedVertical) => selectedVertical._id === vertical._id),
@@ -241,6 +248,28 @@ export default function CompaniesPage() {
                       />
                     ) : null}
 
+                    {/* Operator toggle (AND/OR) always visible under the verticals */}
+                    <div aria-label="Change how multiple filters combine">
+                      <ToggleGroup
+                        type="single"
+                        variant="outline"
+                        size="sm"
+                        value={verticalOperator}
+                        aria-describedby="operator-label"
+                        onValueChange={(val) => {
+                          if (val === 'AND' || val === 'OR') setVerticalOperator(val);
+                        }}
+                        className="h-8"
+                      >
+                        <ToggleGroupItem value="OR" className="px-3 text-xs">
+                          Any
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="AND" className="px-3 text-xs">
+                          All
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+
                     {/* Clear filters button (only when something selected) */}
                     {selectedVerticals.length > 0 ? (
                       <Button
@@ -248,7 +277,7 @@ export default function CompaniesPage() {
                         size="sm"
                         onClick={clearAll}
                         aria-label="Clear all selected filters"
-                        className="rounded-full text-muted-foreground hover:text-foreground"
+                        className="order-first rounded-full text-muted-foreground hover:text-foreground"
                       >
                         Clear
                       </Button>
@@ -285,9 +314,7 @@ export default function CompaniesPage() {
                       </div>
                     </Card>
                   ))
-                : companies.map((company) => (
-                    <CompanyCard key={company._id} company={company as CompanyWithRelations} />
-                  ))}
+                : companies.map((company) => <CompanyCard key={company._id} company={company} />)}
             </div>
 
             {/* Empty state */}
