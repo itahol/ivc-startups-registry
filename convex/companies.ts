@@ -1,6 +1,7 @@
 import { asyncMap, nullThrows } from 'convex-helpers';
 import { crud } from 'convex-helpers/server/crud';
 import { getManyVia } from 'convex-helpers/server/relationships';
+import { literals } from 'convex-helpers/validators';
 import { Infer, v } from 'convex/values';
 import { Id } from './_generated/dataModel';
 import { query, QueryCtx } from './_generated/server';
@@ -8,30 +9,10 @@ import schema from './schema';
 
 export const { create, read, update, destroy, paginate } = crud(schema, 'companies');
 
-const techVerticalsFilter = v.object({
+export const techVerticalsFilter = v.object({
   ids: v.array(v.id('techVerticals')),
-  operator: v.union(v.literal('AND'), v.literal('OR')),
+  operator: literals('AND', 'OR'),
 });
-
-async function getCompanyIdsForTechVerticals({
-  ctx,
-  args,
-}: {
-  ctx: QueryCtx;
-  args: { techVerticals: Infer<typeof techVerticalsFilter>; limit: number };
-}): Promise<Set<Id<'companies'>>> {
-  console.log('Filtering companies by tech verticals', args.techVerticals);
-  const companyIds = (
-    await asyncMap(args.techVerticals.ids, async (techVerticalId) => {
-      const matchingCompanyTechVerticals = await ctx.db
-        .query('companyTechVerticals')
-        .withIndex('techVerticalId', (q) => q.eq('techVerticalId', techVerticalId))
-        .take(args.limit);
-      return matchingCompanyTechVerticals.map((ctv) => ctv.companyEntityId);
-    })
-  ).flat();
-  return new Set(companyIds.slice(0, args.limit));
-}
 
 export const list = query({
   args: {
@@ -82,4 +63,24 @@ async function getBareCompanies({
         .unique(),
     ),
   );
+}
+
+async function getCompanyIdsForTechVerticals({
+  ctx,
+  args,
+}: {
+  ctx: QueryCtx;
+  args: { techVerticals: Infer<typeof techVerticalsFilter>; limit: number };
+}): Promise<Set<Id<'companies'>>> {
+  console.log('Filtering companies by tech verticals', args.techVerticals);
+  const companyIds = (
+    await asyncMap(args.techVerticals.ids, async (techVerticalId) => {
+      const matchingCompanyTechVerticals = await ctx.db
+        .query('companyTechVerticals')
+        .withIndex('techVerticalId', (q) => q.eq('techVerticalId', techVerticalId))
+        .take(args.limit);
+      return matchingCompanyTechVerticals.map((ctv) => ctv.companyEntityId);
+    })
+  ).flat();
+  return new Set(companyIds.slice(0, args.limit));
 }
