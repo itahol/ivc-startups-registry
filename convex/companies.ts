@@ -5,6 +5,7 @@ import { literals } from 'convex-helpers/validators';
 import { ConvexError, Infer, v } from 'convex/values';
 import { Id } from './_generated/dataModel';
 import { query, QueryCtx } from './_generated/server';
+import { getCompaniesByTechVertical } from './model/company';
 import schema from './schema';
 
 export const { create, read, update, destroy, paginate } = crud(schema, 'companies');
@@ -79,13 +80,9 @@ async function getCompanyIdsForTechVerticals({
     throw new ConvexError("The 'AND' operator is not yet supported for tech verticals filtering");
   }
   const companyIds = (
-    await asyncMap(techVerticalsIds, async (techVerticalId) => {
-      const matchingCompanyTechVerticals = await ctx.db
-        .query('companyTechVerticals')
-        .withIndex('techVerticalId', (q) => q.eq('techVerticalId', techVerticalId))
-        .take(args.limit);
-      return matchingCompanyTechVerticals.map((ctv) => ctv.companyEntityId);
-    })
+    await asyncMap(techVerticalsIds, async (techVerticalId) =>
+      getCompaniesByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } }),
+    )
   ).flat();
   return new Set(companyIds.slice(0, args.limit));
 }
