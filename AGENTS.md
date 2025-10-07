@@ -2,11 +2,11 @@
 
 ## Commands
 
-- **Dev**: `pnpm dev` (runs frontend + backend in parallel)
 - **Build**: `pnpm build`
 - **Lint**: `pnpm lint`
 - **Format**: `pnpm format` (Prettier)
 - **Type check**: `tsc --noEmit` (run in root for Next.js, in convex/ for backend)
+- NEVER run the dev server, assume it is already running. If you suspect it's not, ask the user.
 
 ## Code Style
 
@@ -21,11 +21,3 @@
 - **Backend**: Convex (realtime database + server functions)
 - **Auth**: WorkOS AuthKit with middleware protection
 - **Protected routes**: All except `/`, `/sign-in`, `/sign-up`
-
-## Key Patterns
-
-- **Convex functions**: Define in `convex/myFunctions.ts`, use `query`/`mutation`
-- **Schema**: Optional but recommended in `convex/schema.ts` for TypeScript types
-- **Auth hooks**: `useAuth()` (client), `withAuth()` (server components)
-- **Error handling**: Use standard try/catch, Convex handles backend errors
-- **No test framework**: Project has no tests configured
