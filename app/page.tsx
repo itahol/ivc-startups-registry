@@ -5,7 +5,6 @@ import { api } from '../convex/_generated/api';
 import Link from 'next/link';
 import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import type { User } from '@workos-inc/node';
-import { CompanyCard } from '../components/ui/company-card';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 
@@ -78,7 +77,7 @@ function Content() {
         {companies?.length === 0
           ? 'Click the button!'
           : companies?.map((company) => {
-              const { name, description, yearEstablished, techVerticals } = company;
+              const { name, description, techVerticals } = company;
               const websiteUrl = company.websiteUrl ? new URL(company.websiteUrl) : undefined;
               const tags = techVerticals.map((tv) => (
                 <Badge variant={'outline'} key={tv._id}>
