@@ -24,13 +24,13 @@ const slugify = (str: string) =>
 const TECH_VERTICALS_LIMIT = 5;
 
 interface ComboboxProps {
-  selected: 'All' | Doc<'techVerticals'>;
+  selected: Doc<'techVerticals'>[]; // currently selected verticals (can be empty)
   allVerticals: Doc<'techVerticals'>[];
-  visibleNames: string[]; // includes 'All'
-  onSelect: (val: 'All' | Doc<'techVerticals'>) => void;
+  visibleNames: string[]; // names already rendered as pills
+  onToggle: (val: Doc<'techVerticals'>) => void; // toggle selection
 }
 
-function Combobox({ selected, allVerticals, visibleNames, onSelect }: ComboboxProps) {
+function Combobox({ selected, allVerticals, visibleNames, onToggle }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -50,13 +50,17 @@ function Combobox({ selected, allVerticals, visibleNames, onSelect }: ComboboxPr
   // Focus search when opening
   React.useEffect(() => {
     if (open) {
-      // Slight delay to ensure input is mounted
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [open]);
 
-  const display = selected === 'All' ? 'More' : selected.name;
+  // Hidden verticals = not already shown as pills
   const hidden = allVerticals.filter((tv) => !visibleNames.includes(tv.name));
+  const hiddenSelectedCount = selected.filter((s) => !visibleNames.includes(s.name)).length;
+  const display = hiddenSelectedCount > 0 ? `More (+${hiddenSelectedCount})` : 'More';
+
+  const isSelected = (id: string) => selected.some((s) => s._id === id);
+
   return (
     <div className="relative" ref={containerRef}>
       <Button
@@ -67,6 +71,9 @@ function Combobox({ selected, allVerticals, visibleNames, onSelect }: ComboboxPr
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
+        aria-label={
+          hiddenSelectedCount > 0 ? `Select more verticals (${hiddenSelectedCount} selected)` : 'Select more verticals'
+        }
       >
         {display}
         <span className="ml-1 text-xs text-muted-foreground">▼</span>
@@ -78,27 +85,21 @@ function Combobox({ selected, allVerticals, visibleNames, onSelect }: ComboboxPr
             <CommandList>
               <CommandEmpty>No results.</CommandEmpty>
               <CommandGroup heading="Verticals">
-                <CommandItem
-                  value="All"
-                  onSelect={() => {
-                    onSelect('All');
-                    setOpen(false);
-                  }}
-                >
-                  All
-                </CommandItem>
-                {hidden.map((tv) => (
-                  <CommandItem
-                    key={tv._id}
-                    value={tv.name}
-                    onSelect={() => {
-                      onSelect(tv);
-                      setOpen(false);
-                    }}
-                  >
-                    {tv.name}
-                  </CommandItem>
-                ))}
+                {hidden.map((tv) => {
+                  const selectedHere = isSelected(tv._id);
+                  return (
+                    <CommandItem
+                      key={tv._id}
+                      value={tv.name}
+                      onSelect={() => {
+                        onToggle(tv);
+                      }}
+                    >
+                      {selectedHere ? '✓ ' : ''}
+                      {tv.name}
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
             </CommandList>
           </Command>
@@ -109,29 +110,32 @@ function Combobox({ selected, allVerticals, visibleNames, onSelect }: ComboboxPr
 }
 
 export default function CompaniesPage() {
-  const [selectedVertical, setSelectedVertical] = React.useState<'All' | Doc<'techVerticals'>>('All');
+  const [selectedVerticals, setSelectedVerticals] = React.useState<Doc<'techVerticals'>[]>([]);
 
-  // Limited list for pill display
-  const techVerticalsLimited = useQuery(api.techVerticals.list, { limit: TECH_VERTICALS_LIMIT });
   // Full list for select (no limit)
   const allTechVerticals = useQuery(api.techVerticals.list, {});
-
-  const techVerticalsLoading = techVerticalsLimited === undefined || allTechVerticals === undefined;
-
-  const limitedNames = techVerticalsLimited?.map((tv) => tv.name).sort() ?? [];
-  const verticals = ['All', ...limitedNames];
+  const techVerticalsLoading = allTechVerticals === undefined;
+  const verticals = allTechVerticals?.slice(0, TECH_VERTICALS_LIMIT).sort((a, b) => a.name.localeCompare(b.name)) ?? [];
 
   const companies = useQuery(api.companies.list, {
     techVerticals:
-      selectedVertical !== 'All'
+      selectedVerticals.length > 0
         ? {
-            ids: [selectedVertical._id],
-            operator: 'OR',
+            ids: selectedVerticals.map((v) => v._id),
+            operator: 'OR' as const,
           }
         : undefined,
     limit: 20,
   });
   const companiesLoading = companies === undefined;
+
+  const toggleVertical = (tv: Doc<'techVerticals'>) => {
+    setSelectedVerticals((prev) =>
+      prev.some((s) => s._id === tv._id) ? prev.filter((s) => s._id !== tv._id) : [...prev, tv],
+    );
+  };
+  const clearAll = () => setSelectedVerticals([]);
+  const isSelected = (vertical: Doc<'techVerticals'>) => selectedVerticals.some((s) => s.name === vertical.name);
 
   /* ----------------------------- Render --------------------------------- */
   return (
@@ -160,47 +164,52 @@ export default function CompaniesPage() {
               </div>
 
               {/* Category pills */}
-              <div className="flex flex-wrap gap-2 min-h-8">
+              <div className="flex flex-wrap items-center gap-2 min-h-8">
                 {techVerticalsLoading ? (
                   // Skeleton pills (approximate size of buttons)
-                  Array.from({ length: TECH_VERTICALS_LIMIT + 1 }).map((_, i) => (
+                  Array.from({ length: TECH_VERTICALS_LIMIT }).map((_, i) => (
                     <Skeleton key={i} className="h-8 w-20 rounded-full" />
                   ))
                 ) : (
                   <>
-                    {verticals.map((vertical) => (
-                      <Button
-                        aria-pressed={
-                          vertical === (selectedVertical === 'All' ? selectedVertical : selectedVertical.name)
-                        }
-                        className="rounded-full"
-                        key={slugify(vertical)}
-                        onClick={() =>
-                          setSelectedVertical(
-                            (vertical === 'All' ? 'All' : allTechVerticals?.find((tv) => tv.name === vertical)) ??
-                              'All',
-                          )
-                        }
-                        size="sm"
-                        title={`Filter by ${vertical}`}
-                        variant={
-                          vertical === (selectedVertical === 'All' ? selectedVertical : selectedVertical.name)
-                            ? 'default'
-                            : 'outline'
-                        }
-                      >
-                        {vertical}
-                      </Button>
-                    ))}
+                    {verticals.map((vertical) => {
+                      const active = isSelected(vertical);
+                      return (
+                        <Button
+                          aria-pressed={active}
+                          className="rounded-full"
+                          key={slugify(vertical.name)}
+                          onClick={() => toggleVertical(vertical)}
+                          size="sm"
+                          title={`Filter by ${vertical}`}
+                          variant={active ? 'default' : 'outline'}
+                        >
+                          {vertical.name}
+                        </Button>
+                      );
+                    })}
 
                     {/* Select for all verticals beyond pills */}
                     {allTechVerticals && allTechVerticals.length > TECH_VERTICALS_LIMIT ? (
                       <Combobox
-                        selected={selectedVertical}
+                        selected={selectedVerticals}
                         allVerticals={allTechVerticals}
-                        visibleNames={verticals}
-                        onSelect={(val) => setSelectedVertical(val)}
+                        visibleNames={verticals.map((v) => v.name)}
+                        onToggle={toggleVertical}
                       />
+                    ) : null}
+
+                    {/* Clear filters button (only when something selected) */}
+                    {selectedVerticals.length > 0 ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearAll}
+                        aria-label="Clear all selected filters"
+                        className="rounded-full text-muted-foreground hover:text-foreground"
+                      >
+                        Clear
+                      </Button>
                     ) : null}
                   </>
                 )}
@@ -242,7 +251,19 @@ export default function CompaniesPage() {
             {/* Empty state */}
             {!companiesLoading && companies.length === 0 && (
               <div className="mt-8 text-center">
-                <p className="text-muted-foreground">No products found in this category.</p>
+                <p className="text-muted-foreground">No products found in these categories.</p>
+                {selectedVerticals.length > 0 ? (
+                  <div className="mt-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={clearAll}
+                      aria-label="Clear filters to show all products"
+                    >
+                      Clear filters
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             )}
 
