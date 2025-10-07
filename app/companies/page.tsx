@@ -238,21 +238,90 @@ export default function CompaniesPage() {
                       {tv.name}
                     </Badge>
                   ));
+
+                  const stageName = company.stage?.name;
+                  const sectorName = company.sector;
+
                   return (
-                    <Card key={company._id}>
-                      <CardHeader>
-                        <CardTitle>{name}</CardTitle>
+                    <Card
+                      key={company._id}
+                      // Make whole card focusable so keyboard users get the same expand affordance as hover.
+                      tabIndex={0}
+                      className={`
+                        group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50
+                        transition-colors
+                      `}
+                      aria-describedby={`company-${company._id}-desc`}
+                    >
+                      <CardHeader className="pb-0">
+                        <CardTitle className="text-base font-semibold leading-snug tracking-tight">{name}</CardTitle>
                         {websiteUrl ? (
-                          <CardDescription>
-                            <a href={websiteUrl.href} target="_blank" rel="noopener noreferrer">
-                              {websiteUrl.hostname}
+                          <CardDescription className="truncate">
+                            <a
+                              href={websiteUrl.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline focus-visible:underline"
+                            >
+                              {websiteUrl.hostname.replace(/^www\./, '')}
                             </a>
                           </CardDescription>
                         ) : null}
                       </CardHeader>
-                      <CardContent>
-                        {company.techVerticals.length > 0 ? tags : null}
-                        <p>{description}</p>
+                      <CardContent className="pt-4">
+                        <dl className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1 text-sm">
+                          <dt className="font-medium">Stage</dt>
+                          <dd className="text-muted-foreground">{stageName ?? '—'}</dd>
+
+                          <dt className="font-medium">Year Established</dt>
+                          <dd className="text-muted-foreground">{company.yearEstablished ?? '—'}</dd>
+
+                          <dt className="font-medium">Sector</dt>
+                          <dd className="text-muted-foreground">{sectorName ?? '—'}</dd>
+
+                          {techVerticals.length > 0 && (
+                            <>
+                              <dt className="font-medium">Tech Verticals</dt>
+                              <dd className="text-muted-foreground">
+                                <div className="relative" aria-label="Tech verticals list">
+                                  <div
+                                    className={`flex flex-wrap gap-1.5 overflow-hidden transition-all duration-300
+                                      max-h-16 group-hover:max-h-96 group-focus-within:max-h-96
+                                    `}
+                                  >
+                                    {tags}
+                                  </div>
+                                  {/* Fade overlay when collapsed */}
+                                  <div
+                                    className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity"
+                                    aria-hidden="true"
+                                  />
+                                </div>
+                              </dd>
+                            </>
+                          )}
+                        </dl>
+
+                        {/* Description */}
+                        {description ? (
+                          <div className="mt-3 text-sm leading-snug">
+                            <p
+                              id={`company-${company._id}-desc`}
+                              className={`
+                                line-clamp-3 transition-[color] group-hover:line-clamp-none group-focus-within:line-clamp-none
+                              `}
+                            >
+                              {description}
+                            </p>
+                            <div
+                              className="pointer-events-none mt-1 h-6 bg-gradient-to-t from-background to-transparent group-hover:hidden group-focus-within:hidden -translate-y-6"
+                              aria-hidden="true"
+                            />
+                          </div>
+                        ) : null}
+                        <span className="sr-only">
+                          Focus or hover to expand full description and all tech verticals.
+                        </span>
                       </CardContent>
                     </Card>
                   );
