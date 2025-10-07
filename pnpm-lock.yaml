@@ -44,6 +44,9 @@ importers:
       convex-helpers:
         specifier: ^0.1.104
         version: 0.1.104(convex@1.27.4(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      core-js:
+        specifier: 3.45.1
+        version: 3.45.1
       lucide-react:
         specifier: ^0.544.0
         version: 0.544.0(react@19.2.0)
@@ -1821,6 +1824,9 @@ packages:
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
+
+  core-js@3.45.1:
+    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
 
   cross-spawn@6.0.6:
     resolution: {integrity: sha512-VqCUuhcd1iB+dsv8gxPttb5iZh/D0iubSP21g36KXdEuf6I5JiioesUVjpCdHV9MZRUfVFlvwtIUyPfxo5trtw==}
@@ -4835,6 +4841,8 @@ snapshots:
   cookie@0.5.0: {}
 
   cookie@0.7.2: {}
+
+  core-js@3.45.1: {}
 
   cross-spawn@6.0.6:
     dependencies:
