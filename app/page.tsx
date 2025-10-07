@@ -3,22 +3,13 @@
 import { Authenticated, Unauthenticated, useMutation, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import Link from 'next/link';
-import { useAuth } from '@workos-inc/authkit-nextjs/components';
-import type { User } from '@workos-inc/node';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
+import Navbar from '../components/Navbar';
 
 export default function Home() {
-  const { user, signOut } = useAuth();
-
   return (
     <>
-      <header className="sticky top-0 z-10 bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center">
-        Convex + Next.js + WorkOS
-        {user && <UserMenu user={user} onSignOut={signOut} />}
-      </header>
+      <Navbar />
       <main className="p-8 flex flex-col gap-8">
-        <h1 className="text-4xl font-bold text-center">Convex + Next.js + WorkOS</h1>
         <Authenticated>
           <Content />
         </Authenticated>
@@ -56,68 +47,6 @@ function Content() {
 
   return (
     <div>
-      <div className="flex flex-col gap-8 max-w-lg mx-auto">
-        <p>Welcome {'Anonymous'}!</p>
-        <p>
-          Click the button below and open this page in another window - this data is persisted in the Convex cloud
-          database!
-        </p>
-        <p>
-          <button
-            className="bg-foreground text-background text-sm px-4 py-2 rounded-md"
-            onClick={() => {
-              void addCompany({ name: `Cool company - ${Math.random() * 100}` });
-            }}
-          >
-            Add a random number
-          </button>
-        </p>
-      </div>
-      <div className=" grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-        {companies?.length === 0
-          ? 'Click the button!'
-          : companies?.map((company) => {
-              const { name, description, techVerticals } = company;
-              const websiteUrl = company.websiteUrl ? new URL(company.websiteUrl) : undefined;
-              const tags = techVerticals.map((tv) => (
-                <Badge variant={'outline'} key={tv._id}>
-                  {tv.name}
-                </Badge>
-              ));
-              return (
-                <Card key={company._id}>
-                  <CardHeader>
-                    <CardTitle>{name}</CardTitle>
-                    {websiteUrl ? (
-                      <CardDescription>
-                        <a href={websiteUrl.href} target="_blank" rel="noopener noreferrer">
-                          {websiteUrl.hostname}
-                        </a>
-                      </CardDescription>
-                    ) : null}
-                  </CardHeader>
-                  <CardContent>
-                    {techVerticals.length > 0 ? tags : null}
-                    <p>{description}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-      </div>
-      <p>
-        Edit{' '}
-        <code className="text-sm font-bold font-mono bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded-md">
-          convex/myFunctions.ts
-        </code>{' '}
-        to change your backend
-      </p>
-      <p>
-        Edit{' '}
-        <code className="text-sm font-bold font-mono bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded-md">
-          app/page.tsx
-        </code>{' '}
-        to change your frontend
-      </p>
       <p>
         See the{' '}
         <Link href="/server" className="underline hover:no-underline">
@@ -167,17 +96,6 @@ function ResourceCard({ title, description, href }: { title: string; description
         {title}
       </a>
       <p className="text-xs">{description}</p>
-    </div>
-  );
-}
-
-function UserMenu({ user, onSignOut }: { user: User; onSignOut: () => void }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm">{user.email}</span>
-      <button onClick={onSignOut} className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">
-        Sign out
-      </button>
     </div>
   );
 }
