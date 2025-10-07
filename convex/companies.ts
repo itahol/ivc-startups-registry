@@ -1,19 +1,13 @@
 import { asyncMap, nullThrows } from 'convex-helpers';
 import { crud } from 'convex-helpers/server/crud';
 import { getManyVia } from 'convex-helpers/server/relationships';
-import { literals } from 'convex-helpers/validators';
-import { ConvexError, Infer, v } from 'convex/values';
+import { v } from 'convex/values';
 import { Id } from './_generated/dataModel';
 import { query, QueryCtx } from './_generated/server';
-import { getCompaniesByTechVertical } from './model/company';
+import { getCompanyIdsByTechVerticals, techVerticalsFilter } from './model/company';
 import schema from './schema';
 
 export const { create, read, update, destroy, paginate } = crud(schema, 'companies');
-
-export const techVerticalsFilter = v.object({
-  ids: v.array(v.id('techVerticals')),
-  operator: literals('AND', 'OR'),
-});
 
 export const list = query({
   args: {
@@ -26,7 +20,7 @@ export const list = query({
       ? await getBareCompanies({
           ctx,
           args: {
-            companyIds: getCompanyIdsForTechVerticals({ ctx, args: { limit, techVerticals: args.techVerticals } }),
+            companyIds: getCompanyIdsByTechVerticals({ ctx, args: { limit, techVerticals: args.techVerticals } }),
           },
         })
       : await ctx.db.query('companies').take(limit);
@@ -64,25 +58,4 @@ async function getBareCompanies({
         .unique(),
     ),
   );
-}
-
-async function getCompanyIdsForTechVerticals({
-  ctx,
-  args,
-}: {
-  ctx: QueryCtx;
-  args: { techVerticals: Infer<typeof techVerticalsFilter>; limit: number };
-}): Promise<Set<Id<'companies'>>> {
-  const { ids: techVerticalsIds, operator } = args.techVerticals;
-
-  console.log('Filtering companies by tech verticals', args.techVerticals);
-  if (operator === 'AND') {
-    throw new ConvexError("The 'AND' operator is not yet supported for tech verticals filtering");
-  }
-  const companyIds = (
-    await asyncMap(techVerticalsIds, async (techVerticalId) =>
-      getCompaniesByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } }),
-    )
-  ).flat();
-  return new Set(companyIds.slice(0, args.limit));
 }
