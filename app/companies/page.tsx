@@ -27,13 +27,14 @@ interface ComboboxProps {
   selected: Doc<'techVerticals'>[]; // currently selected verticals (can be empty)
   allVerticals: Doc<'techVerticals'>[];
   visibleNames: string[]; // names already rendered as pills
-  onToggle: (val: Doc<'techVerticals'>) => void; // toggle selection
+  onToggle: (vertical: Doc<'techVerticals'>) => void; // toggle selection
 }
 
 function Combobox({ selected, allVerticals, visibleNames, onToggle }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null);
 
   // Close on outside click
   React.useEffect(() => {
@@ -42,28 +43,47 @@ function Combobox({ selected, allVerticals, visibleNames, onToggle }: ComboboxPr
       if (!containerRef.current) return;
       if (containerRef.current.contains(e.target as Node)) return;
       setOpen(false);
+      triggerRef.current?.focus();
     }
     window.addEventListener('mousedown', handle);
     return () => window.removeEventListener('mousedown', handle);
   }, [open]);
 
+  // Close on Escape
+  React.useEffect(() => {
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [open]);
+
   // Focus search when opening
   React.useEffect(() => {
     if (open) {
-      setTimeout(() => inputRef.current?.focus(), 0);
+      const timer = setTimeout(() => inputRef.current?.focus(), 0);
+      return () => clearTimeout(timer);
     }
   }, [open]);
 
   // Hidden verticals = not already shown as pills
-  const hidden = allVerticals.filter((tv) => !visibleNames.includes(tv.name));
-  const hiddenSelectedCount = selected.filter((s) => !visibleNames.includes(s.name)).length;
+  const hiddenVerticals = allVerticals.filter((vertical) => !visibleNames.includes(vertical.name));
+  const hiddenSelectedCount = selected.filter((vertical) => !visibleNames.includes(vertical.name)).length;
   const display = hiddenSelectedCount > 0 ? `More (+${hiddenSelectedCount})` : 'More';
 
-  const isSelected = (id: string) => selected.some((s) => s._id === id);
+  const isSelected = React.useCallback(
+    (id: string) => selected.some((selectedVertical) => selectedVertical._id === id),
+    [selected],
+  );
 
   return (
     <div className="relative" ref={containerRef}>
       <Button
+        ref={triggerRef}
         type="button"
         size="sm"
         variant="outline"
@@ -71,6 +91,14 @@ function Combobox({ selected, allVerticals, visibleNames, onToggle }: ComboboxPr
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if ((e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') && !open) {
+            e.preventDefault();
+            setOpen(true);
+          } else if (e.key === 'Escape' && open) {
+            setOpen(false);
+          }
+        }}
         aria-label={
           hiddenSelectedCount > 0 ? `Select more verticals (${hiddenSelectedCount} selected)` : 'Select more verticals'
         }
@@ -82,21 +110,28 @@ function Combobox({ selected, allVerticals, visibleNames, onToggle }: ComboboxPr
         <div className="absolute z-50 mt-2 w-56 rounded-md border bg-popover shadow-md">
           <Command className="max-h-64">
             <CommandInput ref={inputRef} placeholder="Search verticals" />
-            <CommandList>
+            <CommandList aria-multiselectable="true">
               <CommandEmpty>No results.</CommandEmpty>
               <CommandGroup heading="Verticals">
-                {hidden.map((tv) => {
-                  const selectedHere = isSelected(tv._id);
+                {hiddenVerticals.map((vertical) => {
+                  const selectedHere = isSelected(vertical._id);
                   return (
                     <CommandItem
-                      key={tv._id}
-                      value={tv.name}
+                      key={vertical._id}
+                      value={vertical.name}
+                      aria-selected={selectedHere}
                       onSelect={() => {
-                        onToggle(tv);
+                        onToggle(vertical);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === ' ') {
+                          e.preventDefault();
+                          onToggle(vertical);
+                        }
                       }}
                     >
                       {selectedHere ? '✓ ' : ''}
-                      {tv.name}
+                      {vertical.name}
                     </CommandItem>
                   );
                 })}
@@ -121,7 +156,7 @@ export default function CompaniesPage() {
     techVerticals:
       selectedVerticals.length > 0
         ? {
-            ids: selectedVerticals.map((v) => v._id),
+            ids: selectedVerticals.map((vertical) => vertical._id),
             operator: 'OR' as const,
           }
         : undefined,
@@ -129,13 +164,20 @@ export default function CompaniesPage() {
   });
   const companiesLoading = companies === undefined;
 
-  const toggleVertical = (tv: Doc<'techVerticals'>) => {
+  const toggleVertical = React.useCallback((vertical: Doc<'techVerticals'>) => {
     setSelectedVerticals((prev) =>
-      prev.some((s) => s._id === tv._id) ? prev.filter((s) => s._id !== tv._id) : [...prev, tv],
+      prev.some((selectedVertical) => selectedVertical._id === vertical._id)
+        ? prev.filter((selectedVertical) => selectedVertical._id !== vertical._id)
+        : [...prev, vertical],
     );
-  };
-  const clearAll = () => setSelectedVerticals([]);
-  const isSelected = (vertical: Doc<'techVerticals'>) => selectedVerticals.some((s) => s.name === vertical.name);
+  }, []);
+
+  const clearAll = React.useCallback(() => setSelectedVerticals([]), []);
+  const isSelected = React.useCallback(
+    (vertical: Doc<'techVerticals'>) =>
+      selectedVerticals.some((selectedVertical) => selectedVertical._id === vertical._id),
+    [selectedVerticals],
+  );
 
   /* ----------------------------- Render --------------------------------- */
   return (
@@ -181,7 +223,7 @@ export default function CompaniesPage() {
                           key={slugify(vertical.name)}
                           onClick={() => toggleVertical(vertical)}
                           size="sm"
-                          title={`Filter by ${vertical}`}
+                          title={`Filter by ${vertical.name}`}
                           variant={active ? 'default' : 'outline'}
                         >
                           {vertical.name}
@@ -194,7 +236,7 @@ export default function CompaniesPage() {
                       <Combobox
                         selected={selectedVerticals}
                         allVerticals={allTechVerticals}
-                        visibleNames={verticals.map((v) => v.name)}
+                        visibleNames={verticals.map((vertical) => vertical.name)}
                         onToggle={toggleVertical}
                       />
                     ) : null}
