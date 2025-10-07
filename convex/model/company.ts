@@ -41,31 +41,31 @@ export async function getCompanyIdsByTechVerticals({
   }
 
   console.log('Filtering companies by tech verticals', args.techVerticals);
-  if (operator === 'AND') {
-    const companiesSets = await asyncMap(
-      techVerticalsIds,
-      async (techVerticalId) =>
-        new Set(await getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } })),
-    );
-    let candidateCompanies = new Set<Id<'companies'>>();
-    for (const companiesIds of companiesSets) {
-      if (companiesIds.size === 0) {
-        return [];
-      }
-      if (candidateCompanies.size === 0) {
-        candidateCompanies = companiesIds;
-      }
-      candidateCompanies = candidateCompanies.intersection(companiesIds);
-    }
-    return Array.from(candidateCompanies.values()).slice(0, args.limit);
+  if (operator === 'OR') {
+    const companyIds = (
+      await asyncMap(techVerticalsIds, async (techVerticalId) =>
+        getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } }),
+      )
+    ).flat();
+    return companyIds.slice(0, args.limit);
   }
 
-  const companyIds = (
-    await asyncMap(techVerticalsIds, async (techVerticalId) =>
-      getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } }),
-    )
-  ).flat();
-  return companyIds.slice(0, args.limit);
+  const companiesSets = await asyncMap(
+    techVerticalsIds,
+    async (techVerticalId) =>
+      new Set(await getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } })),
+  );
+  let candidateCompanies = new Set<Id<'companies'>>();
+  for (const companiesIds of companiesSets) {
+    if (companiesIds.size === 0) {
+      return [];
+    }
+    if (candidateCompanies.size === 0) {
+      candidateCompanies = companiesIds;
+    }
+    candidateCompanies = candidateCompanies.intersection(companiesIds);
+  }
+  return Array.from(candidateCompanies.values()).slice(0, args.limit);
 }
 
 async function getCompanyIdsByTechVertical({
