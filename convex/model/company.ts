@@ -2,6 +2,7 @@ import { asyncMap } from 'convex-helpers';
 import { literals } from 'convex-helpers/validators';
 import { WithoutSystemFields } from 'convex/server';
 import { ConvexError, Infer, v } from 'convex/values';
+import 'core-js/actual/set/intersection';
 import { Doc, Id } from '../_generated/dataModel';
 import { MutationCtx, QueryCtx } from '../_generated/server';
 import { createEntity } from '../entity';
@@ -33,19 +34,38 @@ export async function getCompanyIdsByTechVerticals({
 }: {
   ctx: QueryCtx;
   args: { techVerticals: Infer<typeof techVerticalsFilter>; limit: number };
-}): Promise<Set<Id<'companies'>>> {
+}): Promise<Id<'companies'>[]> {
   const { ids: techVerticalsIds, operator } = args.techVerticals;
+  if (techVerticalsIds.length === 0) {
+    throw new ConvexError('At least one tech vertical ID must be provided');
+  }
 
   console.log('Filtering companies by tech verticals', args.techVerticals);
   if (operator === 'AND') {
-    throw new ConvexError("The 'AND' operator is not yet supported for tech verticals filtering");
+    const companiesSets = await asyncMap(
+      techVerticalsIds,
+      async (techVerticalId) =>
+        new Set(await getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } })),
+    );
+    let candidateCompanies = new Set<Id<'companies'>>();
+    for (const companiesIds of companiesSets) {
+      if (companiesIds.size === 0) {
+        return [];
+      }
+      if (candidateCompanies.size === 0) {
+        candidateCompanies = companiesIds;
+      }
+      candidateCompanies = candidateCompanies.intersection(companiesIds);
+    }
+    return Array.from(candidateCompanies.values()).slice(0, args.limit);
   }
+
   const companyIds = (
     await asyncMap(techVerticalsIds, async (techVerticalId) =>
       getCompanyIdsByTechVertical({ ctx, args: { techVerticalId, limit: args.limit } }),
     )
   ).flat();
-  return new Set(companyIds.slice(0, args.limit));
+  return companyIds.slice(0, args.limit);
 }
 
 async function getCompanyIdsByTechVertical({
