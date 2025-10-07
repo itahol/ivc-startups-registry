@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Authenticated, Unauthenticated } from 'convex/react';
 import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import { UserMenu } from '@/components/UserMenu';
+import Link from 'next/link';
 
 /**
  * Isolated client-only auth area so the surrounding Navbar can be a Server Component.
@@ -27,10 +28,10 @@ export function UserAuthArea() {
       </Authenticated>
       <Unauthenticated>
         <Button asChild variant="ghost" size="sm" className="text-sm">
-          <a href="/sign-in">Sign In</a>
+          <Link href="/sign-in">Sign In</Link>
         </Button>
         <Button asChild size="sm" className="text-sm">
-          <a href="/sign-up">Get Started</a>
+          <Link href="/sign-up">Get Started</Link>
         </Button>
       </Unauthenticated>
     </div>

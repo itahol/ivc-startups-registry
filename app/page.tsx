@@ -69,6 +69,7 @@ export default async function Home() {
                   <span
                     data-testid="stat-number"
                     className="text-3xl font-semibold tabular-nums"
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
                     aria-label={`${s.value} ${s.label}`}
                   >
                     {s.value}
@@ -97,7 +98,7 @@ function Hero() {
           Tap into the Digital Ecosystem of the Israeli High‑Tech
         </h1>
         <p className="text-lg text-muted-foreground">Data. Insights. Reports.</p>
-        <div className="w-full" role="search" aria-label="Site search">
+        <form className="w-full" role="search" aria-label="Site search" action="/companies" method="get" noValidate>
           <label htmlFor="hero-search" className="sr-only">
             Search companies
           </label>
@@ -126,7 +127,7 @@ function Hero() {
               </Link>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </section>
   );
