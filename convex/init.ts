@@ -3,12 +3,27 @@ import { v } from 'convex/values';
 import { Doc, Id } from './_generated/dataModel';
 import { internalMutation } from './_generated/server';
 import { createCompany } from './model/company';
+import { COMPANY_STAGE } from './schema';
 
 // Seed data sourced from startups-info.json (subset of fields)
 // Because Convex server bundles functions, we inline JSON content at build time via import assertion.
 // If the JSON grows large consider streaming or chunking.
 // @ts-ignore - JSON import without type declaration
 import startupsData from '../scratch/startups-info.json';
+
+export const SECTORS = {
+  AGRITECH: 'Agritech',
+  BIOMED: 'Biomed',
+  DIGITAL_HEALTH: 'Digital Health',
+  MEDICAL_DEVICES: 'Medical Devices',
+  CLEANTECH: 'Cleantech',
+  ENERGY: 'Energy',
+  CONSUMER_SOFTWARE: 'Consumer-Oriented Software',
+  ENTERPRISE_SOFTWARE: 'Enterprise Software & Infrastructure',
+  NETWORK_INFRASTRUCTURE: 'Network Infrastructure',
+  HARDWARE_INDUSTRIAL: 'Hardware & Industrial',
+  SEMICONDUCTOR: 'Semiconductor',
+} as const;
 
 // Collect all unique tech vertical strings from data
 const techVerticals: string[] = Array.from(
@@ -27,7 +42,7 @@ const mockCompanies: Omit<WithoutSystemFields<Doc<'companies'>>, 'entityId'>[] =
   yearEstablished: typeof c.founded === 'number' ? c.founded : undefined,
   description: c.description || undefined,
   stageId: undefined,
-  sectorId: undefined,
+  sector: undefined,
 }));
 
 export default internalMutation({
@@ -77,5 +92,26 @@ export default internalMutation({
 
     console.log(`Successfully seeded ${mockCompanies.length} companies with tech verticals`);
     return null;
+  },
+});
+
+export const companyStages = internalMutation({
+  args: {},
+  handler: async (ctx, args) => {
+    // Check if company stages already exist to make this idempotent
+    const existingStages = await ctx.db.query('companyStages').take(1);
+    if (existingStages.length > 0) {
+      console.log('Company stages already seeded, skipping...');
+      return;
+    }
+
+    console.log('Seeding company stages...');
+
+    const stageNames = Object.values(COMPANY_STAGE);
+    for (const name of stageNames) {
+      await ctx.db.insert('companyStages', { name });
+    }
+
+    console.log(`Successfully seeded ${stageNames.length} company stages`);
   },
 });
