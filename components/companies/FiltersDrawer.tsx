@@ -4,14 +4,13 @@ import * as React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { MultiSelectCombobox } from '@/components/ui/combobox';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import type { Doc, Id } from '@/convex/_generated/dataModel';
+import type { Id } from '@/convex/_generated/dataModel';
 import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '../../convex/schema';
 
 export type SectorOption = (typeof SECTOR_VALUES)[number];
-
 export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
 
 export interface CompanyFilters {
@@ -38,42 +37,12 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
   const allVerticals = useQuery(api.techVerticals.list, {});
   const verticalsLoading = allVerticals === undefined;
 
-  function toggleVertical(v: Doc<'techVerticals'>) {
-    setDraft((prev) => {
-      const current = prev.techVerticals?.ids ?? [];
-      const exists = current.includes(v._id);
-      const nextIds = exists ? current.filter((id) => id !== v._id) : [...current, v._id];
-      return {
-        ...prev,
-        techVerticals: nextIds.length ? { ids: nextIds, operator: prev.techVerticals?.operator ?? 'OR' } : undefined,
-      };
-    });
-  }
-
   function setVerticalOperator(op: 'AND' | 'OR') {
     setDraft((prev) =>
       prev.techVerticals
         ? { ...prev, techVerticals: { ...prev.techVerticals, operator: op } }
         : { ...prev, techVerticals: { ids: [], operator: op } },
     );
-  }
-
-  function toggleSector(sector: SectorOption) {
-    setDraft((prev) => {
-      const cur = prev.sectors ?? [];
-      const exists = cur.includes(sector);
-      const next = exists ? cur.filter((s) => s !== sector) : [...cur, sector];
-      return { ...prev, sectors: next.length ? next : undefined };
-    });
-  }
-
-  function toggleStage(stage: CompanyStageOption) {
-    setDraft((prev) => {
-      const cur = prev.stages ?? [];
-      const exists = cur.includes(stage);
-      const next = exists ? cur.filter((s) => s !== stage) : [...cur, stage];
-      return { ...prev, stages: next.length ? next : undefined };
-    });
   }
 
   function updateYear(part: 'min' | 'max', val: string) {
@@ -84,7 +53,7 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
       if (next.min === undefined && next.max === undefined) {
         const { yearEstablished: _unused, ...rest } = prev;
         void _unused;
-        return rest;
+        return rest as CompanyFilters;
       }
       return { ...prev, yearEstablished: next };
     });
@@ -114,44 +83,64 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
             <legend id="tech-verticals-label" className="mb-2 text-sm font-medium">
               Tech Verticals
             </legend>
-            <MultiSelectCombobox
-              label="Verticals"
-              items={allVerticals}
-              loading={verticalsLoading}
-              isSelected={(item) => selectedVerticalIds.includes(item._id)}
-              getKey={(item) => item._id}
-              getLabel={(item) => item.name}
-              onToggle={(item) => toggleVertical(item)}
-              placeholder="Search verticals..."
-              search
-              onClear={() =>
-                setDraft((prev) => {
-                  const { techVerticals: _unused, ...rest } = prev;
-                  void _unused;
-                  return rest;
-                })
-              }
-            />
-            {/* Operator visible only when at least one vertical selected */}
-            {selectedVerticalIds.length > 0 && (
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Match</span>
-                <ToggleGroup
-                  type="single"
-                  value={verticalOperator}
-                  onValueChange={(val) => (val === 'AND' || val === 'OR') && setVerticalOperator(val)}
-                  size="sm"
-                  aria-label="Choose whether selected tech verticals should all match or any match"
-                >
-                  <ToggleGroupItem value="OR" className="px-3 text-xs">
-                    Any
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="AND" className="px-3 text-xs">
-                    All
-                  </ToggleGroupItem>
-                </ToggleGroup>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <MultiSelectCombobox
+                  options={allVerticals ?? []}
+                  getOptionLabel={(o) => o.name}
+                  getOptionValue={(o) => o._id}
+                  value={selectedVerticalIds}
+                  onChange={(ids) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      techVerticals: ids.length
+                        ? { ids: ids as Id<'techVerticals'>[], operator: prev.techVerticals?.operator ?? 'OR' }
+                        : undefined,
+                    }))
+                  }
+                  placeholder="Select verticals"
+                  disabled={verticalsLoading}
+                />
+                {selectedVerticalIds.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() =>
+                      setDraft((prev) => {
+                        const { techVerticals: _unused, ...rest } = prev;
+                        void _unused;
+                        return rest;
+                      })
+                    }
+                    aria-label="Clear selected verticals"
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
-            )}
+              {/* Operator visible only when at least one vertical selected */}
+              {selectedVerticalIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Match</span>
+                  <ToggleGroup
+                    type="single"
+                    value={verticalOperator}
+                    onValueChange={(val) => (val === 'AND' || val === 'OR') && setVerticalOperator(val)}
+                    size="sm"
+                    aria-label="Choose whether selected tech verticals should all match or any match"
+                  >
+                    <ToggleGroupItem value="OR" className="px-3 text-xs">
+                      Any
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="AND" className="px-3 text-xs">
+                      All
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              )}
+            </div>
           </fieldset>
 
           {/* Sector (multi-select combobox) */}
@@ -159,24 +148,39 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
             <legend id="sector-label" className="mb-2 text-sm font-medium">
               Sector
             </legend>
-            <MultiSelectCombobox
-              label="Sectors"
-              items={SECTOR_VALUES}
-              loading={false}
-              isSelected={(item) => (draft.sectors ?? []).includes(item)}
-              getKey={(item) => item}
-              getLabel={(item) => item}
-              onToggle={(item) => toggleSector(item)}
-              selectedBadgeLimit={6}
-              emptyMessage="No sectors"
-              onClear={() =>
-                setDraft((prev) => {
-                  const { sectors: _unused, ...rest } = prev;
-                  void _unused;
-                  return rest;
-                })
-              }
-            />
+            <div className="flex items-center gap-2">
+              <MultiSelectCombobox
+                options={SECTOR_VALUES}
+                getOptionLabel={(o) => o}
+                getOptionValue={(o) => o}
+                value={draft.sectors ?? []}
+                onChange={(vals) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    sectors: vals.length ? (vals as SectorOption[]) : undefined,
+                  }))
+                }
+                placeholder="Select sectors"
+              />
+              {(draft.sectors?.length ?? 0) > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() =>
+                    setDraft((prev) => {
+                      const { sectors: _unused, ...rest } = prev;
+                      void _unused;
+                      return rest;
+                    })
+                  }
+                  aria-label="Clear selected sectors"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
           </fieldset>
 
           {/* Stage (multi-select combobox) */}
@@ -184,24 +188,39 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
             <legend id="stage-label" className="mb-2 text-sm font-medium">
               Stage
             </legend>
-            <MultiSelectCombobox
-              label="Stages"
-              items={COMPANY_STAGE_VALUES}
-              loading={false}
-              isSelected={(item) => (draft.stages ?? []).includes(item)}
-              getKey={(item) => item}
-              getLabel={(item) => item}
-              onToggle={(item) => toggleStage(item)}
-              selectedBadgeLimit={COMPANY_STAGE_VALUES.length}
-              placeholder="Any stage"
-              onClear={() =>
-                setDraft((prev) => {
-                  const { stages: _unused, ...rest } = prev;
-                  void _unused;
-                  return rest;
-                })
-              }
-            />
+            <div className="flex items-center gap-2">
+              <MultiSelectCombobox
+                options={COMPANY_STAGE_VALUES}
+                getOptionLabel={(o) => o}
+                getOptionValue={(o) => o}
+                value={draft.stages ?? []}
+                onChange={(vals) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    stages: vals.length ? (vals as CompanyStageOption[]) : undefined,
+                  }))
+                }
+                placeholder="Any stage"
+              />
+              {(draft.stages?.length ?? 0) > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() =>
+                    setDraft((prev) => {
+                      const { stages: _unused, ...rest } = prev;
+                      void _unused;
+                      return rest;
+                    })
+                  }
+                  aria-label="Clear selected stages"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
           </fieldset>
 
           {/* Year Established */}

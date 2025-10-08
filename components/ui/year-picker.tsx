@@ -156,7 +156,7 @@ export const YearRangePicker: React.FC<YearRangePickerProps> = ({
   }
 
   function setStart(y: number | null) {
-    let next: YearRange = { ...range, start: y };
+    const next: YearRange = { ...range, start: y };
     if (y != null && range.end != null && y > range.end) {
       next.end = y;
     }
@@ -164,7 +164,7 @@ export const YearRangePicker: React.FC<YearRangePickerProps> = ({
   }
 
   function setEnd(y: number | null) {
-    let next: YearRange = { ...range, end: y };
+    const next: YearRange = { ...range, end: y };
     if (y != null && range.start != null && y < range.start) {
       next.start = y;
     }
