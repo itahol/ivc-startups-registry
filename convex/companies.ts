@@ -5,15 +5,15 @@ import { v } from 'convex/values';
 import { Id } from './_generated/dataModel';
 import { query, QueryCtx } from './_generated/server';
 import { getCompanyIdsByTechVerticals, techVerticalsFilter } from './model/company';
-import schema, { sectorValidator } from './schema';
+import schema, { companyStageValidator, sectorValidator } from './schema';
 
 export const { create, read, update, destroy, paginate } = crud(schema, 'companies');
 
 export const list = query({
   args: {
     techVerticals: v.optional(techVerticalsFilter),
-    sectors: v.optional(sectorValidator),
-    stages: v.optional(v.array(v.id('companyStages'))),
+    sectors: v.optional(v.array(sectorValidator)),
+    stages: v.optional(v.array(companyStageValidator)),
     yearEstablished: v.optional(
       v.object({
         min: v.optional(v.number()),
@@ -49,7 +49,7 @@ export const list = query({
 
       // Fetch related lookup docs (stage & sector) if present. These are small single fetches; if perf becomes
       // a concern we can batch or denormalize the name fields.
-      const stage = company.stageId ? await ctx.db.get(company.stageId) : null;
+      const stage = company.stage;
       const sector = company.sector;
 
       return { ...company, techVerticals, stage, sector };
@@ -59,7 +59,7 @@ export const list = query({
       companies = companies.filter((c) => c.sector && args.sectors!.includes(c.sector));
     }
     if (args.stages && args.stages.length) {
-      companies = companies.filter((c) => c.stageId && args.stages!.includes(c.stageId));
+      companies = companies.filter((c) => c.stage && args.stages!.includes(c.stage));
     }
     if (args.yearEstablished) {
       const { min, max } = args.yearEstablished;

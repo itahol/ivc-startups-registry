@@ -5,10 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { Doc } from '@/convex/_generated/dataModel';
 
-// Shape returned by api.companies.list query (companies.ts augments the base doc)
 export interface CompanyWithRelations extends Doc<'companies'> {
   techVerticals: Doc<'techVerticals'>[];
-  stage: Doc<'companyStages'> | null;
 }
 
 interface CompanyCardProps {
@@ -24,13 +22,12 @@ export function CompanyCard({ company }: CompanyCardProps) {
     </Badge>
   ));
 
-  const stageName = company.stage?.name;
+  const stageName = company.stage;
   const sectorName = company.sector;
 
   return (
     <Card
       key={company._id}
-      // Make whole card focusable so keyboard users get the same expand affordance as hover.
       tabIndex={0}
       className={`
         group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50

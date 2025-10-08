@@ -4,16 +4,20 @@ import * as React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { MultiSelectCombobox, SingleSelectCombobox } from '@/components/ui/combobox';
+import { MultiSelectCombobox } from '@/components/ui/combobox';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Doc, Id } from '@/convex/_generated/dataModel';
-import { SECTORS } from '../../convex/schema';
+import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '../../convex/schema';
+
+export type SectorOption = (typeof SECTOR_VALUES)[number];
+
+export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
 
 export interface CompanyFilters {
   techVerticals?: { ids: Id<'techVerticals'>[]; operator: 'AND' | 'OR' };
   sectors?: SectorOption[];
-  stages?: Id<'companyStages'>[];
+  stages?: CompanyStageOption[];
   yearEstablished?: { min?: number; max?: number };
 }
 
@@ -22,10 +26,6 @@ export interface FiltersDrawerProps {
   onApply: (next: CompanyFilters) => void;
   trigger?: React.ReactNode;
 }
-
-const SECTOR_OPTIONS = Object.values(SECTORS);
-
-type SectorOption = (typeof SECTOR_OPTIONS)[number];
 
 export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
   const [open, setOpen] = React.useState(false);
@@ -36,9 +36,7 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
   }, [open, value]);
 
   const allVerticals = useQuery(api.techVerticals.list, {});
-  const stages = useQuery(api.companyStages.list, {});
   const verticalsLoading = allVerticals === undefined;
-  const stagesLoading = stages === undefined;
 
   function toggleVertical(v: Doc<'techVerticals'>) {
     setDraft((prev) => {
@@ -69,14 +67,12 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
     });
   }
 
-  function selectStage(id: Id<'companyStages'> | undefined) {
+  function toggleStage(stage: CompanyStageOption) {
     setDraft((prev) => {
-      if (!id) {
-        const { stages: _unused, ...rest } = prev;
-        void _unused;
-        return rest;
-      }
-      return { ...prev, stages: [id] };
+      const cur = prev.stages ?? [];
+      const exists = cur.includes(stage);
+      const next = exists ? cur.filter((s) => s !== stage) : [...cur, stage];
+      return { ...prev, stages: next.length ? next : undefined };
     });
   }
 
@@ -165,7 +161,7 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
             </legend>
             <MultiSelectCombobox
               label="Sectors"
-              items={SECTOR_OPTIONS}
+              items={SECTOR_VALUES}
               loading={false}
               isSelected={(item) => (draft.sectors ?? []).includes(item)}
               getKey={(item) => item}
@@ -183,20 +179,28 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
             />
           </fieldset>
 
-          {/* Stage (single-select combobox) */}
+          {/* Stage (multi-select combobox) */}
           <fieldset className="mb-6" aria-labelledby="stage-label">
             <legend id="stage-label" className="mb-2 text-sm font-medium">
               Stage
             </legend>
-            <SingleSelectCombobox
-              label="Stage"
-              items={stages}
-              loading={stagesLoading}
-              selected={stages?.find((s) => draft.stages?.[0] === s._id)}
-              onSelect={(item) => selectStage(item ? item._id : undefined)}
-              getKey={(item) => item._id}
-              getLabel={(item) => item.name}
-              placeholder="Search stages..."
+            <MultiSelectCombobox
+              label="Stages"
+              items={COMPANY_STAGE_VALUES}
+              loading={false}
+              isSelected={(item) => (draft.stages ?? []).includes(item)}
+              getKey={(item) => item}
+              getLabel={(item) => item}
+              onToggle={(item) => toggleStage(item)}
+              selectedBadgeLimit={COMPANY_STAGE_VALUES.length}
+              placeholder="Any stage"
+              onClear={() =>
+                setDraft((prev) => {
+                  const { stages: _unused, ...rest } = prev;
+                  void _unused;
+                  return rest;
+                })
+              }
             />
           </fieldset>
 

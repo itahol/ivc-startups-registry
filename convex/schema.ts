@@ -28,7 +28,9 @@ export const COMPANY_STAGE = {
   REVENUE_GROWTH: 'Revenue Growth',
 } as const;
 
-export const companyStage = literals(...Object.values(COMPANY_STAGE));
+export const COMPANY_STAGE_VALUES = Object.values(COMPANY_STAGE);
+
+export const companyStageValidator = literals(...COMPANY_STAGE_VALUES);
 
 export const SECTORS = {
   AGRITECH: 'Agritech',
@@ -44,7 +46,9 @@ export const SECTORS = {
   SEMICONDUCTOR: 'Semiconductor',
 } as const;
 
-export const sectorValidator = literals(...Object.values(SECTORS));
+export const SECTOR_VALUES = Object.values(SECTORS);
+
+export const sectorValidator = literals(...SECTOR_VALUES);
 
 // Lookup Tables
 export const techVerticals = defineTable({
@@ -74,12 +78,12 @@ export const companies = defineTable({
   linkedinUrl: v.optional(v.string()),
   yearEstablished: v.optional(v.number()),
   description: v.optional(v.string()),
-  stageId: v.optional(v.id('companyStages')),
+  stage: v.optional(companyStageValidator),
   sector: v.optional(sectorValidator),
 })
   .index('by_entity', ['entityId'])
   .index('by_name', ['name'])
-  .index('by_stage', ['stageId'])
+  .index('by_stage', ['stage'])
   .index('by_sector', ['sector']);
 
 export const companyTechVerticals = defineTable({
