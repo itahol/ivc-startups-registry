@@ -3,12 +3,10 @@
 import { useQuery } from 'convex/react';
 import * as React from 'react';
 import { api } from '../../convex/_generated/api';
-import { Card } from '@/components/ui/card'; // For skeleton loading placeholder only
+import { Card } from '@/components/ui/card';
 import { CompanyCard } from '@/components/CompanyCard';
 import { Button } from '@/components/ui/button';
-// Removed quick vertical toggle group
-// import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Skeleton } from '@/components/ui/skeleton'; // still used for loading cards, not for pills
+import { Skeleton } from '@/components/ui/skeleton';
 import Navbar from '../../components/Navbar';
 import { FiltersDrawer, type CompanyFilters } from '@/components/companies/FiltersDrawer';
 
@@ -16,23 +14,17 @@ import { FiltersDrawer, type CompanyFilters } from '@/components/companies/Filte
 /*                            Helpers / utilities                             */
 /* -------------------------------------------------------------------------- */
 
-// slugify helper removed (unused after quick vertical pills removal)
-
-// Removed quick verticals limit and predefined vertical pill filtering
-
 export default function CompaniesPage() {
   const [filters, setFilters] = React.useState<CompanyFilters>({});
 
   const companies = useQuery(api.companies.list, {
     techVerticals: filters.techVerticals,
     sectors: filters.sectors,
-    stages: filters.stages, // ids of companyStages
+    stages: filters.stages,
     yearEstablished: filters.yearEstablished,
     limit: 20,
   });
   const companiesLoading = companies === undefined;
-
-  /* Quick vertical toggles removed - vertical selection now only via FiltersDrawer */
 
   const clearAll = React.useCallback(() => {
     setFilters({});
