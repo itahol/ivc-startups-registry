@@ -4,7 +4,11 @@ import * as React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { Doc } from '@/convex/_generated/dataModel';
+import { cn } from '@/lib/utils';
 
+/* -------------------------------------------------------------------------- */
+/*                                 Types                                      */
+/* -------------------------------------------------------------------------- */
 export interface CompanyWithRelations extends Doc<'companies'> {
   techVerticals: Doc<'techVerticals'>[];
 }
@@ -17,25 +21,48 @@ export function CompanyCard({ company }: CompanyCardProps) {
   const { name, description, techVerticals } = company;
   const websiteUrl = company.websiteUrl ? new URL(company.websiteUrl) : undefined;
   const tags = techVerticals.map((tv) => (
-    <Badge variant="outline" key={tv._id}>
+    <Badge variant="outline" key={tv._id} className="whitespace-nowrap">
       {tv.name}
     </Badge>
   ));
 
+  const [expanded, setExpanded] = React.useState(false);
+  const [tagsOverflow, setTagsOverflow] = React.useState(false);
+  const [descOverflow, setDescOverflow] = React.useState(false);
+
+  const tagsRef = React.useRef<HTMLDivElement | null>(null);
+  const descRef = React.useRef<HTMLParagraphElement | null>(null);
+
+  React.useLayoutEffect(() => {
+    const el = tagsRef.current;
+    if (el) {
+      const collapsedMax = 56;
+      setTagsOverflow(el.scrollHeight > collapsedMax + 1);
+    }
+    const d = descRef.current;
+    if (d) {
+      setDescOverflow(d.scrollHeight > d.clientHeight + 1);
+    }
+  }, [techVerticals, description]);
+
+  const showToggle = (tagsOverflow || descOverflow) && (description || techVerticals.length > 0);
+
   const stageName = company.stage;
   const sectorName = company.sector;
+
+  const toggle = () => setExpanded((e) => !e);
 
   return (
     <Card
       key={company._id}
-      tabIndex={0}
-      className={`
-        group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50
-        transition-colors
-      `}
+      tabIndex={-1}
+      className={cn(
+        'relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'gap-4 py-4',
+      )}
       aria-describedby={`company-${company._id}-desc`}
     >
-      <CardHeader className="pb-0">
+      <CardHeader className="pb-0 gap-1">
         <CardTitle className="text-base font-semibold leading-snug tracking-tight">{name}</CardTitle>
         {websiteUrl ? (
           <CardDescription className="truncate">
@@ -50,58 +77,81 @@ export function CompanyCard({ company }: CompanyCardProps) {
           </CardDescription>
         ) : null}
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-3 px-6 pb-2">
         <dl className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1 text-sm">
           <dt className="font-medium">Stage</dt>
           <dd className="text-muted-foreground">{stageName ?? '—'}</dd>
-
-          <dt className="font-medium">Year Established</dt>
+          <dt className="font-medium">Year</dt>
           <dd className="text-muted-foreground">{company.yearEstablished ?? '—'}</dd>
-
           <dt className="font-medium">Sector</dt>
           <dd className="text-muted-foreground">{sectorName ?? '—'}</dd>
-
           {techVerticals.length > 0 && (
             <>
-              <dt className="font-medium">Tech Verticals</dt>
-              <dd className="text-muted-foreground">
-                <div className="relative" aria-label="Tech verticals list">
-                  <div
-                    className={`flex flex-wrap gap-1.5 overflow-hidden transition-all duration-300
-                      max-h-16 group-hover:max-h-96 group-focus-within:max-h-96
-                    `}
-                  >
-                    {tags}
-                  </div>
-                  {/* Fade overlay when collapsed */}
-                  <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity"
-                    aria-hidden="true"
-                  />
+              <dt className="font-medium">Tech</dt>
+              <dd className="text-muted-foreground relative">
+                <div
+                  ref={tagsRef}
+                  className={cn(
+                    'flex flex-wrap gap-1.5 pr-1 transition-[max-height] duration-300',
+                    !expanded && 'max-h-14 overflow-hidden',
+                  )}
+                >
+                  {tags}
                 </div>
+                {!expanded && tagsOverflow && (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-background to-transparent"
+                  />
+                )}
               </dd>
             </>
           )}
         </dl>
 
-        {/* Description */}
         {description ? (
           <div className="mt-3 text-sm leading-snug">
             <p
               id={`company-${company._id}-desc`}
-              className={`
-                line-clamp-3 transition-[color] group-hover:line-clamp-none group-focus-within:line-clamp-none
-              `}
+              ref={descRef}
+              className={cn('transition-colors', !expanded && 'line-clamp-3')}
             >
               {description}
             </p>
-            <div
-              className="pointer-events-none mt-1 h-6 bg-gradient-to-t from-background to-transparent group-hover:hidden group-focus-within:hidden -translate-y-6"
-              aria-hidden="true"
-            />
+            {!expanded && descOverflow && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none -mt-6 h-6 bg-gradient-to-t from-background to-transparent"
+              />
+            )}
           </div>
         ) : null}
-        <span className="sr-only">Focus or hover to expand full description and all tech verticals.</span>
+
+        {showToggle && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={toggle}
+              className={cn(
+                'inline-flex items-center gap-1 text-xs font-medium rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                'text-muted-foreground hover:text-foreground hover:underline transition-colors',
+              )}
+              aria-expanded={expanded}
+            >
+              <span>{expanded ? 'Show less' : 'Show more'}</span>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'transition-transform text-[0.65rem] translate-y-px text-muted-foreground',
+                  expanded && 'rotate-180',
+                )}
+              >
+                ▾
+              </span>
+              <span className="sr-only"> for {name}</span>
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

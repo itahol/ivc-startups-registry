@@ -47,20 +47,6 @@ export function FiltersDrawer({ value, onApply }: FiltersDrawerProps) {
     );
   }
 
-  function updateYear(part: 'min' | 'max', val: string) {
-    const num = val === '' ? undefined : Number(val);
-    setDraft((prev) => {
-      const cur = prev.yearEstablished ?? {};
-      const next = { ...cur, [part]: num };
-      if (next.min === undefined && next.max === undefined) {
-        const { yearEstablished: _unused, ...rest } = prev;
-        void _unused;
-        return rest as CompanyFilters;
-      }
-      return { ...prev, yearEstablished: next };
-    });
-  }
-
   const verticalOperator = draft.techVerticals?.operator ?? 'OR';
   const selectedVerticalIds = React.useMemo(() => draft.techVerticals?.ids ?? [], [draft.techVerticals]);
   const hasAnyFilters = !!(draft.techVerticals || draft.sectors || draft.stages || draft.yearEstablished);
