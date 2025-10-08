@@ -5,31 +5,14 @@ import { v } from 'convex/values';
 import { Id } from './_generated/dataModel';
 import { query, QueryCtx } from './_generated/server';
 import { getCompanyIdsByTechVerticals, techVerticalsFilter } from './model/company';
-import schema from './schema';
+import schema, { sectorValidator } from './schema';
 
 export const { create, read, update, destroy, paginate } = crud(schema, 'companies');
 
 export const list = query({
   args: {
     techVerticals: v.optional(techVerticalsFilter),
-    // Sector union validator: replicate from schema.sector (cannot easily introspect optional wrapper)
-    sectors: v.optional(
-      v.array(
-        v.union(
-          v.literal('Agritech'),
-          v.literal('Biomed'),
-          v.literal('Digital Health'),
-          v.literal('Medical Devices'),
-          v.literal('Cleantech'),
-          v.literal('Energy'),
-          v.literal('Consumer-Oriented Software'),
-          v.literal('Enterprise Software & Infrastructure'),
-          v.literal('Network Infrastructure'),
-          v.literal('Hardware & Industrial'),
-          v.literal('Semiconductor'),
-        ),
-      ),
-    ),
+    sectors: v.optional(sectorValidator),
     stages: v.optional(v.array(v.id('companyStages'))),
     yearEstablished: v.optional(
       v.object({

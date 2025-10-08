@@ -14,7 +14,7 @@ interface MultiSelectComboboxProps<T> {
   getLabel: (item: T) => string;
   onToggle: (item: T) => void;
   placeholder?: string;
-  search?: boolean; // enable text search
+  search?: boolean;
   selectedBadgeLimit?: number;
   onClear?: () => void;
   emptyMessage?: string;
@@ -170,7 +170,7 @@ interface SingleSelectComboboxProps<T> {
   items: T[] | undefined;
   loading: boolean;
   selected: T | undefined;
-  onSelect: (item: T | undefined) => void; // passing undefined clears selection
+  onSelect: (item: T | undefined) => void;
   getKey: (item: T) => string;
   getLabel: (item: T) => string;
   placeholder?: string;

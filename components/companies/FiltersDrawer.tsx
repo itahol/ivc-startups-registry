@@ -10,34 +10,26 @@ import { api } from '@/convex/_generated/api';
 import type { Doc, Id } from '@/convex/_generated/dataModel';
 import { SECTORS } from '../../convex/schema';
 
-/* -------------------------------------------------------------------------- */
-/*                               Types & Config                               */
-/* -------------------------------------------------------------------------- */
-
 export interface CompanyFilters {
   techVerticals?: { ids: Id<'techVerticals'>[]; operator: 'AND' | 'OR' };
-  sectors?: SectorOption[]; // multi-select
-  stages?: Id<'companyStages'>[]; // single-select -> length 0 or 1
+  sectors?: SectorOption[];
+  stages?: Id<'companyStages'>[];
   yearEstablished?: { min?: number; max?: number };
 }
 
-interface FiltersDrawerProps {
+export interface FiltersDrawerProps {
   value: CompanyFilters;
   onApply: (next: CompanyFilters) => void;
-  trigger?: React.ReactNode; // optional custom trigger
+  trigger?: React.ReactNode;
 }
 
 const SECTOR_OPTIONS = Object.values(SECTORS);
 
 type SectorOption = (typeof SECTOR_OPTIONS)[number];
 
-/* -------------------------------------------------------------------------- */
-/*                               Main Component                               */
-/* -------------------------------------------------------------------------- */
 export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<CompanyFilters>(value);
-  // Removed verticalSearch state (was unused for local filtering)
 
   React.useEffect(() => {
     if (open) setDraft(value);

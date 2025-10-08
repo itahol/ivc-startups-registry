@@ -1,21 +1,13 @@
-// Server Component Navbar (no client hooks)
 import Logo from '@/components/navbar-components/logo';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-// (refactored)
-// removed Authenticated/Unauthenticated from server component
-// import { UserMenu } from './UserMenu'; // moved into isolated client component
-// Active route highlighting skipped in server version to avoid client hook usage.
-
-// Server Component version of Navbar. Only the auth area is a client component now.
 
 import UserAuthArea from '@/components/navbar-components/UserAuthArea';
 import Link from 'next/link';
 import ClientNavigationMenuLink from './navbar-components/client-navigation-menu-link';
 import { cn } from '../lib/utils';
 
-// Central nav link definitions kept close to where they're rendered (clear & flexible)
 const NAV_LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: '/', label: 'Home', exact: true },
   { href: '/companies', label: 'Companies', exact: true },

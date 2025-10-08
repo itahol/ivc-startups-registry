@@ -5,9 +5,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 import { cn } from '@/lib/utils';
 
-// ————————————————————————————————————————————
-// Types
-// ————————————————————————————————————————————
 export type YearRange = { start?: number | null; end?: number | null };
 
 interface YearRangePickerProps {
@@ -31,9 +28,6 @@ interface YearSelectProps {
   align?: 'start' | 'center' | 'end';
 }
 
-// ————————————————————————————————————————————
-// Utilities
-// ————————————————————————————————————————————
 const thisYear = new Date().getFullYear();
 
 function clamp(value: number, min?: number, max?: number) {
@@ -46,9 +40,6 @@ function decadeStart(y: number) {
   return Math.floor(y / 10) * 10;
 }
 
-// ————————————————————————————————————————————
-// YearSelect: a compact years-only picker (grid of 12 years with decade nav)
-// ————————————————————————————————————————————
 const YearSelect: React.FC<YearSelectProps> = ({
   year,
   onSelect,
@@ -69,7 +60,6 @@ const YearSelect: React.FC<YearSelectProps> = ({
   }, [open]);
 
   const years = React.useMemo(() => {
-    // show decade plus next 2 years (12 cells) to make a neat 3x4 grid
     return Array.from({ length: 12 }, (_, i) => pageStart + i);
   }, [pageStart]);
 
@@ -144,9 +134,6 @@ const YearSelect: React.FC<YearSelectProps> = ({
   );
 };
 
-// ————————————————————————————————————————————
-// YearRangePicker: two YearSelects + invariant enforcement (start ≤ end)
-// ————————————————————————————————————————————
 export const YearRangePicker: React.FC<YearRangePickerProps> = ({
   value,
   onChange,
@@ -170,9 +157,8 @@ export const YearRangePicker: React.FC<YearRangePickerProps> = ({
 
   function setStart(y: number | null) {
     let next: YearRange = { ...range, start: y };
-    // auto-fix if needed
     if (y != null && range.end != null && y > range.end) {
-      next.end = y; // extend end to maintain start ≤ end
+      next.end = y;
     }
     commit(next);
   }
@@ -180,7 +166,7 @@ export const YearRangePicker: React.FC<YearRangePickerProps> = ({
   function setEnd(y: number | null) {
     let next: YearRange = { ...range, end: y };
     if (y != null && range.start != null && y < range.start) {
-      next.start = y; // pull start back to maintain start ≤ end
+      next.start = y;
     }
     commit(next);
   }

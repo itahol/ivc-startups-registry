@@ -44,7 +44,7 @@ export const SECTORS = {
   SEMICONDUCTOR: 'Semiconductor',
 } as const;
 
-export const sector = literals(...Object.values(SECTORS));
+export const sectorValidator = literals(...Object.values(SECTORS));
 
 // Lookup Tables
 export const techVerticals = defineTable({
@@ -75,7 +75,7 @@ export const companies = defineTable({
   yearEstablished: v.optional(v.number()),
   description: v.optional(v.string()),
   stageId: v.optional(v.id('companyStages')),
-  sector: v.optional(sector),
+  sector: v.optional(sectorValidator),
 })
   .index('by_entity', ['entityId'])
   .index('by_name', ['name'])

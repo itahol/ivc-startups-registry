@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { createCompany as createCompanyInternal } from './model/company';
-import { dealRole, entityType, positionType, sector } from './schema';
+import { dealRole, entityType, positionType, sectorValidator } from './schema';
 
 // ===== COMPANIES =====
 
@@ -9,7 +9,7 @@ import { dealRole, entityType, positionType, sector } from './schema';
 export const createCompany = mutation({
   args: {
     name: v.string(),
-    sector: v.optional(sector),
+    sector: v.optional(sectorValidator),
     websiteUrl: v.optional(v.string()),
     linkedinUrl: v.optional(v.string()),
     yearEstablished: v.optional(v.number()),
@@ -36,7 +36,7 @@ export const getCompanyByEntity = query({
       yearEstablished: v.optional(v.number()),
       description: v.optional(v.string()),
       stageId: v.optional(v.id('companyStages')),
-      sector: v.optional(sector),
+      sector: v.optional(sectorValidator),
     }),
     v.null(),
   ),
