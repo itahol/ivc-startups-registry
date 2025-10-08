@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useState, useRef } from 'react';
 import { type UseSliderWithInputProps } from '@/hooks/use-slider-with-input';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -36,16 +36,20 @@ export default function YearRangePicker({
   const [startInput, setStartInput] = useState<string>(resolvedInitial[0]?.toString() ?? '');
   const [endInput, setEndInput] = useState<string>(resolvedInitial[1]?.toString() ?? '');
 
-  // Emit changes
+  // Emit changes only when values actually change (avoid loop on parent re-renders)
+  const onChangeRef = useRef(onChange);
   useEffect(() => {
-    if (onChange) {
-      if (startYear === null && endYear === null) {
-        onChange(null);
-      } else {
-        onChange([startYear, endYear]);
-      }
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  useEffect(() => {
+    const cb = onChangeRef.current;
+    if (!cb) return;
+    if (startYear === null && endYear === null) {
+      cb(null);
+    } else {
+      cb([startYear, endYear]);
     }
-  }, [startYear, endYear, onChange]);
+  }, [startYear, endYear]);
 
   // Helper to clamp + order
   const normalizeRange = useCallback(

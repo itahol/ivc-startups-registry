@@ -18,6 +18,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '../../convex/schema';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
+import YearRangePicker from '../YearRangePicker';
 
 export type SectorOption = (typeof SECTOR_VALUES)[number];
 export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
@@ -229,30 +230,45 @@ export function FiltersDrawer({ value, onApply }: FiltersDrawerProps) {
               <legend id="year-established-label" className="mb-2 text-sm font-medium">
                 Year Established
               </legend>
-              <div className="flex items-center gap-2">
-                <label className="text-xs" htmlFor="year-min">
-                  Min
-                </label>
-                <input
-                  id="year-min"
-                  inputMode="numeric"
-                  type="number"
-                  className="w-24 rounded-md border bg-background px-2 py-1 text-sm"
-                  value={draft.yearEstablished?.min ?? ''}
-                  onChange={(e) => updateYear('min', e.target.value)}
-                />
-                <label className="text-xs" htmlFor="year-max">
-                  Max
-                </label>
-                <input
-                  id="year-max"
-                  inputMode="numeric"
-                  type="number"
-                  className="w-24 rounded-md border bg-background px-2 py-1 text-sm"
-                  value={draft.yearEstablished?.max ?? ''}
-                  onChange={(e) => updateYear('max', e.target.value)}
-                />
-              </div>
+              <YearRangePicker
+                minValue={1970}
+                maxValue={new Date().getFullYear()}
+                initialValue={
+                  draft.yearEstablished &&
+                  (draft.yearEstablished.min !== undefined || draft.yearEstablished.max !== undefined)
+                    ? [
+                        draft.yearEstablished.min ?? draft.yearEstablished.max ?? 0,
+                        draft.yearEstablished.max ?? draft.yearEstablished.min ?? 0,
+                      ]
+                    : undefined
+                }
+                defaultValue={
+                  value.yearEstablished &&
+                  (value.yearEstablished.min !== undefined || value.yearEstablished.max !== undefined)
+                    ? [
+                        value.yearEstablished.min ?? value.yearEstablished.max ?? 0,
+                        value.yearEstablished.max ?? value.yearEstablished.min ?? 0,
+                      ]
+                    : undefined
+                }
+                onChange={(yr) => {
+                  setDraft((prev) => {
+                    if (!yr || (yr[0] === null && yr[1] === null)) {
+                      const { yearEstablished: _unused, ...rest } = prev;
+                      void _unused;
+                      return rest as CompanyFilters;
+                    }
+                    const [min, max] = yr;
+                    return {
+                      ...prev,
+                      yearEstablished: {
+                        min: min === null ? undefined : min,
+                        max: max === null ? undefined : max,
+                      },
+                    };
+                  });
+                }}
+              />
             </fieldset>
           </div>
         </div>
