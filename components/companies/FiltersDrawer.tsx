@@ -1,7 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
@@ -17,10 +25,9 @@ export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
 interface FiltersDrawerProps {
   value: CompanyFilters;
   onApply: (next: CompanyFilters) => void;
-  trigger?: React.ReactNode;
 }
 
-export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
+export function FiltersDrawer({ value, onApply }: FiltersDrawerProps) {
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<CompanyFilters>(value);
 
@@ -59,43 +66,104 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      {trigger ?? (
-        <SheetTrigger asChild>
-          <Button variant="outline" aria-haspopup="dialog" aria-label="Open filters panel">
-            Filters{hasAnyFilters ? ' *' : ''}
-          </Button>
-        </SheetTrigger>
-      )}
-      <SheetContent side="left" aria-label="Filters panel">
-        <SheetHeader>
-          <h2 className="text-lg font-semibold">Refine Your Search</h2>
+      <SheetTrigger asChild>
+        <Button variant="outline" aria-haspopup="dialog" aria-label="Open filters panel">
+          Filters{hasAnyFilters ? ' *' : ''}
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="p-0">
+        <SheetHeader className="flex-none border-b p-6 text-left">
+          <SheetTitle>Filters</SheetTitle>
+          <SheetDescription>Refine your search criteria</SheetDescription>
         </SheetHeader>
 
-        <div className="flex h-full flex-col overflow-y-auto pr-1">
-          {/* Tech Verticals */}
-          <fieldset className="mb-6" aria-labelledby="tech-verticals-label">
-            <legend id="tech-verticals-label" className="mb-2 text-sm font-medium">
-              Tech Verticals
-            </legend>
-            <div className="space-y-2">
+        <div className="flex-1 overflow-y-auto">
+          <div className="space-y-8 p-6">
+            {/* Tech Verticals */}
+            <fieldset className="mb-6" aria-labelledby="tech-verticals-label">
+              <legend id="tech-verticals-label" className="mb-2 text-sm font-medium">
+                Tech Verticals
+              </legend>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <MultiSelectCombobox
+                    options={allVerticals ?? []}
+                    getOptionLabel={(o) => o.name}
+                    getOptionValue={(o) => o._id}
+                    value={selectedVerticalIds}
+                    onChange={(ids) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        techVerticals: ids.length
+                          ? { ids: ids as Id<'techVerticals'>[], operator: prev.techVerticals?.operator ?? 'OR' }
+                          : undefined,
+                      }))
+                    }
+                    placeholder="Select verticals"
+                    disabled={verticalsLoading}
+                  />
+                  {selectedVerticalIds.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() =>
+                        setDraft((prev) => {
+                          const { techVerticals: _unused, ...rest } = prev;
+                          void _unused;
+                          return rest;
+                        })
+                      }
+                      aria-label="Clear selected verticals"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                {/* Operator visible only when at least one vertical selected */}
+                {selectedVerticalIds.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Match</span>
+                    <ToggleGroup
+                      type="single"
+                      value={verticalOperator}
+                      onValueChange={(val) => (val === 'AND' || val === 'OR') && setVerticalOperator(val)}
+                      size="sm"
+                      aria-label="Choose whether selected tech verticals should all match or any match"
+                    >
+                      <ToggleGroupItem value="OR" className="px-3 text-xs">
+                        Any
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="AND" className="px-3 text-xs">
+                        All
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                )}
+              </div>
+            </fieldset>
+
+            {/* Sector (multi-select combobox) */}
+            <fieldset className="mb-6" aria-labelledby="sector-label">
+              <legend id="sector-label" className="mb-2 text-sm font-medium">
+                Sector
+              </legend>
               <div className="flex items-center gap-2">
                 <MultiSelectCombobox
-                  options={allVerticals ?? []}
-                  getOptionLabel={(o) => o.name}
-                  getOptionValue={(o) => o._id}
-                  value={selectedVerticalIds}
-                  onChange={(ids) =>
+                  options={SECTOR_VALUES}
+                  getOptionLabel={(o) => o}
+                  getOptionValue={(o) => o}
+                  value={draft.sectors ?? []}
+                  onChange={(vals) =>
                     setDraft((prev) => ({
                       ...prev,
-                      techVerticals: ids.length
-                        ? { ids: ids as Id<'techVerticals'>[], operator: prev.techVerticals?.operator ?? 'OR' }
-                        : undefined,
+                      sectors: vals.length ? vals : undefined,
                     }))
                   }
-                  placeholder="Select verticals"
-                  disabled={verticalsLoading}
+                  placeholder="Select sectors"
                 />
-                {selectedVerticalIds.length > 0 && (
+                {(draft.sectors?.length ?? 0) > 0 && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -103,182 +171,121 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
                     className="h-7 px-2 text-xs"
                     onClick={() =>
                       setDraft((prev) => {
-                        const { techVerticals: _unused, ...rest } = prev;
+                        const { sectors: _unused, ...rest } = prev;
                         void _unused;
                         return rest;
                       })
                     }
-                    aria-label="Clear selected verticals"
+                    aria-label="Clear selected sectors"
                   >
                     Clear
                   </Button>
                 )}
               </div>
-              {/* Operator visible only when at least one vertical selected */}
-              {selectedVerticalIds.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Match</span>
-                  <ToggleGroup
-                    type="single"
-                    value={verticalOperator}
-                    onValueChange={(val) => (val === 'AND' || val === 'OR') && setVerticalOperator(val)}
+            </fieldset>
+
+            {/* Stage (multi-select combobox) */}
+            <fieldset className="mb-6" aria-labelledby="stage-label">
+              <legend id="stage-label" className="mb-2 text-sm font-medium">
+                Stage
+              </legend>
+              <div className="flex items-center gap-2">
+                <MultiSelectCombobox
+                  options={COMPANY_STAGE_VALUES}
+                  getOptionLabel={(o) => o}
+                  getOptionValue={(o) => o}
+                  value={draft.stages ?? []}
+                  onChange={(vals) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      stages: vals.length ? (vals as CompanyStageOption[]) : undefined,
+                    }))
+                  }
+                  placeholder="Any stage"
+                />
+                {(draft.stages?.length ?? 0) > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
                     size="sm"
-                    aria-label="Choose whether selected tech verticals should all match or any match"
+                    className="h-7 px-2 text-xs"
+                    onClick={() =>
+                      setDraft((prev) => {
+                        const { stages: _unused, ...rest } = prev;
+                        void _unused;
+                        return rest;
+                      })
+                    }
+                    aria-label="Clear selected stages"
                   >
-                    <ToggleGroupItem value="OR" className="px-3 text-xs">
-                      Any
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="AND" className="px-3 text-xs">
-                      All
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-              )}
-            </div>
-          </fieldset>
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </fieldset>
 
-          {/* Sector (multi-select combobox) */}
-          <fieldset className="mb-6" aria-labelledby="sector-label">
-            <legend id="sector-label" className="mb-2 text-sm font-medium">
-              Sector
-            </legend>
-            <div className="flex items-center gap-2">
-              <MultiSelectCombobox
-                options={SECTOR_VALUES}
-                getOptionLabel={(o) => o}
-                getOptionValue={(o) => o}
-                value={draft.sectors ?? []}
-                onChange={(vals) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    sectors: vals.length ? vals : undefined,
-                  }))
-                }
-                placeholder="Select sectors"
-              />
-              {(draft.sectors?.length ?? 0) > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() =>
-                    setDraft((prev) => {
-                      const { sectors: _unused, ...rest } = prev;
-                      void _unused;
-                      return rest;
-                    })
-                  }
-                  aria-label="Clear selected sectors"
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-          </fieldset>
-
-          {/* Stage (multi-select combobox) */}
-          <fieldset className="mb-6" aria-labelledby="stage-label">
-            <legend id="stage-label" className="mb-2 text-sm font-medium">
-              Stage
-            </legend>
-            <div className="flex items-center gap-2">
-              <MultiSelectCombobox
-                options={COMPANY_STAGE_VALUES}
-                getOptionLabel={(o) => o}
-                getOptionValue={(o) => o}
-                value={draft.stages ?? []}
-                onChange={(vals) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    stages: vals.length ? (vals as CompanyStageOption[]) : undefined,
-                  }))
-                }
-                placeholder="Any stage"
-              />
-              {(draft.stages?.length ?? 0) > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() =>
-                    setDraft((prev) => {
-                      const { stages: _unused, ...rest } = prev;
-                      void _unused;
-                      return rest;
-                    })
-                  }
-                  aria-label="Clear selected stages"
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-          </fieldset>
-
-          {/* Year Established */}
-          <fieldset className="mb-8" aria-labelledby="year-established-label">
-            <legend id="year-established-label" className="mb-2 text-sm font-medium">
-              Year Established
-            </legend>
-            <div className="flex items-center gap-2">
-              <label className="text-xs" htmlFor="year-min">
-                Min
-              </label>
-              <input
-                id="year-min"
-                inputMode="numeric"
-                type="number"
-                className="w-24 rounded-md border bg-background px-2 py-1 text-sm"
-                value={draft.yearEstablished?.min ?? ''}
-                onChange={(e) => updateYear('min', e.target.value)}
-              />
-              <label className="text-xs" htmlFor="year-max">
-                Max
-              </label>
-              <input
-                id="year-max"
-                inputMode="numeric"
-                type="number"
-                className="w-24 rounded-md border bg-background px-2 py-1 text-sm"
-                value={draft.yearEstablished?.max ?? ''}
-                onChange={(e) => updateYear('max', e.target.value)}
-              />
-            </div>
-          </fieldset>
-
-          <div className="mt-auto flex gap-2 pb-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDraft({})}
-              disabled={!hasAnyFilters}
-              aria-label="Clear all filters"
-            >
-              Clear All
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                onApply(draft);
-                setOpen(false);
-              }}
-            >
-              Apply
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setDraft(value);
-                setOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
+            {/* Year Established */}
+            <fieldset className="mb-8" aria-labelledby="year-established-label">
+              <legend id="year-established-label" className="mb-2 text-sm font-medium">
+                Year Established
+              </legend>
+              <div className="flex items-center gap-2">
+                <label className="text-xs" htmlFor="year-min">
+                  Min
+                </label>
+                <input
+                  id="year-min"
+                  inputMode="numeric"
+                  type="number"
+                  className="w-24 rounded-md border bg-background px-2 py-1 text-sm"
+                  value={draft.yearEstablished?.min ?? ''}
+                  onChange={(e) => updateYear('min', e.target.value)}
+                />
+                <label className="text-xs" htmlFor="year-max">
+                  Max
+                </label>
+                <input
+                  id="year-max"
+                  inputMode="numeric"
+                  type="number"
+                  className="w-24 rounded-md border bg-background px-2 py-1 text-sm"
+                  value={draft.yearEstablished?.max ?? ''}
+                  onChange={(e) => updateYear('max', e.target.value)}
+                />
+              </div>
+            </fieldset>
           </div>
         </div>
+        <SheetFooter className="flex-none border-t p-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setDraft({})}
+            disabled={!hasAnyFilters}
+            aria-label="Clear all filters"
+          >
+            Clear All
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              onApply(draft);
+              setOpen(false);
+            }}
+          >
+            Apply
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setDraft(value);
+              setOpen(false);
+            }}
+          >
+            Cancel
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
