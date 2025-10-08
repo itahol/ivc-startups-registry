@@ -79,8 +79,7 @@ export default function CompaniesPage() {
         <main className="flex-1 py-10">
           <div
             className={`
-            container px-4
-            md:px-6
+            w-full px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 mx-auto
           `}
           >
             {/* Heading & filters */}
@@ -117,10 +116,10 @@ export default function CompaniesPage() {
             {/* Product grid */}
             <div
               className={`
-              grid grid-cols-1 gap-6
+              grid grid-cols-1 gap-8
               sm:grid-cols-2
-              md:grid-cols-3
               lg:grid-cols-3
+              2xl:grid-cols-4
             `}
             >
               {companiesLoading
