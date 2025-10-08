@@ -58,7 +58,7 @@ export function FiltersDrawer({ value, onApply }: FiltersDrawerProps) {
           Filters{hasAnyFilters ? ' *' : ''}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="p-0">
+      <SheetContent side="left" className="p-0">
         <SheetHeader className="flex-none border-b p-6 text-left">
           <SheetTitle>Filters</SheetTitle>
           <SheetDescription>Refine your search criteria</SheetDescription>
