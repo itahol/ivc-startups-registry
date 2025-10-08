@@ -1,3 +1,4 @@
+import { literals } from 'convex-helpers/validators';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
@@ -27,7 +28,7 @@ export const COMPANY_STAGE = {
   REVENUE_GROWTH: 'Revenue Growth',
 } as const;
 
-export const companyStage = v.union(...Object.values(COMPANY_STAGE).map((stage) => v.literal(stage)));
+export const companyStage = literals(...Object.values(COMPANY_STAGE));
 
 export const SECTORS = {
   AGRITECH: 'Agritech',
@@ -43,7 +44,7 @@ export const SECTORS = {
   SEMICONDUCTOR: 'Semiconductor',
 } as const;
 
-export const sector = v.union(...Object.values(SECTORS).map((sector) => v.literal(sector)));
+export const sector = literals(...Object.values(SECTORS));
 
 // Lookup Tables
 export const techVerticals = defineTable({

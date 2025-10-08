@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as companies from "../companies.js";
+import type * as companyStages from "../companyStages.js";
 import type * as entity from "../entity.js";
 import type * as init from "../init.js";
 import type * as model_company from "../model/company.js";
@@ -31,6 +32,7 @@ import type * as techVerticals from "../techVerticals.js";
  */
 declare const fullApi: ApiFromModules<{
   companies: typeof companies;
+  companyStages: typeof companyStages;
   entity: typeof entity;
   init: typeof init;
   "model/company": typeof model_company;

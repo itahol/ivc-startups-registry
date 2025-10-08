@@ -12,6 +12,31 @@ export const { create, read, update, destroy, paginate } = crud(schema, 'compani
 export const list = query({
   args: {
     techVerticals: v.optional(techVerticalsFilter),
+    // Sector union validator: replicate from schema.sector (cannot easily introspect optional wrapper)
+    sectors: v.optional(
+      v.array(
+        v.union(
+          v.literal('Agritech'),
+          v.literal('Biomed'),
+          v.literal('Digital Health'),
+          v.literal('Medical Devices'),
+          v.literal('Cleantech'),
+          v.literal('Energy'),
+          v.literal('Consumer-Oriented Software'),
+          v.literal('Enterprise Software & Infrastructure'),
+          v.literal('Network Infrastructure'),
+          v.literal('Hardware & Industrial'),
+          v.literal('Semiconductor'),
+        ),
+      ),
+    ),
+    stages: v.optional(v.array(v.id('companyStages'))),
+    yearEstablished: v.optional(
+      v.object({
+        min: v.optional(v.number()),
+        max: v.optional(v.number()),
+      }),
+    ),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -34,7 +59,7 @@ export const list = query({
       return true;
     });
 
-    const companies = await asyncMap(deduped, async (company) => {
+    let companies = await asyncMap(deduped, async (company) => {
       const techVerticals = (
         await getManyVia(ctx.db, 'companyTechVerticals', 'techVerticalId', 'companyEntityId', company._id)
       ).filter((tv) => tv !== null);
@@ -46,7 +71,24 @@ export const list = query({
 
       return { ...company, techVerticals, stage, sector };
     });
-    return companies;
+    // In-memory filtering for sectors, stages, yearEstablished (optimize later with indexes)
+    if (args.sectors && args.sectors.length) {
+      companies = companies.filter((c) => c.sector && args.sectors!.includes(c.sector));
+    }
+    if (args.stages && args.stages.length) {
+      companies = companies.filter((c) => c.stageId && args.stages!.includes(c.stageId));
+    }
+    if (args.yearEstablished) {
+      const { min, max } = args.yearEstablished;
+      companies = companies.filter((c) => {
+        if (c.yearEstablished === undefined) return false;
+        if (min !== undefined && c.yearEstablished < min) return false;
+        if (max !== undefined && c.yearEstablished > max) return false;
+        return true;
+      });
+    }
+
+    return companies.slice(0, limit);
   },
 });
 
