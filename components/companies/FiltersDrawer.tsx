@@ -9,18 +9,12 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '../../convex/schema';
+import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 
 export type SectorOption = (typeof SECTOR_VALUES)[number];
 export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
 
-export interface CompanyFilters {
-  techVerticals?: { ids: Id<'techVerticals'>[]; operator: 'AND' | 'OR' };
-  sectors?: SectorOption[];
-  stages?: CompanyStageOption[];
-  yearEstablished?: { min?: number; max?: number };
-}
-
-export interface FiltersDrawerProps {
+interface FiltersDrawerProps {
   value: CompanyFilters;
   onApply: (next: CompanyFilters) => void;
   trigger?: React.ReactNode;

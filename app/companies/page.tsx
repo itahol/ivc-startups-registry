@@ -8,14 +8,57 @@ import { CompanyCard } from '@/components/CompanyCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import Navbar from '../../components/Navbar';
-import { FiltersDrawer, type CompanyFilters } from '@/components/companies/FiltersDrawer';
+import { FiltersDrawer } from '@/components/companies/FiltersDrawer';
+import type { CompanyFilters } from '@/lib/companies/filtersUrl';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { encodeCompanyFilters, readCompanyFilters, hasActiveCompanyFilters } from '@/lib/companies/filtersUrl';
 
 /* -------------------------------------------------------------------------- */
-/*                            Helpers / utilities                             */
+/*                               Page Component                              */
 /* -------------------------------------------------------------------------- */
 
 export default function CompaniesPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [filters, setFilters] = React.useState<CompanyFilters>({});
+  const filtersRef = React.useRef(filters);
+  filtersRef.current = filters;
+
+  // Keep filters in sync when user navigates with back/forward or manual edits.
+  const parsedFromUrl = React.useMemo(() => readCompanyFilters(searchParams), [searchParams]);
+  React.useEffect(() => {
+    // Compare canonical serialized forms to avoid object diff noise.
+    const currentSerialized = encodeCompanyFilters(filtersRef.current).toString();
+    const parsedSerialized = encodeCompanyFilters(parsedFromUrl).toString();
+    if (currentSerialized !== parsedSerialized) {
+      setFilters(parsedFromUrl);
+    }
+  }, [parsedFromUrl]);
+
+  const updateUrl = React.useCallback(
+    (next: CompanyFilters) => {
+      const query = encodeCompanyFilters(next).toString();
+      const currentQuery = searchParams.toString();
+      if (query === currentQuery) return; // No change
+      const url = query ? `${pathname}?${query}` : pathname;
+      router.push(url, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const handleApply = React.useCallback(
+    (next: CompanyFilters) => {
+      setFilters(next);
+      updateUrl(next);
+    },
+    [updateUrl],
+  );
+
+  const clearAll = React.useCallback(() => {
+    handleApply({});
+  }, [handleApply]);
 
   const companies = useQuery(api.companies.list, {
     techVerticals: filters.techVerticals,
@@ -26,11 +69,7 @@ export default function CompaniesPage() {
   });
   const companiesLoading = companies === undefined;
 
-  const clearAll = React.useCallback(() => {
-    setFilters({});
-  }, []);
-
-  const hasActiveFilters = !!(filters.techVerticals || filters.sectors || filters.stages || filters.yearEstablished);
+  const hasActiveFilters = hasActiveCompanyFilters(filters);
 
   /* ----------------------------- Render --------------------------------- */
   return (
@@ -52,17 +91,15 @@ export default function CompaniesPage() {
             `}
             >
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-                <p className="mt-1 text-lg text-muted-foreground">
-                  Browse our latest products and find something you&apos;ll love.
-                </p>
+                <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
+                <p className="mt-1 text-lg text-muted-foreground">Discover and explore the companies in our dataset.</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 min-h-8">
                 {/* Filters drawer trigger */}
-                <FiltersDrawer value={filters} onApply={setFilters} />
+                <FiltersDrawer value={filters} onApply={handleApply} />
 
-                {/* Quick vertical pills removed */}
+                {/* Clear button */}
                 {hasActiveFilters ? (
                   <Button
                     variant="ghost"
@@ -110,7 +147,7 @@ export default function CompaniesPage() {
             {/* Empty state */}
             {!companiesLoading && (companies?.length ?? 0) === 0 && (
               <div className="mt-8 text-center">
-                <p className="text-muted-foreground">No products found for these filters.</p>
+                <p className="text-muted-foreground">No companies found for these filters.</p>
                 {hasActiveFilters ? (
                   <div className="mt-4">
                     <Button
