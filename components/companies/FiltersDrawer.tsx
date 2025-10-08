@@ -157,7 +157,7 @@ export function FiltersDrawer({ value, onApply, trigger }: FiltersDrawerProps) {
                 onChange={(vals) =>
                   setDraft((prev) => ({
                     ...prev,
-                    sectors: vals.length ? (vals as SectorOption[]) : undefined,
+                    sectors: vals.length ? vals : undefined,
                   }))
                 }
                 placeholder="Select sectors"

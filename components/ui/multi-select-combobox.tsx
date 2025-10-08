@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import React from 'react';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 
-export interface MultiSelectComboboxProps<T> {
+export interface MultiSelectComboboxProps<T, V extends string> {
   options: T[];
   getOptionLabel: (option: T) => string;
-  getOptionValue: (option: T) => string; // must be stable and unique per option
-  value?: string[]; // selected option values
-  defaultValue?: string[];
-  onChange?: (values: string[]) => void;
+  getOptionValue: (option: T) => V; // must be stable and unique per option
+  value?: V[]; // selected option values
+  defaultValue?: V[];
+  onChange?: (values: V[]) => void;
   placeholder?: string;
   className?: string;
   buttonClassName?: string;
@@ -19,7 +19,7 @@ export interface MultiSelectComboboxProps<T> {
   showChips?: boolean; // show removable chips under the button
 }
 
-function MultiSelectCombobox<T>({
+function MultiSelectCombobox<T, V extends string = string>({
   options,
   getOptionLabel,
   getOptionValue,
@@ -31,7 +31,7 @@ function MultiSelectCombobox<T>({
   buttonClassName,
   disabled,
   showChips = true,
-}: MultiSelectComboboxProps<T>) {
+}: MultiSelectComboboxProps<T, V>) {
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = useControllableArray({ value, defaultValue, onChange });
   const buttonRef = React.useRef<HTMLButtonElement>(null);
@@ -44,14 +44,14 @@ function MultiSelectCombobox<T>({
   }, [buttonRef.current?.offsetWidth]);
 
   const toggle = React.useCallback(
-    (v: string) => {
+    (v: V) => {
       setSelected((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
     },
     [setSelected],
   );
 
   const valueToLabel = React.useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<V, string>();
     for (const o of options) {
       map.set(getOptionValue(o), getOptionLabel(o));
     }
@@ -130,18 +130,18 @@ function MultiSelectCombobox<T>({
   );
 }
 
-function useControllableArray<T>({
+function useControllableArray<T, V extends string>({
   value,
   defaultValue = [],
   onChange,
-}: Pick<MultiSelectComboboxProps<T>, 'value' | 'defaultValue' | 'onChange'>) {
-  const [internal, setInternal] = React.useState<string[]>(defaultValue);
+}: Pick<MultiSelectComboboxProps<T, V>, 'value' | 'defaultValue' | 'onChange'>) {
+  const [internal, setInternal] = React.useState<V[]>(defaultValue);
   const isControlled = value !== undefined;
-  const current = isControlled ? (value as string[]) : internal;
+  const current = isControlled ? value : internal;
 
   const set = React.useCallback(
-    (next: string[] | ((prev: string[]) => string[])) => {
-      const resolved = typeof next === 'function' ? (next as (prev: string[]) => string[])(current) : next;
+    (next: V[] | ((prev: V[]) => V[])) => {
+      const resolved = typeof next === 'function' ? next(current) : next;
       if (!isControlled) setInternal(resolved);
       onChange?.(resolved);
     },
