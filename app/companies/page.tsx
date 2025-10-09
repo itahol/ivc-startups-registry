@@ -18,7 +18,6 @@ export default async function CompaniesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
-  // In React 19 / Next.js 15, searchParams can be a Promise for streaming.
   const resolved: Record<string, string | string[] | undefined> = await Promise.resolve(
     searchParams as
       | Record<string, string | string[] | undefined>
@@ -31,8 +30,15 @@ export default async function CompaniesPage({
   }
   const initialFilters = readCompanyFilters(usp);
   const techVerticals = await getTechVerticals();
-  const companies = await QUERIES.getCompanies({ limit: 20 });
+  const companies = await QUERIES.getCompanies({ limit: 20, techVerticalsFilter: initialFilters.techVerticals });
 
+  // const companies = useQuery(api.companies.list, {
+  //   techVerticals: currentFilters.techVerticals,
+  //   sectors: currentFilters.sectors,
+  //   stages: currentFilters.stages,
+  //   yearEstablished: currentFilters.yearEstablished,
+  //   limit: 20,
+  // });
   return (
     <>
       <Navbar />

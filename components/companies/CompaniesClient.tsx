@@ -17,22 +17,14 @@ interface CompaniesClientProps {
   companies: Company[];
 }
 
-export function CompaniesClient({ initialFilters, companies, techVerticals }: CompaniesClientProps) {
+export function CompaniesClient({ companies, techVerticals }: CompaniesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   // Derive filters from URL each render (URL = source of truth)
   const currentFilters = React.useMemo(() => readCompanyFilters(searchParams), [searchParams]);
-  void initialFilters; // placeholder for potential preloading comparison
 
-  // const companies = useQuery(api.companies.list, {
-  //   techVerticals: currentFilters.techVerticals,
-  //   sectors: currentFilters.sectors,
-  //   stages: currentFilters.stages,
-  //   yearEstablished: currentFilters.yearEstablished,
-  //   limit: 20,
-  // });
   const companiesLoading = companies === undefined;
 
   const hasActiveFilters = hasActiveCompanyFilters(currentFilters);
