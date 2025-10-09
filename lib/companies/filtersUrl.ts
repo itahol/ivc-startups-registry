@@ -1,6 +1,5 @@
 import { COMPANY_STAGE_VALUES, companyStageValidator, SECTOR_VALUES, sectorValidator } from '@/convex/schema';
 import { validate } from 'convex-helpers/validators';
-import { v } from 'convex/values';
 
 export interface CompanyFilters {
   techVerticals?: { ids: string[]; operator: 'AND' | 'OR' };

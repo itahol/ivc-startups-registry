@@ -30,7 +30,13 @@ export default async function CompaniesPage({
   }
   const initialFilters = readCompanyFilters(usp);
   const techVerticals = await getTechVerticals();
-  const companies = await QUERIES.getCompanies({ limit: 20, techVerticalsFilter: initialFilters.techVerticals });
+  const companies = await QUERIES.getCompanies({
+    limit: 20,
+    techVerticalsFilter: initialFilters.techVerticals,
+    sectors: initialFilters.sectors,
+    stages: initialFilters.stages,
+    yearEstablished: initialFilters.yearEstablished,
+  });
 
   // const companies = useQuery(api.companies.list, {
   //   techVerticals: currentFilters.techVerticals,

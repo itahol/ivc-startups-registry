@@ -52,8 +52,16 @@ export const QUERIES = {
       .execute();
   },
 
-  getCompanies: function (params: { limit?: number; techVerticalsFilter?: ManyFilter<string> } = {}) {
-    const { limit = 100, techVerticalsFilter } = params;
+  getCompanies: function (
+    params: {
+      limit?: number;
+      techVerticalsFilter?: ManyFilter<string>;
+      sectors?: string[];
+      stages?: string[];
+      yearEstablished?: { min?: number; max?: number };
+    } = {},
+  ) {
+    const { limit = 100, techVerticalsFilter, sectors, stages, yearEstablished } = params;
     return db
       .selectFrom('Profiles')
       .selectAll('Profiles')
@@ -62,6 +70,24 @@ export const QUERIES = {
 
         if (techVerticalsFilter) {
           filters.push(hasTechVerticals({ companyId: eb.ref('Profiles.Company_ID'), techVerticalsFilter }));
+        }
+
+        if (sectors && sectors.length > 0) {
+          filters.push(eb('Profiles.Sector', 'in', sectors));
+        }
+
+        if (stages && stages.length > 0) {
+          filters.push(eb('Profiles.Stage', 'in', stages));
+        }
+
+        if (yearEstablished && (yearEstablished.min !== undefined || yearEstablished.max !== undefined)) {
+          if (yearEstablished.min !== undefined && yearEstablished.max !== undefined) {
+            filters.push(eb.between('Profiles.Established_Year', yearEstablished.min, yearEstablished.max));
+          } else if (yearEstablished.min !== undefined) {
+            filters.push(eb('Profiles.Established_Year', '>=', yearEstablished.min));
+          } else if (yearEstablished.max !== undefined) {
+            filters.push(eb('Profiles.Established_Year', '<=', yearEstablished.max));
+          }
         }
 
         const realFilters = filters.filter((f) => f !== undefined);
