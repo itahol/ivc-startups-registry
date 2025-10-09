@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { Doc } from '@/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
+import { Company } from '../lib/model/profiiles';
 
 /* -------------------------------------------------------------------------- */
 /*                                 Types                                      */
@@ -14,15 +15,22 @@ export interface CompanyWithRelations extends Doc<'companies'> {
 }
 
 interface CompanyCardProps {
-  company: CompanyWithRelations;
+  company: Company;
 }
 
 export function CompanyCard({ company }: CompanyCardProps) {
-  const { name, description, techVerticals } = company;
-  const websiteUrl = company.websiteUrl ? new URL(company.websiteUrl) : undefined;
+  const {
+    Company_ID: id,
+    Company_Name: name,
+    Company_Description: description,
+    Stage: stageName,
+    Sector: sectorName,
+  } = company;
+  const websiteUrl = company.Website ? new URL(`https://${company.Website}`) : undefined;
+  const techVerticals = company.Tech_Verticals ? company.Tech_Verticals.split(',') : [];
   const tags = techVerticals.map((tv) => (
-    <Badge variant="outline" key={tv._id} className="whitespace-nowrap">
-      {tv.name}
+    <Badge variant="outline" key={tv} className="whitespace-nowrap">
+      {tv}
     </Badge>
   ));
 
@@ -47,20 +55,17 @@ export function CompanyCard({ company }: CompanyCardProps) {
 
   const showToggle = (tagsOverflow || descOverflow) && (description || techVerticals.length > 0);
 
-  const stageName = company.stage;
-  const sectorName = company.sector;
-
   const toggle = () => setExpanded((e) => !e);
 
   return (
     <Card
-      key={company._id}
+      key={id}
       tabIndex={-1}
       className={cn(
         'relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         'gap-4 py-4',
       )}
-      aria-describedby={`company-${company._id}-desc`}
+      aria-describedby={`company-${id}-desc`}
     >
       <CardHeader className="pb-0 gap-1">
         <CardTitle className="text-base font-semibold leading-snug tracking-tight">{name}</CardTitle>
@@ -82,7 +87,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
           <dt className="font-medium">Stage</dt>
           <dd className="text-muted-foreground">{stageName ?? '—'}</dd>
           <dt className="font-medium">Year</dt>
-          <dd className="text-muted-foreground">{company.yearEstablished ?? '—'}</dd>
+          <dd className="text-muted-foreground">{company.Established_Year ?? '—'}</dd>
           <dt className="font-medium">Sector</dt>
           <dd className="text-muted-foreground">{sectorName ?? '—'}</dd>
           {techVerticals.length > 0 && (
@@ -111,11 +116,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
 
         {description ? (
           <div className="mt-3 text-sm leading-snug">
-            <p
-              id={`company-${company._id}-desc`}
-              ref={descRef}
-              className={cn('transition-colors', !expanded && 'line-clamp-3')}
-            >
+            <p id={`company-${id}-desc`} ref={descRef} className={cn('transition-colors', !expanded && 'line-clamp-3')}>
               {description}
             </p>
             {!expanded && descOverflow && (

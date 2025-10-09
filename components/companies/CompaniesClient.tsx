@@ -2,8 +2,6 @@
 
 import * as React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { readCompanyFilters, encodeCompanyFilters, hasActiveCompanyFilters } from '@/lib/companies/filtersUrl';
 import { FiltersDrawer } from '@/components/companies/FiltersDrawer';
@@ -11,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CompanyCard } from '@/components/CompanyCard';
+import { Company } from '../../lib/model/profiiles';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters; // currently not strictly needed except for future preloading
+  companies: Company[];
 }
 
-export function CompaniesClient({ initialFilters }: CompaniesClientProps) {
+export function CompaniesClient({ initialFilters, companies }: CompaniesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -25,13 +25,13 @@ export function CompaniesClient({ initialFilters }: CompaniesClientProps) {
   const currentFilters = React.useMemo(() => readCompanyFilters(searchParams), [searchParams]);
   void initialFilters; // placeholder for potential preloading comparison
 
-  const companies = useQuery(api.companies.list, {
-    techVerticals: currentFilters.techVerticals,
-    sectors: currentFilters.sectors,
-    stages: currentFilters.stages,
-    yearEstablished: currentFilters.yearEstablished,
-    limit: 20,
-  });
+  // const companies = useQuery(api.companies.list, {
+  //   techVerticals: currentFilters.techVerticals,
+  //   sectors: currentFilters.sectors,
+  //   stages: currentFilters.stages,
+  //   yearEstablished: currentFilters.yearEstablished,
+  //   limit: 20,
+  // });
   const companiesLoading = companies === undefined;
 
   const hasActiveFilters = hasActiveCompanyFilters(currentFilters);
@@ -102,7 +102,7 @@ export function CompaniesClient({ initialFilters }: CompaniesClientProps) {
                 </div>
               </Card>
             ))
-          : companies?.map((company) => <CompanyCard key={company._id} company={company} />)}
+          : companies?.map((company) => <CompanyCard key={company.Company_ID} company={company} />)}
       </div>
 
       {/* Empty state */}
