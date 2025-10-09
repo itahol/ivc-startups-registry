@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import type { Doc } from '@/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
 import { Company } from '../lib/model/profiiles';
+import { Separator } from './ui/separator';
 
 /* -------------------------------------------------------------------------- */
 /*                                 Types                                      */
@@ -89,6 +90,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
         ) : null}
       </CardHeader>
       <CardContent className="pt-3 px-6 pb-2">
+        <Separator className="my-4" />
         <dl className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1 text-sm">
           <dt className="font-medium">Stage</dt>
           <dd className="text-muted-foreground">{stageName ?? '—'}</dd>
@@ -119,7 +121,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
             </>
           )}
         </dl>
-
+        <Separator className="my-4" />
         {description ? (
           <div className="mt-3 text-sm leading-snug">
             <p id={`company-${id}-desc`} ref={descRef} className={cn('transition-colors', !expanded && 'line-clamp-3')}>
