@@ -26,7 +26,13 @@ export function CompanyCard({ company }: CompanyCardProps) {
     Stage: stageName,
     Sector: sectorName,
   } = company;
-  const websiteUrl = company.Website ? new URL(`https://${company.Website}`) : undefined;
+  const websiteUrl = company.Website
+    ? new URL(
+        company.Website.startsWith('http://') || company.Website.startsWith('https://')
+          ? company.Website
+          : `https://${company.Website}`,
+      )
+    : undefined;
   const techVerticals = company.Tech_Verticals ? company.Tech_Verticals.split(',') : [];
   const tags = techVerticals.map((tv) => (
     <Badge variant="outline" key={tv} className="whitespace-nowrap">
