@@ -1,9 +1,13 @@
-import { Suspense } from 'react';
+import { cache, Suspense } from 'react';
 import Navbar from '../../components/Navbar';
 import { readCompanyFilters } from '@/lib/companies/filtersUrl';
 import { CompaniesSkeleton } from '@/components/companies/CompaniesSkeleton';
 import { CompaniesClient } from '@/components/companies/CompaniesClient';
 import { QUERIES } from '../../lib/server/db/queries';
+
+const getTechVerticals = cache(async () => {
+  return (await QUERIES.getTechVerticals()) as { id: string; name: string }[];
+});
 
 /* -------------------------------------------------------------------------- */
 /*                     Server Component Wrapper (RSC Page)                    */
@@ -26,6 +30,7 @@ export default async function CompaniesPage({
     else if (Array.isArray(value) && value.length) usp.set(key, value[0]!);
   }
   const initialFilters = readCompanyFilters(usp);
+  const techVerticals = await getTechVerticals();
   const companies = await QUERIES.getCompanies({ limit: 20 });
 
   return (
@@ -53,7 +58,7 @@ export default async function CompaniesPage({
 
             <Suspense fallback={<CompaniesSkeleton />}>
               {/* Client side filters + grid */}
-              <CompaniesClient initialFilters={initialFilters} companies={companies} />
+              <CompaniesClient initialFilters={initialFilters} companies={companies} techVerticals={techVerticals} />
             </Suspense>
           </div>
         </main>

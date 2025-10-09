@@ -13,10 +13,11 @@ import { Company } from '../../lib/model/profiiles';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters; // currently not strictly needed except for future preloading
+  techVerticals: { id: string; name: string }[];
   companies: Company[];
 }
 
-export function CompaniesClient({ initialFilters, companies }: CompaniesClientProps) {
+export function CompaniesClient({ initialFilters, companies, techVerticals }: CompaniesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -60,7 +61,7 @@ export function CompaniesClient({ initialFilters, companies }: CompaniesClientPr
         `}
       >
         <div className="flex flex-wrap items-center gap-2 min-h-8">
-          <FiltersDrawer value={currentFilters} onApply={onApply} />
+          <FiltersDrawer value={currentFilters} onApply={onApply} techVerticals={techVerticals} />
           {hasActiveFilters ? (
             <Button
               variant="ghost"

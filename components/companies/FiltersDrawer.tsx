@@ -13,9 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
 import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '../../convex/schema';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import YearRangePicker from '../YearRangePicker';
@@ -24,20 +21,18 @@ export type SectorOption = (typeof SECTOR_VALUES)[number];
 export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
 
 interface FiltersDrawerProps {
+  techVerticals: { id: string; name: string }[];
   value: CompanyFilters;
   onApply: (next: CompanyFilters) => void;
 }
 
-export function FiltersDrawer({ value, onApply }: FiltersDrawerProps) {
+export function FiltersDrawer({ value, onApply, techVerticals }: FiltersDrawerProps) {
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<CompanyFilters>(value);
 
   React.useEffect(() => {
     if (open) setDraft(value);
   }, [open, value]);
-
-  const allVerticals = useQuery(api.techVerticals.list, {});
-  const verticalsLoading = allVerticals === undefined;
 
   function setVerticalOperator(op: 'AND' | 'OR') {
     setDraft((prev) =>
@@ -74,20 +69,19 @@ export function FiltersDrawer({ value, onApply }: FiltersDrawerProps) {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <MultiSelectCombobox
-                    options={allVerticals ?? []}
+                    options={techVerticals}
                     getOptionLabel={(o) => o.name}
-                    getOptionValue={(o) => o._id}
+                    getOptionValue={(o) => o.id}
                     value={selectedVerticalIds}
                     onChange={(ids) =>
                       setDraft((prev) => ({
                         ...prev,
                         techVerticals: ids.length
-                          ? { ids: ids as Id<'techVerticals'>[], operator: prev.techVerticals?.operator ?? 'OR' }
+                          ? { ids: ids, operator: prev.techVerticals?.operator ?? 'OR' }
                           : undefined,
                       }))
                     }
                     placeholder="Select verticals"
-                    disabled={verticalsLoading}
                   />
                   {selectedVerticalIds.length > 0 && (
                     <Button

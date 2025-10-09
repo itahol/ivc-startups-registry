@@ -1,10 +1,9 @@
-import type { Id } from '@/convex/_generated/dataModel';
 import { COMPANY_STAGE_VALUES, companyStageValidator, SECTOR_VALUES, sectorValidator } from '@/convex/schema';
 import { validate } from 'convex-helpers/validators';
 import { v } from 'convex/values';
 
 export interface CompanyFilters {
-  techVerticals?: { ids: Id<'techVerticals'>[]; operator: 'AND' | 'OR' };
+  techVerticals?: { ids: string[]; operator: 'AND' | 'OR' };
   sectors?: (typeof SECTOR_VALUES)[number][];
   stages?: (typeof COMPANY_STAGE_VALUES)[number][];
   yearEstablished?: { min?: number; max?: number };
@@ -24,7 +23,7 @@ export function readCompanyFilters(searchParams: URLSearchParams): CompanyFilter
     const ids = techVerticals
       .split(',')
       .map((s) => s.trim())
-      .filter((s) => validate(v.id('techVerticals'), s));
+      .filter((s) => s.length > 0);
     if (ids.length) {
       const op = searchParams.get('tvOp') === 'AND' ? 'AND' : 'OR';
       const cleanedIds = Array.from(new Set(ids)).sort();
