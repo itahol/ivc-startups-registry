@@ -15,9 +15,13 @@ interface CompaniesClientProps {
   initialFilters: CompanyFilters; // currently not strictly needed except for future preloading
   techVerticals: { id: string; name: string }[];
   companies: Company[];
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  total: number;
 }
 
-export function CompaniesClient({ companies, techVerticals }: CompaniesClientProps) {
+export function CompaniesClient({ companies, techVerticals, page, pageSize, totalPages, total }: CompaniesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -112,17 +116,42 @@ export function CompaniesClient({ companies, techVerticals }: CompaniesClientPro
         </div>
       )}
 
-      {/* Pagination placeholder */}
-      <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-2">
-        <Button disabled variant="outline">
-          Previous
-        </Button>
-        <Button aria-current="page" variant="default">
-          1
-        </Button>
-        <Button disabled variant="outline">
-          Next
-        </Button>
+      {/* Pagination */}
+      <nav aria-label="Pagination" className="mt-12 flex flex-col items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => {
+              const sp = new URLSearchParams(searchParams.toString());
+              if (page <= 2) sp.delete('page');
+              else sp.set('page', String(page - 1));
+              router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+            }}
+          >
+            Previous
+          </Button>
+          <span className="text-sm tabular-nums">
+            Page {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => {
+              const sp = new URLSearchParams(searchParams.toString());
+              sp.set('page', String(page + 1));
+              router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+            }}
+          >
+            Next
+          </Button>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {total.toLocaleString()} results · Showing {(total === 0 ? 0 : (page - 1) * pageSize + 1).toLocaleString()}–
+          {Math.min(page * pageSize, total).toLocaleString()}
+        </div>
       </nav>
     </div>
   );

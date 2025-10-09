@@ -30,13 +30,31 @@ export default async function CompaniesPage({
   }
   const initialFilters = readCompanyFilters(usp);
   const techVerticals = await getTechVerticals();
-  const companies = await QUERIES.getCompanies({
-    limit: 20,
-    techVerticalsFilter: initialFilters.techVerticals,
-    sectors: initialFilters.sectors,
-    stages: initialFilters.stages,
-    yearEstablished: initialFilters.yearEstablished,
-  });
+
+  const pageSizeParam = usp.get('limit');
+  const pageParam = usp.get('page');
+  const pageSize = pageSizeParam ? Math.min(Math.max(parseInt(pageSizeParam, 10) || 20, 1), 100) : 20;
+  const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
+  const offset = (page - 1) * pageSize;
+
+  const [companies, countResult] = await Promise.all([
+    QUERIES.getCompanies({
+      limit: pageSize,
+      offset,
+      techVerticalsFilter: initialFilters.techVerticals,
+      sectors: initialFilters.sectors,
+      stages: initialFilters.stages,
+      yearEstablished: initialFilters.yearEstablished,
+    }),
+    QUERIES.getCompaniesCount({
+      techVerticalsFilter: initialFilters.techVerticals,
+      sectors: initialFilters.sectors,
+      stages: initialFilters.stages,
+      yearEstablished: initialFilters.yearEstablished,
+    }),
+  ]);
+  const total = countResult?.count ?? 0;
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 
   // const companies = useQuery(api.companies.list, {
   //   techVerticals: currentFilters.techVerticals,
@@ -70,7 +88,15 @@ export default async function CompaniesPage({
 
             <Suspense fallback={<CompaniesSkeleton />}>
               {/* Client side filters + grid */}
-              <CompaniesClient initialFilters={initialFilters} companies={companies} techVerticals={techVerticals} />
+              <CompaniesClient
+                initialFilters={initialFilters}
+                companies={companies}
+                techVerticals={techVerticals}
+                page={page}
+                pageSize={pageSize}
+                totalPages={totalPages}
+                total={total}
+              />
             </Suspense>
           </div>
         </main>
