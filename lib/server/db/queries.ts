@@ -52,13 +52,12 @@ export const QUERIES = {
 
   getCompanies: function (params: { limit?: number; techVerticalsFilter?: ManyFilter<string> } = {}) {
     const { limit = 100, techVerticalsFilter } = params;
+    const baseQuery = db.selectFrom('Profiles').selectAll('Profiles').top(limit);
     if (!techVerticalsFilter || techVerticalsFilter.ids.length === 0) {
-      return db.selectFrom('Profiles').selectAll().top(limit).execute();
+      return baseQuery.execute();
     }
     if (techVerticalsFilter.operator === 'OR') {
-      return db
-        .selectFrom('Profiles')
-        .selectAll()
+      return baseQuery
         .where(({ exists, selectFrom }) =>
           exists(
             selectFrom('Tags')
@@ -67,7 +66,6 @@ export const QUERIES = {
               .whereRef('Tags.Company_ID', '=', 'Profiles.Company_ID'),
           ),
         )
-        .top(limit)
         .execute();
     }
 
@@ -80,13 +78,14 @@ export const QUERIES = {
       .having(sql<number>`count(distinct "Tags"."Tags_ID")`, '=', tagIds.length)
       .as('eligible');
 
-    return db
-      .selectFrom('Profiles as p')
+    return baseQuery
       .where(({ exists, selectFrom }) =>
-        exists(selectFrom(eligible).select('eligible.Company_ID').whereRef('eligible.Company_ID', '=', 'p.Company_ID')),
+        exists(
+          selectFrom(eligible)
+            .select('eligible.Company_ID')
+            .whereRef('eligible.Company_ID', '=', 'Profiles.Company_ID'),
+        ),
       )
-      .selectAll('p')
-      .top(limit)
       .execute();
   },
 };
