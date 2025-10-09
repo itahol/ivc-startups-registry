@@ -1,4 +1,6 @@
-import { sql } from 'kysely';
+import { Expression, expressionBuilder, sql, SqlBool } from 'kysely';
+import { DB } from 'kysely-codegen';
+import { Company } from '../../model/profiiles';
 import { db } from './index';
 
 export const COMPANY_STAGE = {
@@ -52,40 +54,56 @@ export const QUERIES = {
 
   getCompanies: function (params: { limit?: number; techVerticalsFilter?: ManyFilter<string> } = {}) {
     const { limit = 100, techVerticalsFilter } = params;
-    const baseQuery = db.selectFrom('Profiles').selectAll('Profiles').top(limit);
-    if (!techVerticalsFilter || techVerticalsFilter.ids.length === 0) {
-      return baseQuery.execute();
-    }
-    if (techVerticalsFilter.operator === 'OR') {
-      return baseQuery
-        .where(({ exists, selectFrom }) =>
-          exists(
-            selectFrom('Tags')
-              .select('Tags.Tags_ID')
-              .where('Tags.Tags_ID', 'in', techVerticalsFilter.ids)
-              .whereRef('Tags.Company_ID', '=', 'Profiles.Company_ID'),
-          ),
-        )
-        .execute();
-    }
+    return db
+      .selectFrom('Profiles')
+      .selectAll('Profiles')
+      .where((eb) => {
+        const filters: (Expression<SqlBool> | undefined)[] = [];
 
-    const tagIds = techVerticalsFilter.ids;
-    const eligible = db
-      .selectFrom('Tags')
-      .select('Tags.Company_ID')
-      .where('Tags.Tags_ID', 'in', tagIds)
-      .groupBy('Tags.Company_ID')
-      .having(sql<number>`count(distinct "Tags"."Tags_ID")`, '=', tagIds.length)
-      .as('eligible');
+        if (techVerticalsFilter) {
+          filters.push(hasTechVerticals({ companyId: eb.ref('Profiles.Company_ID'), techVerticalsFilter }));
+        }
 
-    return baseQuery
-      .where(({ exists, selectFrom }) =>
-        exists(
-          selectFrom(eligible)
-            .select('eligible.Company_ID')
-            .whereRef('eligible.Company_ID', '=', 'Profiles.Company_ID'),
-        ),
-      )
+        const realFilters = filters.filter((f) => f !== undefined);
+        return eb.and(realFilters);
+      })
+      .top(limit)
       .execute();
   },
 };
+
+function hasTechVerticals({
+  companyId,
+  techVerticalsFilter,
+}: {
+  companyId: Expression<Company['Company_ID']>;
+  techVerticalsFilter: ManyFilter<string>;
+}): Expression<SqlBool> | undefined {
+  const { ids: tagIds, operator } = techVerticalsFilter;
+  if (tagIds.length === 0) {
+    return undefined;
+  }
+  const eb = expressionBuilder<DB>();
+
+  if (operator === 'OR') {
+    return eb.exists(
+      eb
+        .selectFrom('Tags')
+        .select('Tags.Tags_ID')
+        .where('Tags.Company_ID', '=', companyId)
+        .where('Tags.Tags_ID', 'in', tagIds),
+    );
+  }
+
+  if (operator === 'AND') {
+    return eb.exists(
+      eb
+        .selectFrom('Tags')
+        .select('Tags.Company_ID')
+        .where('Tags.Tags_ID', 'in', tagIds)
+        .groupBy('Tags.Company_ID')
+        .having('Tags.Company_ID', '=', companyId)
+        .having(sql<number>`count(distinct "Tags"."Tags_ID")`, '=', tagIds.length),
+    );
+  }
+}
