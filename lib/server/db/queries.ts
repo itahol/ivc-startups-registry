@@ -138,6 +138,7 @@ function getCompanyBoard({ companyId }: { companyId: Expression<Company['Company
   DB,
   'Board',
   {
+    Contact_ID: string | null;
     Board_Name: string | null;
     Board_Position: string | null;
     Other_Positions: string | null;
@@ -147,7 +148,7 @@ function getCompanyBoard({ companyId }: { companyId: Expression<Company['Company
   return eb
     .selectFrom('Board')
     .where('Board.Company_ID', '=', companyId)
-    .select(['Board_Name', 'Board_Position', 'Other_Positions']);
+    .select(['Contact_ID', 'Board_Name', 'Board_Position', 'Other_Positions']);
 }
 
 function getCompanyTechVerticals({ companyId }: { companyId: Expression<Company['Company_ID']> }) {

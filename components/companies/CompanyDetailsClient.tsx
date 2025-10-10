@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const TECH_PREVIEW = 8;
-const MGMT_PREVIEW = 5;
+const MANAGEMENT_PREVIEW = 5;
 const BOARD_PREVIEW = 5;
 
 export interface ManagementPerson {
@@ -15,6 +15,7 @@ export interface ManagementPerson {
 }
 
 export interface BoardPerson {
+  Contact_ID: string | null;
   Board_Name: string | null;
   Board_Position: string | null;
   Other_Positions: string | null;
@@ -39,16 +40,16 @@ export interface CompanyDetailsData {
 export default function CompanyDetailsClient({ companyPromise }: { companyPromise: Promise<CompanyDetailsData> }) {
   const company = use(companyPromise);
 
-  const techVerticals = company.techVerticals ?? [];
-  const management = orderManagement(company.management || []);
+  const techVerticals = company.techVerticals;
+  const management = orderManagement(company.management);
   const websiteHref =
     company.Website && (company.Website.startsWith('http') ? company.Website : `https://${company.Website}`);
 
   const [showAllTech, setShowAllTech] = useState(false);
-  const [showAllMgmt, setShowAllMgmt] = useState(false);
+  const [showAllManagement, setShowAllMgmt] = useState(false);
   const [showAllBoard, setShowAllBoard] = useState(false);
   const techToShow = showAllTech ? techVerticals : techVerticals.slice(0, TECH_PREVIEW);
-  const mgmtToShow = showAllMgmt ? management : management.slice(0, MGMT_PREVIEW);
+  const managementToShow = showAllManagement ? management : management.slice(0, MANAGEMENT_PREVIEW);
   const orderedBoard = orderBoard(company.board || []);
   const boardToShow = showAllBoard ? orderedBoard : orderedBoard.slice(0, BOARD_PREVIEW);
 
@@ -168,22 +169,24 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {mgmtToShow.map((m) => (
-                          <TableRow key={m.Contact_ID || m.Contact_Name || Math.random()} className="text-[13px]">
-                            <TableCell className="font-medium">{m.Contact_Name || '—'}</TableCell>
-                            <TableCell className="text-muted-foreground">{m.Position_Title || '—'}</TableCell>
+                        {managementToShow.map((managementPosition, idx) => (
+                          <TableRow key={idx} className="text-[13px]">
+                            <TableCell className="font-medium">{managementPosition.Contact_Name || '—'}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {managementPosition.Position_Title || '—'}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                    {management.length > MGMT_PREVIEW && (
+                    {management.length > MANAGEMENT_PREVIEW && (
                       <button
                         type="button"
                         onClick={() => setShowAllMgmt((v: boolean) => !v)}
                         className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-sm"
-                        aria-expanded={showAllMgmt}
+                        aria-expanded={showAllManagement}
                       >
-                        {showAllMgmt ? 'Show fewer' : `Show all (${management.length})`}
+                        {showAllManagement ? 'Show fewer' : `Show all (${management.length})`}
                       </button>
                     )}
                   </>
@@ -207,13 +210,19 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {boardToShow.map((m, idx) => (
-                          <TableRow key={(m.Board_Name || m.Board_Position || '') + idx} className="text-[13px]">
-                            <TableCell className="font-medium">{m.Board_Name || '—'}</TableCell>
-                            <TableCell className="text-muted-foreground">{m.Board_Position || '—'}</TableCell>
-                            <TableCell className="text-muted-foreground">{m.Other_Positions || '—'}</TableCell>
-                          </TableRow>
-                        ))}
+                        {boardToShow.map((boardMember, idx) => {
+                          return (
+                            <TableRow key={idx} className="text-[13px]">
+                              <TableCell className="font-medium">{boardMember.Board_Name || '—'}</TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {boardMember.Board_Position || '—'}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {boardMember.Other_Positions || '—'}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                     {orderedBoard.length > BOARD_PREVIEW && (
