@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { Doc } from '@/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
-import { Company } from '../lib/model/profiiles';
+import { Company } from '../lib/model';
 import { Separator } from './ui/separator';
 
 /* -------------------------------------------------------------------------- */

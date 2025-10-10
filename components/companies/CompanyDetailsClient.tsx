@@ -3,41 +3,13 @@ import { use, useState } from 'react';
 import { Item, ItemGroup, ItemTitle, ItemContent, ItemDescription, ItemSeparator } from '@/components/ui/item';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { CompanyBoardMember, CompanyExecutive, CompanyFullDetails } from '../../lib/model';
 
 const TECH_PREVIEW = 8;
 const MANAGEMENT_PREVIEW = 5;
 const BOARD_PREVIEW = 5;
 
-export interface ManagementPerson {
-  Contact_ID: string | null;
-  Contact_Name: string | null;
-  Position_Title: string | null;
-}
-
-export interface BoardPerson {
-  Contact_ID: string | null;
-  Board_Name: string | null;
-  Board_Position: string | null;
-  Other_Positions: string | null;
-}
-
-export interface CompanyDetailsData {
-  Company_Name: string | null;
-  Short_Name: string | null;
-  Website: string | null;
-  Sector: string | null;
-  Stage: string | null;
-  Company_Description: string | null;
-  Technology: string | null;
-  techVerticals: { Tags_ID: string | null; Tags_Name: string | null }[];
-  management: ManagementPerson[];
-  board: BoardPerson[];
-  Employees: number | null;
-  Israeli_Employees: number | null;
-  Reg_Number: string | null;
-}
-
-export default function CompanyDetailsClient({ companyPromise }: { companyPromise: Promise<CompanyDetailsData> }) {
+export default function CompanyDetailsClient({ companyPromise }: { companyPromise: Promise<CompanyFullDetails> }) {
   const company = use(companyPromise);
 
   const techVerticals = company.techVerticals;
@@ -248,7 +220,7 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
   );
 }
 
-function orderManagement(list: ManagementPerson[]) {
+function orderManagement(list: CompanyExecutive[]) {
   const weight = (role: string | null) => {
     if (!role) return 100;
     const r = role.toLowerCase();
@@ -261,7 +233,7 @@ function orderManagement(list: ManagementPerson[]) {
   return [...list].sort((a, b) => weight(a.Position_Title) - weight(b.Position_Title));
 }
 
-function orderBoard(list: BoardPerson[]) {
+function orderBoard(list: CompanyBoardMember[]) {
   const weight = (title: string | null) => {
     if (!title) return 99;
     const t = title.toLowerCase();

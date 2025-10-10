@@ -1,6 +1,14 @@
 import { Expression, ExpressionBuilder, expressionBuilder, SelectQueryBuilder, Simplify, sql, SqlBool } from 'kysely';
 import { DB } from 'kysely-codegen';
-import { Company } from '../../model';
+import {
+  Company,
+  CompanyBoardMember,
+  CompanyDealInvestor,
+  CompanyExecutive,
+  CompanyFullDetails,
+  CompanyFundingDeal,
+  Deal,
+} from '../../model';
 import { db } from './index';
 
 export const COMPANY_STAGE = {
@@ -93,7 +101,7 @@ export const QUERIES = {
     companyId,
   }: {
     companyId: Expression<Company['Company_ID']> | Company['Company_ID'];
-  }) {
+  }): Promise<CompanyFullDetails | undefined> {
     return db
       .selectFrom('Profiles')
       .select([
@@ -115,20 +123,55 @@ export const QUERIES = {
         jsonArrayFrom(getCompanyManagement({ companyId: eb.ref('Profiles.Company_ID') })).as('management'),
       )
       .select(({ eb }) => jsonArrayFrom(getCompanyBoard({ companyId: eb.ref('Profiles.Company_ID') })).as('board'))
+      .select(({ eb }) => jsonArrayFrom(getCompanyDeals({ companyId: eb.ref('Profiles.Company_ID') })).as('deals'))
       .where('Profiles.Company_ID', '=', companyId)
       .executeTakeFirst();
   },
 };
 
-function getCompanyManagement({ companyId }: { companyId: Expression<Company['Company_ID']> }): SelectQueryBuilder<
-  DB,
-  'Management',
-  {
-    Contact_ID: string | null;
-    Contact_Name: string | null;
-    Position_Title: string | null;
-  }
-> {
+function getCompanyDeals({
+  companyId,
+}: {
+  companyId: Expression<Company['Company_ID']>;
+}): SelectQueryBuilder<DB, 'Deals', CompanyFundingDeal> {
+  const eb = expressionBuilder<DB>();
+  return eb
+    .selectFrom('Deals')
+    .where('Deals.Company_ID', '=', companyId)
+    .select([
+      'Deals.Deal_ID',
+      'Deals.Deal_Date',
+      'Deals.Deal_Type',
+      'Deals.Deal_Stage',
+      'Deals.Deal_Amount',
+      'Deals.Company_Post_Valuation',
+    ])
+    .select(({ eb }) => jsonArrayFrom(getDealInvestors({ dealId: eb.ref('Deals.Deal_ID') })).as('investors'));
+}
+
+function getDealInvestors({ dealId }: { dealId: Expression<Deal['Deal_ID']> }) {
+  const eb = expressionBuilder<Pick<DB, 'Investors' | 'Profiles' | 'Contacts'>, never>();
+  return eb
+    .selectFrom('Investors')
+    .leftJoin('Profiles', 'Investors.Company_Investor_ID', 'Profiles.Company_ID')
+    .leftJoin('Contacts', 'Investors.Private_Investor_ID', 'Contacts.Contact_ID')
+    .where('Investors.Deal_ID', '=', dealId)
+    .select([
+      'Investors.Investment_Amount',
+      'Investors.Company_Investor_ID',
+      'Investors.Private_Investor_ID',
+      'Investors.Investment_Remarks',
+      'Profiles.Company_SubType as investor_company_type',
+    ])
+    .select((eb) => eb.fn.coalesce('Company_Name', 'Contact_Name').as('investor_name'))
+    .$assertType<CompanyDealInvestor>();
+}
+
+function getCompanyManagement({
+  companyId,
+}: {
+  companyId: Expression<Company['Company_ID']>;
+}): SelectQueryBuilder<DB, 'Management', CompanyExecutive> {
   const eb = expressionBuilder<DB>();
   return eb
     .selectFrom('Management')
@@ -138,16 +181,11 @@ function getCompanyManagement({ companyId }: { companyId: Expression<Company['Co
     .select(['Contact_ID', 'Contact_Name', 'Position_Title']);
 }
 
-function getCompanyBoard({ companyId }: { companyId: Expression<Company['Company_ID']> }): SelectQueryBuilder<
-  DB,
-  'Board',
-  {
-    Contact_ID: string | null;
-    Board_Name: string | null;
-    Board_Position: string | null;
-    Other_Positions: string | null;
-  }
-> {
+function getCompanyBoard({
+  companyId,
+}: {
+  companyId: Expression<Company['Company_ID']>;
+}): SelectQueryBuilder<DB, 'Board', CompanyBoardMember> {
   const eb = expressionBuilder<DB>();
   return eb
     .selectFrom('Board')
