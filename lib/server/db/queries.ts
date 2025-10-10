@@ -89,7 +89,11 @@ export const QUERIES = {
       ?.then((result) => result?.count ?? 0);
   },
 
-  getCompanyDetails({ companyId }: { companyId: Expression<Company['Company_ID']> | Company['Company_ID'] }) {
+  getCompanyDetails: function ({
+    companyId,
+  }: {
+    companyId: Expression<Company['Company_ID']> | Company['Company_ID'];
+  }) {
     return db
       .selectFrom('Profiles')
       .select([
