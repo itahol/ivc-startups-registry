@@ -70,9 +70,12 @@ export function CompanyCard({ company }: CompanyCardProps) {
       tabIndex={-1}
       className={cn(
         'relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-        'gap-4 py-4',
+        'gap-4 py-4 cursor-pointer',
       )}
       aria-describedby={`company-${id}-desc`}
+      onClick={() => {
+        window.location.href = `/companies/${id}`;
+      }}
     >
       <CardHeader className="pb-0 gap-1">
         <CardTitle className="text-base font-semibold leading-snug tracking-tight">{name}</CardTitle>

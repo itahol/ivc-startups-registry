@@ -1,0 +1,43 @@
+import { Suspense } from 'react';
+import Navbar from '@/components/Navbar';
+import { QUERIES } from '@/lib/server/db/queries';
+import CompanyDetailsClient from '@/components/companies/CompanyDetailsClient';
+import { CompanyDetailsSkeleton } from '@/components/companies/CompanyDetailsSkeleton';
+import { notFound } from 'next/navigation';
+
+interface PageProps {
+  params: Promise<{ companyId: string }> | { companyId: string };
+}
+
+export default async function CompanyDetailsPage({ params }: PageProps) {
+  const resolved = await params;
+  const rawId = resolved.companyId;
+  // Try to coerce to number if possible, else keep string
+  const companyId: any = Number.isNaN(Number(rawId)) ? rawId : Number(rawId);
+
+  const companyPromise = QUERIES.getCompanyDetails({ companyId });
+
+  // We cannot await here for streaming; instead we create a small proxy promise that
+  // lets us detect not-found and throw early (still within suspense boundary).
+  const guardedPromise = companyPromise.then((data) => {
+    if (!data) {
+      notFound();
+    }
+    return data as any;
+  });
+
+  return (
+    <>
+      <Navbar />
+      <div className="flex min-h-screen flex-col">
+        <main className="flex-1 py-10">
+          <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 mx-auto">
+            <Suspense fallback={<CompanyDetailsSkeleton />}>
+              <CompanyDetailsClient companyPromise={guardedPromise} />
+            </Suspense>
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}

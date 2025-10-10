@@ -1,4 +1,4 @@
-import { Kysely, MssqlDialect } from 'kysely';
+import { Kysely, MssqlDialect, ParseJSONResultsPlugin } from 'kysely';
 import type { DB } from 'kysely-codegen';
 import * as tarn from 'tarn';
 import * as tedious from 'tedious';
@@ -35,4 +35,5 @@ const dialect = new MssqlDialect({
 
 export const db = new Kysely<DB>({
   dialect,
+  plugins: [new ParseJSONResultsPlugin()],
 });

@@ -90,8 +90,7 @@ export const QUERIES = {
   },
 
   getCompanyDetails({ companyId }: { companyId: Expression<Company['Company_ID']> }) {
-    const eb = expressionBuilder<DB>();
-    return eb
+    return db
       .selectFrom('Profiles')
       .select(['Company_Name', 'Short_Name', 'Website', 'Sector', 'Stage', 'Company_Description', 'Technology'])
       .select(({ eb }) =>
