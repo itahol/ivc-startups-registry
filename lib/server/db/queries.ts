@@ -92,7 +92,18 @@ export const QUERIES = {
   getCompanyDetails({ companyId }: { companyId: Expression<Company['Company_ID']> }) {
     return db
       .selectFrom('Profiles')
-      .select(['Company_Name', 'Short_Name', 'Website', 'Sector', 'Stage', 'Company_Description', 'Technology'])
+      .select([
+        'Company_Name',
+        'Short_Name',
+        'Website',
+        'Sector',
+        'Stage',
+        'Company_Description',
+        'Technology',
+        'Employees',
+        'Israeli_Employees',
+        'Reg_Number',
+      ])
       .select(({ eb }) =>
         jsonArrayFrom(getCompanyTechVerticals({ companyId: eb.ref('Profiles.Company_ID') })).as('techVerticals'),
       )

@@ -30,8 +30,8 @@ export default async function CompanyDetailsPage({ params }: PageProps) {
     <>
       <Navbar />
       <div className="flex min-h-screen flex-col">
-        <main className="flex-1 py-10">
-          <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 mx-auto">
+        <main className="flex-1 py-6">
+          <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8 mx-auto">
             <Suspense fallback={<CompanyDetailsSkeleton />}>
               <CompanyDetailsClient companyPromise={guardedPromise} />
             </Suspense>
