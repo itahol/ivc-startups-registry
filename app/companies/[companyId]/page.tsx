@@ -11,9 +11,7 @@ interface PageProps {
 
 export default async function CompanyDetailsPage({ params }: PageProps) {
   const resolved = await params;
-  const rawId = resolved.companyId;
-  // Try to coerce to number if possible, else keep string
-  const companyId: any = Number.isNaN(Number(rawId)) ? rawId : Number(rawId);
+  const companyId: string = resolved.companyId;
 
   const companyPromise = QUERIES.getCompanyDetails({ companyId });
 
@@ -23,7 +21,7 @@ export default async function CompanyDetailsPage({ params }: PageProps) {
     if (!data) {
       notFound();
     }
-    return data as any;
+    return data;
   });
 
   return (

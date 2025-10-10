@@ -89,7 +89,7 @@ export const QUERIES = {
       ?.then((result) => result?.count ?? 0);
   },
 
-  getCompanyDetails({ companyId }: { companyId: Expression<Company['Company_ID']> }) {
+  getCompanyDetails({ companyId }: { companyId: Expression<Company['Company_ID']> | Company['Company_ID'] }) {
     return db
       .selectFrom('Profiles')
       .select([
@@ -110,6 +110,7 @@ export const QUERIES = {
       .select(({ eb }) =>
         jsonArrayFrom(getCompanyManagement({ companyId: eb.ref('Profiles.Company_ID') })).as('management'),
       )
+      .select(({ eb }) => jsonArrayFrom(getCompanyBoard({ companyId: eb.ref('Profiles.Company_ID') })).as('board'))
       .where('Profiles.Company_ID', '=', companyId)
       .executeTakeFirst();
   },
@@ -131,6 +132,22 @@ function getCompanyManagement({ companyId }: { companyId: Expression<Company['Co
     .where('Hide_Position', '=', 'No')
     .where('Past_Position', '=', 'No')
     .select(['Contact_ID', 'Contact_Name', 'Position_Title']);
+}
+
+function getCompanyBoard({ companyId }: { companyId: Expression<Company['Company_ID']> }): SelectQueryBuilder<
+  DB,
+  'Board',
+  {
+    Board_Name: string | null;
+    Board_Position: string | null;
+    Other_Positions: string | null;
+  }
+> {
+  const eb = expressionBuilder<DB>();
+  return eb
+    .selectFrom('Board')
+    .where('Board.Company_ID', '=', companyId)
+    .select(['Board_Name', 'Board_Position', 'Other_Positions']);
 }
 
 function getCompanyTechVerticals({ companyId }: { companyId: Expression<Company['Company_ID']> }) {
