@@ -56,13 +56,6 @@ export default async function CompaniesPage({
   const total = countResult?.count ?? 0;
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 
-  // const companies = useQuery(api.companies.list, {
-  //   techVerticals: currentFilters.techVerticals,
-  //   sectors: currentFilters.sectors,
-  //   stages: currentFilters.stages,
-  //   yearEstablished: currentFilters.yearEstablished,
-  //   limit: 20,
-  // });
   return (
     <>
       <Navbar />
