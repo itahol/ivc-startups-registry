@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CompanyCard } from '@/components/CompanyCard';
 import { Company } from '../../lib/model/profiiles';
 import { use } from 'react';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '../ui/empty';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters;
@@ -95,16 +96,23 @@ export function CompaniesClient({
 
       {/* Empty state */}
       {companies.length === 0 && (
-        <div className="mt-8 text-center">
-          <p className="text-muted-foreground">No companies found for these filters.</p>
-          {hasActiveFilters ? (
-            <div className="mt-4">
-              <Button size="sm" variant="outline" onClick={clearAll} aria-label="Clear filters to show all products">
-                Clear filters
-              </Button>
-            </div>
-          ) : null}
-        </div>
+        <Empty className="border border-dashed">
+          <EmptyHeader>
+            <EmptyTitle>No companies found for these filters.</EmptyTitle>
+            {hasActiveFilters ? (
+              <EmptyDescription>Try adjusting your filters to find what you're looking for.</EmptyDescription>
+            ) : null}
+          </EmptyHeader>
+          <EmptyContent>
+            {hasActiveFilters ? (
+              <div className="mt-4">
+                <Button size="sm" variant="outline" onClick={clearAll} aria-label="Clear filters to show all products">
+                  Clear filters
+                </Button>
+              </div>
+            ) : null}
+          </EmptyContent>
+        </Empty>
       )}
 
       {/* Pagination */}
