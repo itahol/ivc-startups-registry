@@ -6,22 +6,26 @@ import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { readCompanyFilters, encodeCompanyFilters, hasActiveCompanyFilters } from '@/lib/companies/filtersUrl';
 import { FiltersDrawer } from '@/components/companies/FiltersDrawer';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { CompanyCard } from '@/components/CompanyCard';
 import { Company } from '../../lib/model/profiiles';
+import { use } from 'react';
 
 interface CompaniesClientProps {
-  initialFilters: CompanyFilters; // currently not strictly needed except for future preloading
-  techVerticals: { id: string; name: string }[];
-  companies: Company[];
+  initialFilters: CompanyFilters;
+  techVerticalsPromise: Promise<{ id: string; name: string }[]>;
+  companiesPromise: Promise<Company[]>;
+  companiesCountPromise: Promise<number>;
   page: number;
   pageSize: number;
-  totalPages: number;
-  total: number;
 }
 
-export function CompaniesClient({ companies, techVerticals, page, pageSize, totalPages, total }: CompaniesClientProps) {
+export function CompaniesClient({
+  companiesPromise,
+  companiesCountPromise,
+  techVerticalsPromise,
+  page,
+  pageSize,
+}: CompaniesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,7 +33,10 @@ export function CompaniesClient({ companies, techVerticals, page, pageSize, tota
   // Derive filters from URL each render (URL = source of truth)
   const currentFilters = React.useMemo(() => readCompanyFilters(searchParams), [searchParams]);
 
-  const companiesLoading = companies === undefined;
+  const techVerticals = use(techVerticalsPromise);
+  const companies = use(companiesPromise);
+  const total = use(companiesCountPromise);
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 
   const hasActiveFilters = hasActiveCompanyFilters(currentFilters);
 
@@ -81,29 +88,13 @@ export function CompaniesClient({ companies, techVerticals, page, pageSize, tota
           2xl:grid-cols-4
         `}
       >
-        {companiesLoading
-          ? Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="space-y-4 p-4">
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-12" />
-                  <Skeleton className="h-5 w-20" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                </div>
-              </Card>
-            ))
-          : companies?.map((company) => <CompanyCard key={company.Company_ID} company={company} />)}
+        {companies.map((company) => (
+          <CompanyCard key={company.Company_ID} company={company} />
+        ))}
       </div>
 
       {/* Empty state */}
-      {!companiesLoading && (companies?.length ?? 0) === 0 && (
+      {companies.length === 0 && (
         <div className="mt-8 text-center">
           <p className="text-muted-foreground">No companies found for these filters.</p>
           {hasActiveFilters ? (

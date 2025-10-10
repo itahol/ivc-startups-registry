@@ -80,12 +80,13 @@ export const QUERIES = {
       .execute();
   },
 
-  getCompaniesCount: function (options: CompaniesQueryOptions = {}) {
+  getCompaniesCount: async function (options: CompaniesQueryOptions = {}) {
     return db
       .selectFrom('Profiles')
       .select(({ fn }) => [fn.count<number>('Profiles.Company_ID').as('count')])
       .where((eb) => matchesCompanyFilters(eb, options))
-      .executeTakeFirst();
+      .executeTakeFirst()
+      ?.then((result) => result?.count ?? 0);
   },
 };
 

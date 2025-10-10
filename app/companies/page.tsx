@@ -18,18 +18,19 @@ export default async function CompaniesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
-  const resolved: Record<string, string | string[] | undefined> = await Promise.resolve(
-    searchParams as
-      | Record<string, string | string[] | undefined>
-      | Promise<Record<string, string | string[] | undefined>>,
-  );
+  const resolved = await searchParams;
   const usp = new URLSearchParams();
   for (const [key, value] of Object.entries(resolved)) {
     if (typeof value === 'string') usp.set(key, value);
-    else if (Array.isArray(value) && value.length) usp.set(key, value[0]!);
+    else if (Array.isArray(value)) {
+      const v = value.at(0);
+      if (v) {
+        usp.set(key, v);
+      }
+    }
   }
   const initialFilters = readCompanyFilters(usp);
-  const techVerticals = await getTechVerticals();
+  const techVerticals = getTechVerticals();
 
   const pageSizeParam = usp.get('limit');
   const pageParam = usp.get('page');
@@ -37,7 +38,7 @@ export default async function CompaniesPage({
   const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
   const offset = (page - 1) * pageSize;
 
-  const [companies, countResult] = await Promise.all([
+  const [companies, companiesCount] = [
     QUERIES.getCompanies({
       limit: pageSize,
       offset,
@@ -52,9 +53,7 @@ export default async function CompaniesPage({
       stages: initialFilters.stages,
       yearEstablished: initialFilters.yearEstablished,
     }),
-  ]);
-  const total = countResult?.count ?? 0;
-  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+  ];
 
   return (
     <>
@@ -78,17 +77,15 @@ export default async function CompaniesPage({
                 <p className="mt-1 text-lg text-muted-foreground">Discover and explore the companies in our dataset.</p>
               </div>
             </div>
-
-            <Suspense fallback={<CompaniesSkeleton />}>
+            <Suspense key={usp.toString()} fallback={<CompaniesSkeleton />}>
               {/* Client side filters + grid */}
               <CompaniesClient
                 initialFilters={initialFilters}
-                companies={companies}
-                techVerticals={techVerticals}
+                companiesPromise={companies}
+                companiesCountPromise={companiesCount}
+                techVerticalsPromise={techVerticals}
                 page={page}
                 pageSize={pageSize}
-                totalPages={totalPages}
-                total={total}
               />
             </Suspense>
           </div>
