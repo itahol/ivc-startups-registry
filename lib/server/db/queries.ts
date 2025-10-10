@@ -73,7 +73,7 @@ export const QUERIES = {
     return db
       .selectFrom('Profiles')
       .selectAll('Profiles')
-      .where((eb) => buildCompanyFilterExpression(eb, options))
+      .where((eb) => matchesCompanyFilters(eb, options))
       .orderBy('Profiles.Company_ID')
       .offset(offset)
       .fetch(limit)
@@ -84,12 +84,12 @@ export const QUERIES = {
     return db
       .selectFrom('Profiles')
       .select(({ fn }) => [fn.count<number>('Profiles.Company_ID').as('count')])
-      .where((eb) => buildCompanyFilterExpression(eb, options))
+      .where((eb) => matchesCompanyFilters(eb, options))
       .executeTakeFirst();
   },
 };
 
-function buildCompanyFilterExpression(eb: ExpressionBuilder<DB, 'Profiles'>, options: CompaniesQueryOptions) {
+const matchesCompanyFilters = (eb: ExpressionBuilder<DB, 'Profiles'>, options: CompaniesQueryOptions) => {
   const filters: (Expression<SqlBool> | undefined)[] = [];
   const { techVerticalsFilter, sectors, stages, yearEstablished } = options;
   if (techVerticalsFilter) {
@@ -108,7 +108,7 @@ function buildCompanyFilterExpression(eb: ExpressionBuilder<DB, 'Profiles'>, opt
   }
   const realFilters = filters.filter((f) => f !== undefined);
   return eb.and(realFilters);
-}
+};
 
 function hasTechVerticals({
   companyId,
