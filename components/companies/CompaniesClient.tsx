@@ -6,6 +6,8 @@ import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { readCompanyFilters, encodeCompanyFilters, hasActiveCompanyFilters } from '@/lib/companies/filtersUrl';
 import { FiltersDrawer } from '@/components/companies/FiltersDrawer';
 import { Button } from '@/components/ui/button';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
 import { Company } from '../../lib/model/profiiles';
 import { use } from 'react';
@@ -40,6 +42,24 @@ export function CompaniesClient({
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 
   const hasActiveFilters = hasActiveCompanyFilters(currentFilters);
+
+  const prevHref = React.useMemo(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+    if (page <= 2) {
+      sp.delete('page');
+    } else {
+      sp.set('page', String(page - 1));
+    }
+    const qs = sp.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }, [page, pathname, searchParams]);
+
+  const nextHref = React.useMemo(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set('page', String(page + 1));
+    const qs = sp.toString();
+    return `${pathname}?${qs}`;
+  }, [page, pathname, searchParams]);
 
   const onApply = React.useCallback(
     (next: CompanyFilters) => {
@@ -100,7 +120,7 @@ export function CompaniesClient({
           <EmptyHeader>
             <EmptyTitle>No companies found for these filters.</EmptyTitle>
             {hasActiveFilters ? (
-              <EmptyDescription>Try adjusting your filters to find what you're looking for.</EmptyDescription>
+              <EmptyDescription>Try adjusting your filters to find what you&apos;re looking for.</EmptyDescription>
             ) : null}
           </EmptyHeader>
           <EmptyContent>
@@ -116,42 +136,54 @@ export function CompaniesClient({
       )}
 
       {/* Pagination */}
-      <nav aria-label="Pagination" className="mt-12 flex flex-col items-center gap-3">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => {
-              const sp = new URLSearchParams(searchParams.toString());
-              if (page <= 2) sp.delete('page');
-              else sp.set('page', String(page - 1));
-              router.push(`${pathname}?${sp.toString()}`, { scroll: false });
-            }}
-          >
-            Previous
-          </Button>
-          <span className="text-sm tabular-nums">
-            Page {page} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => {
-              const sp = new URLSearchParams(searchParams.toString());
-              sp.set('page', String(page + 1));
-              router.push(`${pathname}?${sp.toString()}`, { scroll: false });
-            }}
-          >
-            Next
-          </Button>
-        </div>
+      <div className="mt-12 flex flex-col items-center gap-3">
+        <Pagination>
+          <PaginationContent className="gap-3">
+            <PaginationItem>
+              <PaginationLink
+                className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                href={page === 1 ? undefined : prevHref}
+                aria-label="Go to previous page"
+                aria-disabled={page === 1 ? true : undefined}
+                role={page === 1 ? 'link' : undefined}
+                onClick={(e) => {
+                  if (page === 1) return;
+                  e.preventDefault();
+                  router.push(prevHref, { scroll: false });
+                }}
+              >
+                <ChevronLeftIcon size={16} aria-hidden="true" />
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <p className="text-muted-foreground text-sm" aria-live="polite">
+                Page <span className="text-foreground">{page}</span> of{' '}
+                <span className="text-foreground">{totalPages}</span>
+              </p>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink
+                className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                href={page === totalPages ? undefined : nextHref}
+                aria-label="Go to next page"
+                aria-disabled={page === totalPages ? true : undefined}
+                role={page === totalPages ? 'link' : undefined}
+                onClick={(e) => {
+                  if (page === totalPages) return;
+                  e.preventDefault();
+                  router.push(nextHref, { scroll: false });
+                }}
+              >
+                <ChevronRightIcon size={16} aria-hidden="true" />
+              </PaginationLink>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
         <div className="text-xs text-muted-foreground">
           {total.toLocaleString()} results · Showing {(total === 0 ? 0 : (page - 1) * pageSize + 1).toLocaleString()}–
           {Math.min(page * pageSize, total).toLocaleString()}
         </div>
-      </nav>
+      </div>
     </div>
   );
 }
