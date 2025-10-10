@@ -49,7 +49,7 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
   const [showAllTech, setShowAllTech] = useState(false);
   const [showAllMgmt, setShowAllMgmt] = useState(false);
   const TECH_PREVIEW = 8;
-  const MGMT_PREVIEW = 8;
+  const MGMT_PREVIEW = 5;
   const techToShow = showAllTech ? techVerticals : techVerticals.slice(0, TECH_PREVIEW);
   const mgmtToShow = showAllMgmt ? management : management.slice(0, MGMT_PREVIEW);
 

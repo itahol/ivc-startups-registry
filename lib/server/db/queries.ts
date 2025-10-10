@@ -129,6 +129,7 @@ function getCompanyManagement({ companyId }: { companyId: Expression<Company['Co
     .selectFrom('Management')
     .where('Management.Company_ID', '=', companyId)
     .where('Hide_Position', '=', 'No')
+    .where('Past_Position', '=', 'No')
     .select(['Contact_ID', 'Contact_Name', 'Position_Title']);
 }
 
