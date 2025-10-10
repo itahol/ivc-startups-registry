@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { Doc } from '@/convex/_generated/dataModel';
@@ -70,15 +71,16 @@ export function CompanyCard({ company }: CompanyCardProps) {
       tabIndex={-1}
       className={cn(
         'relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-        'gap-4 py-4 cursor-pointer',
+        'gap-4 py-4',
       )}
       aria-describedby={`company-${id}-desc`}
-      onClick={() => {
-        window.location.href = `/companies/${id}`;
-      }}
     >
       <CardHeader className="pb-0 gap-1">
-        <CardTitle className="text-base font-semibold leading-snug tracking-tight">{name}</CardTitle>
+        <CardTitle className="text-base font-semibold leading-snug tracking-tight">
+          <Link href={`/companies/${id}`} className="hover:underline focus-visible:underline">
+            {name}
+          </Link>
+        </CardTitle>
         {websiteUrl ? (
           <CardDescription className="truncate">
             <a
