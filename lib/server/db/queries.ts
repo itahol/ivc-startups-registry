@@ -1,6 +1,6 @@
 import { Expression, ExpressionBuilder, expressionBuilder, SelectQueryBuilder, Simplify, sql, SqlBool } from 'kysely';
 import { DB } from 'kysely-codegen';
-import { Company } from '../../model/profiiles';
+import { Company } from '../../model';
 import { db } from './index';
 
 export const COMPANY_STAGE = {
