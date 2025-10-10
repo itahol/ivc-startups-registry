@@ -1,4 +1,4 @@
-import { Expression, ExpressionBuilder, expressionBuilder, sql, SqlBool } from 'kysely';
+import { Expression, ExpressionBuilder, expressionBuilder, SelectQueryBuilder, Simplify, sql, SqlBool } from 'kysely';
 import { DB } from 'kysely-codegen';
 import { Company } from '../../model/profiiles';
 import { db } from './index';
@@ -88,7 +88,48 @@ export const QUERIES = {
       .executeTakeFirst()
       ?.then((result) => result?.count ?? 0);
   },
+
+  getCompanyDetails({ companyId }: { companyId: Expression<Company['Company_ID']> }) {
+    const eb = expressionBuilder<DB>();
+    return eb
+      .selectFrom('Profiles')
+      .select(['Company_Name', 'Short_Name', 'Website', 'Sector', 'Stage', 'Company_Description', 'Technology'])
+      .select(({ eb }) =>
+        jsonArrayFrom(getCompanyTechVerticals({ companyId: eb.ref('Profiles.Company_ID') })).as('techVerticals'),
+      )
+      .select(({ eb }) =>
+        jsonArrayFrom(getCompanyManagement({ companyId: eb.ref('Profiles.Company_ID') })).as('management'),
+      )
+      .where('Profiles.Company_ID', '=', companyId)
+      .executeTakeFirst();
+  },
 };
+
+function getCompanyManagement({ companyId }: { companyId: Expression<Company['Company_ID']> }): SelectQueryBuilder<
+  DB,
+  'Management',
+  {
+    Contact_ID: string | null;
+    Contact_Name: string | null;
+    Position_Title: string | null;
+  }
+> {
+  const eb = expressionBuilder<DB>();
+  return eb
+    .selectFrom('Management')
+    .where('Management.Company_ID', '=', companyId)
+    .where('Hide_Position', '=', 'No')
+    .select(['Contact_ID', 'Contact_Name', 'Position_Title']);
+}
+
+function getCompanyTechVerticals({ companyId }: { companyId: Expression<Company['Company_ID']> }) {
+  const eb = expressionBuilder<DB>();
+  return eb
+    .selectFrom('Tags')
+    .where('Tags.Company_ID', '=', companyId)
+    .where('Tags.Web_Published_Tag', '=', 'Yes')
+    .select(['Tags_ID', 'Tags_Name']);
+}
 
 const matchesCompanyFilters = (eb: ExpressionBuilder<DB, 'Profiles'>, options: CompaniesQueryOptions) => {
   const filters: (Expression<SqlBool> | undefined)[] = [];
@@ -145,4 +186,8 @@ function hasTechVerticals({
         .having(sql<number>`count(distinct "Tags"."Tags_ID")`, '=', tagIds.length),
     );
   }
+}
+
+function jsonArrayFrom<O>(expr: Expression<O>) {
+  return sql<Simplify<O>[]>`(select coalesce((select * from ${expr} as agg for json path), '[]'))`;
 }
