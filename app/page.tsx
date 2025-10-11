@@ -1,84 +1,47 @@
 import Navbar from '@/components/Navbar';
-import { preloadQuery, preloadedQueryResult } from 'convex/nextjs';
-import { api } from '@/convex/_generated/api';
 import { Metadata } from 'next';
-import { Building2, Landmark, Users, Banknote } from 'lucide-react';
-import { HeroClient } from '@/components/HeroClient';
+import { HeroClient } from '@/app/_components/HeroClient';
+import { StatsSection } from '@/app/_components/StatsSection';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const metadata: Metadata = {
   title: 'Israeli High‑Tech Data Platform',
   description: 'Tap into the digital ecosystem of Israeli high‑tech: companies, investment firms, people, and funds.',
 };
 
-// Server Component Landing Page
-export default async function Home() {
-  // Preload all counts in parallel (SSR)
-  const companiesP = preloadQuery(api.stats.companiesCount, {});
-  const investmentFirmsP = preloadQuery(api.stats.investmentFirmsCount, {});
-  const peopleP = preloadQuery(api.stats.peopleCount, {});
-  const fundsP = preloadQuery(api.stats.fundsCount, {});
+function StatsLoading() {
+  return (
+    <section className="mx-auto w-full max-w-7xl px-4 md:px-8 pb-20" aria-labelledby="stats-heading">
+      <Skeleton className="h-8 w-64 mb-6" />
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4" role="list">
+        {[...Array(4)].map((_, index) => (
+          <div key={index} role="listitem" className="group relative overflow-hidden rounded-lg border p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Skeleton className="h-5 w-5" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <Skeleton className="h-8 w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-  const [companiesQ, investmentFirmsQ, peopleQ, fundsQ] = await Promise.all([
-    companiesP,
-    investmentFirmsP,
-    peopleP,
-    fundsP,
-  ]);
-
-  const companies = preloadedQueryResult(companiesQ) ?? 0;
-  const investmentFirms = preloadedQueryResult(investmentFirmsQ) ?? 0;
-  const people = preloadedQueryResult(peopleQ) ?? 0;
-  const funds = preloadedQueryResult(fundsQ) ?? 0;
-
-  const stats: { label: string; value: number; icon: React.ReactNode; testId: string }[] = [
-    { label: 'Companies', value: companies, icon: <Building2 className="h-5 w-5" aria-hidden />, testId: 'companies' },
-    {
-      label: 'Investment Firms',
-      value: investmentFirms,
-      icon: <Landmark className="h-5 w-5" aria-hidden />,
-      testId: 'investment-firms',
-    },
-    { label: 'People', value: people, icon: <Users className="h-5 w-5" aria-hidden />, testId: 'people' },
-    { label: 'Funds', value: funds, icon: <Banknote className="h-5 w-5" aria-hidden />, testId: 'funds' },
-  ];
-
+export default function Home() {
   return (
     <>
       <Navbar />
       <main>
         <HeroClient />
-        <section className="mx-auto w-full max-w-7xl px-4 md:px-8 pb-20" aria-labelledby="stats-heading">
-          <h2 id="stats-heading" className="text-xl font-semibold tracking-tight mb-6">
-            Currently Available Profiles
-          </h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4" role="list">
-            {stats.map((s) => (
-              <div
-                key={s.label}
-                role="listitem"
-                data-testid={`stat-${s.testId}`}
-                className="group relative overflow-hidden rounded-lg border p-4 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    {s.icon}
-                    <span className="text-xs font-medium uppercase tracking-wide">{s.label}</span>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span
-                    data-testid="stat-number"
-                    className="text-3xl font-semibold tabular-nums"
-                    style={{ fontVariantNumeric: 'tabular-nums' }}
-                    aria-label={`${s.value} ${s.label}`}
-                  >
-                    {s.value}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <Suspense fallback={<StatsLoading />}>
+          <StatsSection />
+        </Suspense>
       </main>
     </>
   );
