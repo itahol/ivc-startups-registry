@@ -1,9 +1,10 @@
 # Migration to existing mssql server
 
-- [ ] Setup kysley
+- [x] Setup kysley
   - Add deps
   - Generate types
   - Create basic client
-- Replace backend functions to use kysley client
+- [x] Replace backend functions to use kysley client
+- [x] Update frontend
+- Replace landing page queris to DB
 - Replace auth to not use convex
-- Update frontend
