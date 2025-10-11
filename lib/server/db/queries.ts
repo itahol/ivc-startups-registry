@@ -51,6 +51,7 @@ export interface PaginationOptions {
 }
 
 export interface CompaniesQueryOptions {
+  keyword?: string;
   techVerticalsFilter?: ManyFilter<string>;
   sectors?: string[];
   stages?: string[];
@@ -275,12 +276,27 @@ function getDealInvestors({
 
 const matchesCompanyFilters = (eb: ExpressionBuilder<DB, 'Profiles'>, options: CompaniesQueryOptions) => {
   const filters: (Expression<SqlBool> | undefined)[] = [];
-  const { techVerticalsFilter, sectors, stages, yearEstablished } = options;
+  const { keyword, techVerticalsFilter, sectors, stages, yearEstablished } = options;
+
+  if (keyword) {
+    const likeKeyword = `%${keyword}%`;
+    filters.push(
+      eb.or([
+        eb('Profiles.Company_Name', 'like', likeKeyword),
+        eb('Profiles.Short_Name', 'like', likeKeyword),
+        eb('Profiles.Company_Description', 'like', likeKeyword),
+      ]),
+    );
+  }
   if (techVerticalsFilter) {
     filters.push(hasTechVerticals({ companyId: eb.ref('Profiles.Company_ID'), techVerticalsFilter }));
   }
-  if (sectors && sectors.length > 0) filters.push(eb('Profiles.Sector', 'in', sectors));
-  if (stages && stages.length > 0) filters.push(eb('Profiles.Stage', 'in', stages));
+  if (sectors && sectors.length > 0) {
+    filters.push(eb('Profiles.Sector', 'in', sectors));
+  }
+  if (stages && stages.length > 0) {
+    filters.push(eb('Profiles.Stage', 'in', stages));
+  }
   if (yearEstablished && (yearEstablished.min !== undefined || yearEstablished.max !== undefined)) {
     if (yearEstablished.min !== undefined && yearEstablished.max !== undefined) {
       filters.push(eb.between('Profiles.Established_Year', yearEstablished.min, yearEstablished.max));
