@@ -83,7 +83,7 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
         </div>
 
         <div className="space-y-2 overflow-x-auto">
-          <div className="min-w-[720px]">
+          <div>
             {/* Column headers using grid to align with rows */}
             <div
               className="hidden md:grid grid-cols-7 items-center gap-4 px-3 text-[11px] uppercase tracking-wide text-muted-foreground font-medium"
