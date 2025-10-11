@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import { QUERIES } from '@/lib/server/db/queries';
-import CompanyDetailsClient from '@/components/companies/CompanyDetailsClient';
-import { CompanyDetailsSkeleton } from '@/components/companies/CompanyDetailsSkeleton';
+import CompanyDetailsClient from './_components/CompanyDetailsClient';
+import { CompanyDetailsSkeleton } from './_components/CompanyDetailsSkeleton';
 
 interface PageProps {
   params: Promise<{ companyId: string }> | { companyId: string };
