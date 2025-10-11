@@ -110,7 +110,6 @@ export function CompaniesClient({
         `}
       >
         {companies.map((company) => {
-          console.dir(company);
           return <CompanyCard key={company.companyID} company={company} />;
         })}
       </div>
