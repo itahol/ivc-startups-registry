@@ -99,14 +99,10 @@ export function CompaniesClient({
 
   return (
     <div>
-      {/* Filters Row */}
-      <div
-        className={`
-          mb-8 flex flex-col gap-4
-          md:flex-row md:items-center md:justify-between
-        `}
-      >
-        <div className="flex flex-wrap items-center gap-2 min-h-8">
+      {/* Search Section - Centered and Prominent */}
+      <div className="mb-8 flex flex-col items-center gap-6">
+        {/* Search Bar - Larger and Centered */}
+        <div className="w-full max-w-2xl">
           <SearchInput
             value={keywordInput}
             onChange={setKeywordInput}
@@ -114,7 +110,12 @@ export function CompaniesClient({
             label="Search companies"
             placeholder="Search by keyword..."
             hideLabel={true}
+            size="large"
           />
+        </div>
+
+        {/* Filters Row - Below Search */}
+        <div className="flex flex-wrap items-center justify-center gap-2 min-h-8">
           <FiltersDrawer value={currentFilters} onApply={onApply} techVerticals={techVerticals} />
           {hasActiveFilters ? (
             <Button
