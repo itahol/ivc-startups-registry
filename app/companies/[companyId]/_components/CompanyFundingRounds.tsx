@@ -71,9 +71,6 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
           <SummaryStat label="Financial Rounds" value={orderedDeals.length.toString()} />
           <SummaryStat label="Number of Investors" value={investorCount.toString()} />
         </div>
-        <p className="text-[11px] leading-tight text-muted-foreground">
-          All funding amounts reflect USD millions (m). Figures ≥ $1b are displayed in billions (b).
-        </p>
         <div className="flex items-center justify-end">
           <button
             type="button"
@@ -208,15 +205,15 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
 function formatMoney(rawMillions: number) {
   // Raw numbers are already in millions of USD.
   // So rawMillions = 1.5 means $1.5m; 1500 means $1.5b.
-  if (rawMillions === 0) return '$0m';
+  if (rawMillions === 0) return '$0M';
   const abs = Math.abs(rawMillions);
   // If ≥ 1000 millions => billions
   if (abs >= 1000) {
     const billions = rawMillions / 1000; // convert millions to billions
-    return `$${billions.toFixed(billions >= 10 ? 0 : 1)}b`;
+    return `$${billions.toFixed(billions >= 10 ? 0 : 1)}B`;
   }
   // Otherwise stay in millions; display up to one decimal unless >= 10.
-  return `$${rawMillions.toFixed(abs >= 10 ? 0 : 1)}m`;
+  return `$${rawMillions.toFixed(abs >= 10 ? 0 : 1)}M`;
 }
 
 function formatDate(date: Date | string) {
