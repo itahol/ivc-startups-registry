@@ -3,7 +3,7 @@ import { use, useState } from 'react';
 import { Item, ItemGroup, ItemTitle, ItemContent, ItemDescription, ItemSeparator } from '@/components/ui/item';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CompanyBoardMember, CompanyExecutive, CompanyFullDetails } from '../../lib/model';
+import { CompanyBoardMember, CompanyExecutive, CompanyFullDetails, CompanyFundingDeal } from '../../lib/model';
 import CompanyFundingRounds from '@/components/companies/CompanyFundingRounds';
 import { notFound } from 'next/navigation';
 
@@ -11,18 +11,21 @@ const TECH_PREVIEW = 8;
 const MANAGEMENT_PREVIEW = 5;
 const BOARD_PREVIEW = 5;
 
-export default function CompanyDetailsClient({
-  companyPromise,
-}: {
+export default function CompanyDetailsClient(props: {
   companyPromise: Promise<CompanyFullDetails | undefined>;
+  techVerticalsPromise: Promise<{ tagID: string | null; tagName: string | null }[]>;
+  managementPromise: Promise<CompanyExecutive[]>;
+  boardPromise: Promise<CompanyBoardMember[]>;
+  dealsPromise: Promise<CompanyFundingDeal[]>;
 }) {
+  const { companyPromise, managementPromise, techVerticalsPromise, boardPromise, dealsPromise } = props;
   const company = use(companyPromise);
   if (!company) {
     notFound();
   }
 
-  const techVerticals = company.techVerticals;
-  const management = orderManagement(company.management);
+  const techVerticals = use(techVerticalsPromise);
+  const management = orderManagement(use(managementPromise));
   const websiteHref =
     company.website && (company.website.startsWith('http') ? company.website : `https://${company.website}`);
 
@@ -31,7 +34,7 @@ export default function CompanyDetailsClient({
   const [showAllBoard, setShowAllBoard] = useState(false);
   const techToShow = showAllTech ? techVerticals : techVerticals.slice(0, TECH_PREVIEW);
   const managementToShow = showAllManagement ? management : management.slice(0, MANAGEMENT_PREVIEW);
-  const orderedBoard = orderBoard(company.board || []);
+  const orderedBoard = orderBoard(use(boardPromise) || []);
   const boardToShow = showAllBoard ? orderedBoard : orderedBoard.slice(0, BOARD_PREVIEW);
 
   return (
@@ -136,7 +139,7 @@ export default function CompanyDetailsClient({
 
         {/* Right column */}
         <div className="lg:col-span-2 space-y-6">
-          <CompanyFundingRounds deals={company.deals || []} />
+          <CompanyFundingRounds deals={use(dealsPromise) || []} />
           {/* Inserted feature parity financial rounds section */}
           <ItemGroup className="gap-4">
             <Item className="flex-col items-start p-0">

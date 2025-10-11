@@ -47,13 +47,6 @@ export interface CompanyFullDetails {
   stage: string | null;
   technology: string | null;
   website: string | null;
-  techVerticals: {
-    tagID: string | null;
-    tagName: string | null;
-  }[];
-  management: CompanyExecutive[];
-  board: CompanyBoardMember[];
-  deals: CompanyFundingDeal[];
 }
 
 export type CompanyDetails = Pick<
