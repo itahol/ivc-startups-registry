@@ -99,6 +99,7 @@ export const QUERIES = {
         'Established_Year as establishedYear',
         'Tech_Verticals as techVerticalsNames',
       ])
+      .where('Company_Type2', '=', 'HT')
       .where((eb) => matchesCompanyFilters(eb, options))
       .orderBy('Profiles.Company_ID')
       .offset(offset)
@@ -110,6 +111,7 @@ export const QUERIES = {
     return db
       .selectFrom('Profiles')
       .select(({ fn }) => [fn.count<number>('Profiles.Company_ID').as('count')])
+      .where('Company_Type2', '=', 'HT')
       .where((eb) => matchesCompanyFilters(eb, options))
       .executeTakeFirst()
       ?.then((result) => result?.count ?? 0);
