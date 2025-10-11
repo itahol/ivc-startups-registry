@@ -106,9 +106,9 @@ export default function CompanyDetailsClient(props: {
               </ItemContent>
             </Item>
             <ItemSeparator />
-            <ContactInfoSection contactInfoPromise={contactInfoPromise} />
-            <ItemSeparator />
             <TechVerticalsSection techVerticals={use(techVerticalsPromise)} />
+            <ItemSeparator />
+            <ContactInfoSection contactInfoPromise={contactInfoPromise} />
           </ItemGroup>
         </div>
 
