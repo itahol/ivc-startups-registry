@@ -1,18 +1,22 @@
 'use client';
-import { use, useState } from 'react';
+import { use } from 'react';
 import { Item, ItemGroup, ItemTitle, ItemContent, ItemDescription, ItemSeparator } from '@/components/ui/item';
-import { Badge } from '@/components/ui/badge';
-import { CompanyBoardMember, CompanyExecutive, CompanyFullDetails, CompanyFundingDeal } from '../../../../lib/model';
+import {
+  CompanyBoardMember,
+  CompanyExecutive,
+  CompanyFullDetails,
+  CompanyFundingDeal,
+  TechVertical,
+} from '../../../../lib/model';
 import { notFound } from 'next/navigation';
 import BoardSection from './BoardSection';
 import ManagementSection from './ManagementSection';
 import CompanyFundingRounds from './CompanyFundingRounds';
-
-const TECH_PREVIEW = 8;
+import TechVerticalsSection from './TechVerticalsSection';
 
 export default function CompanyDetailsClient(props: {
   companyPromise: Promise<CompanyFullDetails | undefined>;
-  techVerticalsPromise: Promise<{ tagID: string | null; tagName: string | null }[]>;
+  techVerticalsPromise: Promise<TechVertical[]>;
   managementPromise: Promise<CompanyExecutive[]>;
   boardPromise: Promise<CompanyBoardMember[]>;
   dealsPromise: Promise<CompanyFundingDeal[]>;
@@ -22,15 +26,8 @@ export default function CompanyDetailsClient(props: {
   if (!company) {
     notFound();
   }
-
-  const techVerticals = use(techVerticalsPromise);
-  const management = use(managementPromise);
-  const board = use(boardPromise) || [];
   const websiteHref =
     company.website && (company.website.startsWith('http') ? company.website : `https://${company.website}`);
-
-  const [showAllTech, setShowAllTech] = useState(false);
-  const techToShow = showAllTech ? techVerticals : techVerticals.slice(0, TECH_PREVIEW);
 
   return (
     <div className="space-y-6 text-[15px] leading-relaxed">
@@ -101,34 +98,7 @@ export default function CompanyDetailsClient(props: {
 
             <ItemSeparator />
 
-            <Item className="flex-col items-start p-0">
-              <ItemTitle className="text-sm font-semibold">Tech Verticals</ItemTitle>
-              <ItemContent className="mt-2 space-y-3">
-                {techVerticals.length > 0 ? (
-                  <>
-                    <div className="flex flex-wrap gap-1.5">
-                      {techToShow.map((tv) => (
-                        <Badge key={tv.tagID} variant="outline" className="text-[12px] py-1 px-2">
-                          {tv.tagName}
-                        </Badge>
-                      ))}
-                    </div>
-                    {techVerticals.length > TECH_PREVIEW && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAllTech((v: boolean) => !v)}
-                        className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-sm"
-                        aria-expanded={showAllTech}
-                      >
-                        {showAllTech ? 'Show less' : `Show all (${techVerticals.length})`}
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No tech verticals listed.</p>
-                )}
-              </ItemContent>
-            </Item>
+            <TechVerticalsSection techVerticals={use(techVerticalsPromise)} />
           </ItemGroup>
         </div>
 
@@ -137,8 +107,8 @@ export default function CompanyDetailsClient(props: {
           <CompanyFundingRounds deals={use(dealsPromise) || []} />
           {/* Inserted feature parity financial rounds section */}
           <ItemGroup className="gap-4">
-            <ManagementSection management={management} />
-            <BoardSection board={board} />
+            <ManagementSection management={use(managementPromise)} />
+            <BoardSection board={use(boardPromise)} />
           </ItemGroup>
         </div>
       </div>

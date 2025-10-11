@@ -9,6 +9,7 @@ import {
   CompanyFundingDeal,
   CompanyID,
   DealID,
+  TechVertical,
 } from '../../model';
 import { db } from './index';
 
@@ -103,7 +104,7 @@ export const QUERIES = {
       .execute();
   },
 
-  getCompaniesCount: async function (options: CompaniesQueryOptions = {}) {
+  getCompaniesCount: async function (options: CompaniesQueryOptions = {}): Promise<number> {
     return db
       .selectFrom('Profiles')
       .select(({ fn }) => [fn.count<number>('Profiles.Company_ID').as('count')])
@@ -112,20 +113,20 @@ export const QUERIES = {
       ?.then((result) => result?.count ?? 0);
   },
 
-  getCompanyManagement: function ({ companyId }: { companyId: string }) {
+  getCompanyManagement: function ({ companyId }: { companyId: string }): Promise<CompanyExecutive[]> {
     console.log('Fetching management for companyId:', companyId);
     return getCompanyManagement({ companyId }).execute();
   },
 
-  getCompanyBoard: function ({ companyId }: { companyId: CompanyID }) {
+  getCompanyBoard: function ({ companyId }: { companyId: CompanyID }): Promise<CompanyBoardMember[]> {
     return getCompanyBoard({ companyId }).execute();
   },
 
-  getCompanyDeals: function ({ companyId }: { companyId: CompanyID }) {
+  getCompanyDeals: function ({ companyId }: { companyId: CompanyID }): Promise<CompanyFundingDeal[]> {
     return getCompanyDeals({ companyId }).execute();
   },
 
-  getCompanyTechVerticals: function ({ companyId }: { companyId: CompanyID }) {
+  getCompanyTechVerticals: function ({ companyId }: { companyId: CompanyID }): Promise<TechVertical[]> {
     return getCompanyTechVerticals({ companyId }).execute();
   },
 
@@ -181,7 +182,11 @@ function getCompanyBoard({
     .$assertType<CompanyBoardMember>();
 }
 
-function getCompanyTechVerticals({ companyId }: { companyId: Expression<CompanyID> | CompanyID }) {
+function getCompanyTechVerticals({
+  companyId,
+}: {
+  companyId: Expression<CompanyID> | CompanyID;
+}): SelectQueryBuilder<DB, 'Tags', TechVertical> {
   return db
     .selectFrom('Tags')
     .where('Tags.Company_ID', '=', companyId)

@@ -2,6 +2,11 @@ export type CompanyID = string | null;
 
 export type DealID = string | null;
 
+export interface TechVertical {
+  tagID: string | null;
+  tagName: string | null;
+}
+
 export interface CompanyDealInvestor {
   companyInvestorID: string | null;
   investmentAmount: number | null;
