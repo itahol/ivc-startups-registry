@@ -16,6 +16,7 @@ import BoardSection from './BoardSection';
 import ManagementSection from './ManagementSection';
 import CompanyFundingRounds from './CompanyFundingRounds';
 import TechVerticalsSection from './TechVerticalsSection';
+import { Separator } from '../../../../components/ui/separator';
 
 export default function CompanyDetailsClient(props: {
   companyPromise: Promise<CompanyFullDetails | undefined>;
@@ -55,6 +56,7 @@ export default function CompanyDetailsClient(props: {
         )}
       </header>
 
+      <Separator />
       <div className="grid gap-6 lg:grid-cols-4">
         {/* Left column (About + Contact Info + Tech) */}
         <div className="lg:col-span-2 space-y-6">
@@ -113,8 +115,10 @@ export default function CompanyDetailsClient(props: {
         {/* Right column (Funding + People) */}
         <div className="lg:col-span-2 space-y-6">
           <CompanyFundingRounds deals={use(dealsPromise) || []} />
+          <Separator />
           <ItemGroup className="gap-4">
             <ManagementSection management={use(managementPromise)} />
+            <ItemSeparator />
             <BoardSection board={use(boardPromise)} />
           </ItemGroup>
         </div>
