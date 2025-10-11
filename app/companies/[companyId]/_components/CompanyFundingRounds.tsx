@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { CompanyDealInvestor, CompanyFundingDeal } from '@/lib/model';
 import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -182,7 +183,19 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                                 })
                                 .map((inv, idx) => (
                                   <TableRow key={idx} className="text-[13px]">
-                                    <TableCell className="font-medium">{inv.investorName || '—'}</TableCell>
+                                    <TableCell className="font-medium">
+                                      {inv.companyInvestorID ? (
+                                        <Link
+                                          href={`/companies/${inv.companyInvestorID}`}
+                                          className="inline-flex items-center text-primary hover:text-primary/80 hover:underline"
+                                        >
+                                          {inv.investorName || '—'}
+                                          <span className="ml-1 text-[10px] opacity-60">↗</span>
+                                        </Link>
+                                      ) : (
+                                        <span className="text-foreground">{inv.investorName || '—'}</span>
+                                      )}
+                                    </TableCell>
                                     <TableCell className="text-muted-foreground">
                                       {deriveInvestorType(inv) || '-'}
                                     </TableCell>
