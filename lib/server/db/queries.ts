@@ -114,7 +114,6 @@ export const QUERIES = {
   },
 
   getCompanyManagement: function ({ companyId }: { companyId: string }): Promise<CompanyExecutive[]> {
-    console.log('Fetching management for companyId:', companyId);
     return getCompanyManagement({ companyId }).execute();
   },
 
