@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { CompanyFundingDeal } from '@/lib/model';
+import { CompanyDealInvestor, CompanyFundingDeal } from '@/lib/model';
 import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -155,18 +155,45 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                           </TableHeader>
                           <TableBody>
                             {deal.investors.length > 0 ? (
-                              deal.investors.map((inv, idx) => (
-                                <TableRow key={idx} className="text-[13px]">
-                                  <TableCell className="font-medium">{inv.investorName || '—'}</TableCell>
-                                  <TableCell className="text-muted-foreground">{deriveInvestorType(inv)}</TableCell>
-                                  <TableCell className="text-muted-foreground">
-                                    {inv.investmentAmount != null ? formatMoney(inv.investmentAmount) : '—'}
-                                  </TableCell>
-                                  <TableCell className="text-muted-foreground">
-                                    {inv.investmentRemarks || '—'}
-                                  </TableCell>
-                                </TableRow>
-                              ))
+                              deal.investors
+                                .toSorted((a, b) => {
+                                  const typeA = deriveInvestorType(a);
+                                  const typeB = deriveInvestorType(b);
+
+                                  if (typeA === null && typeB !== null) {
+                                    return 1;
+                                  }
+                                  if (typeA !== null && typeB === null) {
+                                    return -1;
+                                  }
+
+                                  if (typeA === 'Private' && typeB !== 'Private') {
+                                    return 1;
+                                  }
+                                  if (typeA !== 'Private' && typeB === 'Private') {
+                                    return -1;
+                                  }
+
+                                  const typeComparison = (typeB || '').localeCompare(typeA || '');
+                                  if (typeComparison !== 0) {
+                                    return typeComparison;
+                                  }
+                                  return (a.investorName || '').localeCompare(b.investorName || '');
+                                })
+                                .map((inv, idx) => (
+                                  <TableRow key={idx} className="text-[13px]">
+                                    <TableCell className="font-medium">{inv.investorName || '—'}</TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                      {deriveInvestorType(inv) || '-'}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                      {inv.investmentAmount != null ? formatMoney(inv.investmentAmount) : '—'}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                      {inv.investmentRemarks || '—'}
+                                    </TableCell>
+                                  </TableRow>
+                                ))
                             ) : (
                               <TableRow>
                                 <TableCell colSpan={4} className="text-center text-muted-foreground">
@@ -226,10 +253,10 @@ function formatDate(date: Date | string) {
   }
 }
 
-function deriveInvestorType(inv: CompanyFundingDeal['investors'][number]) {
+function deriveInvestorType(inv: CompanyDealInvestor): string | null {
   if (inv.investorCompanyType) return inv.investorCompanyType;
   if (inv.privateInvestorID) return 'Private';
-  return '—';
+  return null;
 }
 
 export default CompanyFundingRounds;
