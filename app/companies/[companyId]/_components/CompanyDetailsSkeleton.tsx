@@ -4,10 +4,11 @@ export function CompanyDetailsSkeleton() {
       {/* Header */}
       <div className="h-8 w-1/3 rounded bg-muted" />
 
-      {/* Grid: About + Tech Verticals */}
+      {/* Grid: Contact Info + About/Tech | Funding + People */}
       <div className="grid gap-6 lg:grid-cols-4">
-        {/* Left (About) */}
+        {/* Left (Contact Info + About/Tech) */}
         <div className="lg:col-span-2 space-y-6">
+          {/* About */}
           <div className="space-y-4">
             <div className="h-4 w-24 rounded bg-muted" />
             <div className="grid gap-4 sm:grid-cols-3">
@@ -21,6 +22,7 @@ export function CompanyDetailsSkeleton() {
             <div className="h-12 rounded bg-muted" />
           </div>
 
+          {/* Tech Verticals */}
           <div className="space-y-3">
             <div className="h-4 w-32 rounded bg-muted" />
             <div className="flex flex-wrap gap-2">
@@ -29,10 +31,22 @@ export function CompanyDetailsSkeleton() {
               ))}
             </div>
           </div>
+
+          {/* Contact Info */}
+          <div className="space-y-3">
+            <div className="h-4 w-28 rounded bg-muted" />
+            <div className="rounded bg-muted h-40" />
+          </div>
         </div>
 
-        {/* Right (Management + Board) */}
+        {/* Right (Funding + Management + Board) */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Funding Rounds */}
+          <div className="space-y-3">
+            <div className="h-4 w-32 rounded bg-muted" />
+            <div className="rounded bg-muted h-40" />
+          </div>
+
           {/* Management */}
           <div className="space-y-3">
             <div className="h-4 w-28 rounded bg-muted" />

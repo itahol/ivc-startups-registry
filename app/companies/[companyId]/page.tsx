@@ -16,6 +16,7 @@ export default async function CompanyDetailsPage({ params }: PageProps) {
   const managementPromise = QUERIES.getCompanyManagement({ companyId });
   const boardPromise = QUERIES.getCompanyBoard({ companyId });
   const dealsPromise = QUERIES.getCompanyDeals({ companyId });
+  const contactInfoPromise = QUERIES.getCompanyContactInfo({ companyId });
   return (
     <>
       <Navbar />
@@ -29,6 +30,7 @@ export default async function CompanyDetailsPage({ params }: PageProps) {
                 managementPromise={managementPromise}
                 boardPromise={boardPromise}
                 dealsPromise={dealsPromise}
+                contactInfoPromise={contactInfoPromise}
               />
             </Suspense>
           </div>

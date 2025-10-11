@@ -3,11 +3,14 @@ import { use } from 'react';
 import { Item, ItemGroup, ItemTitle, ItemContent, ItemDescription, ItemSeparator } from '@/components/ui/item';
 import {
   CompanyBoardMember,
+  CompanyContactInfo,
   CompanyExecutive,
   CompanyFullDetails,
   CompanyFundingDeal,
+  CompanyPrimaryContactInfo,
   TechVertical,
 } from '../../../../lib/model';
+import ContactInfoSection from './ContactInfoSection';
 import { notFound } from 'next/navigation';
 import BoardSection from './BoardSection';
 import ManagementSection from './ManagementSection';
@@ -19,9 +22,14 @@ export default function CompanyDetailsClient(props: {
   techVerticalsPromise: Promise<TechVertical[]>;
   managementPromise: Promise<CompanyExecutive[]>;
   boardPromise: Promise<CompanyBoardMember[]>;
+  contactInfoPromise: Promise<{
+    primaryContactInfo?: CompanyPrimaryContactInfo;
+    branchesContactInfo: CompanyContactInfo[];
+  }>;
   dealsPromise: Promise<CompanyFundingDeal[]>;
 }) {
-  const { companyPromise, managementPromise, techVerticalsPromise, boardPromise, dealsPromise } = props;
+  const { companyPromise, managementPromise, techVerticalsPromise, boardPromise, dealsPromise, contactInfoPromise } =
+    props;
   const company = use(companyPromise);
   if (!company) {
     notFound();
@@ -48,7 +56,7 @@ export default function CompanyDetailsClient(props: {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-4">
-        {/* Left column */}
+        {/* Left column (About + Contact Info + Tech) */}
         <div className="lg:col-span-2 space-y-6">
           <ItemGroup className="gap-4">
             <Item className="flex-col items-start p-0">
@@ -95,17 +103,16 @@ export default function CompanyDetailsClient(props: {
                 )}
               </ItemContent>
             </Item>
-
             <ItemSeparator />
-
+            <ContactInfoSection contactInfoPromise={contactInfoPromise} />
+            <ItemSeparator />
             <TechVerticalsSection techVerticals={use(techVerticalsPromise)} />
           </ItemGroup>
         </div>
 
-        {/* Right column */}
+        {/* Right column (Funding + People) */}
         <div className="lg:col-span-2 space-y-6">
           <CompanyFundingRounds deals={use(dealsPromise) || []} />
-          {/* Inserted feature parity financial rounds section */}
           <ItemGroup className="gap-4">
             <ManagementSection management={use(managementPromise)} />
             <BoardSection board={use(boardPromise)} />
