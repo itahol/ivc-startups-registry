@@ -2,12 +2,14 @@ import { Expression, ExpressionBuilder, expressionBuilder, SelectQueryBuilder, S
 import { DB } from 'kysely-codegen';
 import {
   CompanyBoardMember,
+  CompanyContactInfo,
   CompanyDealInvestor,
   CompanyDetails,
   CompanyExecutive,
   CompanyFullDetails,
   CompanyFundingDeal,
   CompanyID,
+  CompanyPrimaryContactInfo,
   DealID,
   TechVertical,
 } from '../../model';
@@ -148,6 +150,40 @@ export const QUERIES = {
       ])
       .where('Profiles.Company_ID', '=', companyId)
       .executeTakeFirst();
+  },
+
+  getCompanyContactInfo: async function ({
+    companyId,
+  }: {
+    companyId: CompanyID;
+  }): Promise<{ primaryContactInfo?: CompanyPrimaryContactInfo; branchesContactInfo: CompanyContactInfo[] }> {
+    const [primaryContactInfo, branchesContactInfo] = await Promise.all([
+      db
+        .selectFrom('PrimaryContacts')
+        .where('Company_ID', '=', companyId)
+        .select([
+          'Contact_ID as contactID',
+          'Contact_Name as contactName',
+          'Email as contactEmail',
+          'Position as contactPosition',
+        ])
+        .executeTakeFirst(),
+
+      db
+        .selectFrom('Main_Branch_Addresses')
+        .where('Company_ID', '=', companyId)
+        .select([
+          'Address_Type as type',
+          'Country as country',
+          'City as city',
+          'State as state',
+          'Address as address',
+          'ZIP_Code as zipCode',
+        ])
+        .execute(),
+    ]);
+
+    return { primaryContactInfo, branchesContactInfo };
   },
 };
 

@@ -39,6 +39,22 @@ export interface CompanyBoardMember {
   otherPositions: string | null;
 }
 
+export interface CompanyPrimaryContactInfo {
+  contactID: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPosition: string | null;
+}
+
+export interface CompanyContactInfo {
+  type: 'Main' | 'Branch' | string | null;
+  country: string | null;
+  state: string | null;
+  city: string | null;
+  address: string | null;
+  zipCode: string | null;
+}
+
 export interface CompanyFullDetails {
   companyID: CompanyID;
   companyName: string | null;
