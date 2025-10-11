@@ -1,57 +1,62 @@
-import type { DB } from 'kysely-codegen';
+export type CompanyID = string | null;
 
-export type Company = DB['Profiles'];
-
-export type Deal = DB['Deals'];
+export type DealID = string | null;
 
 export interface CompanyDealInvestor {
-  Company_Investor_ID: string | null;
-  Investment_Amount: number | null;
-  Investment_Remarks: string | null;
-  Private_Investor_ID: string | null;
-  investor_company_type: string | null;
-  investor_name: string | null;
+  companyInvestorID: string | null;
+  investmentAmount: number | null;
+  investmentRemarks: string | null;
+  privateInvestorID: string | null;
+  investorCompanyType: string | null;
+  investorName: string | null;
 }
 
 export interface CompanyFundingDeal {
-  Company_Post_Valuation: number | null;
-  Deal_Amount: number | null;
-  Deal_Date: Date | null;
-  Deal_ID: string;
-  Deal_Stage: string | null;
-  Deal_Type: string | null;
+  companyPostValuation: number | null;
+  dealAmount: number | null;
+  dealDate: Date | null;
+  dealID: string;
+  dealStage: string | null;
+  dealType: string | null;
   investors: CompanyDealInvestor[];
 }
 
 export interface CompanyExecutive {
-  Contact_ID: string | null;
-  Contact_Name: string | null;
-  Position_Title: string | null;
+  contactID: string | null;
+  contactName: string | null;
+  positionTitle: string | null;
 }
 
 export interface CompanyBoardMember {
-  Contact_ID: string | null;
-  Board_Name: string | null;
-  Board_Position: string | null;
-  Other_Positions: string | null;
+  contactID: string | null;
+  boardName: string | null;
+  boardPosition: string | null;
+  otherPositions: string | null;
 }
 
 export interface CompanyFullDetails {
-  Company_Name: string | null;
-  Company_Description: string | null;
-  Employees: number | null;
-  Israeli_Employees: number | null;
-  Reg_Number: string | null;
-  Sector: string | null;
-  Short_Name: string | null;
-  Stage: string | null;
-  Technology: string | null;
-  Website: string | null;
+  companyID: CompanyID;
+  companyName: string | null;
+  companyDescription: string | null;
+  establishedYear: number | null;
+  employees: number | null;
+  israeliEmployees: number | null;
+  regNumber: string | null;
+  sector: string | null;
+  shortName: string | null;
+  stage: string | null;
+  technology: string | null;
+  website: string | null;
   techVerticals: {
-    Tags_ID: string | null;
-    Tags_Name: string | null;
+    tagID: string | null;
+    tagName: string | null;
   }[];
   management: CompanyExecutive[];
   board: CompanyBoardMember[];
   deals: CompanyFundingDeal[];
 }
+
+export type CompanyDetails = Pick<
+  CompanyFullDetails,
+  'companyID' | 'companyName' | 'companyDescription' | 'establishedYear' | 'stage' | 'sector' | 'website'
+> & { techVerticalsNames: string | null };

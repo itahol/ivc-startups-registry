@@ -4,18 +4,26 @@ import { Item, ItemGroup, ItemTitle, ItemContent, ItemDescription, ItemSeparator
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CompanyBoardMember, CompanyExecutive, CompanyFullDetails } from '../../lib/model';
+import { notFound } from 'next/navigation';
 
 const TECH_PREVIEW = 8;
 const MANAGEMENT_PREVIEW = 5;
 const BOARD_PREVIEW = 5;
 
-export default function CompanyDetailsClient({ companyPromise }: { companyPromise: Promise<CompanyFullDetails> }) {
+export default function CompanyDetailsClient({
+  companyPromise,
+}: {
+  companyPromise: Promise<CompanyFullDetails | undefined>;
+}) {
   const company = use(companyPromise);
+  if (!company) {
+    notFound();
+  }
 
   const techVerticals = company.techVerticals;
   const management = orderManagement(company.management);
   const websiteHref =
-    company.Website && (company.Website.startsWith('http') ? company.Website : `https://${company.Website}`);
+    company.website && (company.website.startsWith('http') ? company.website : `https://${company.website}`);
 
   const [showAllTech, setShowAllTech] = useState(false);
   const [showAllManagement, setShowAllMgmt] = useState(false);
@@ -28,7 +36,7 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
   return (
     <div className="space-y-6 text-[15px] leading-relaxed">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{company.Company_Name}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{company.companyName}</h1>
         {websiteHref && (
           <p className="text-muted-foreground text-sm">
             <a
@@ -53,40 +61,40 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
                 <div className="grid gap-4 sm:grid-cols-3 text-[13px]">
                   <div>
                     <h2 className="text-xs font-medium mb-1 uppercase tracking-wide text-muted-foreground">Stage</h2>
-                    <p>{company.Stage ?? '—'}</p>
+                    <p>{company.stage ?? '—'}</p>
                   </div>
                   <div>
                     <h2 className="text-xs font-medium mb-1 uppercase tracking-wide text-muted-foreground">Sector</h2>
-                    <p>{company.Sector ?? '—'}</p>
+                    <p>{company.sector ?? '—'}</p>
                   </div>
                   <div>
                     <h2 className="text-xs font-medium mb-1 uppercase tracking-wide text-muted-foreground">
                       Employees
                     </h2>
-                    <p>{company.Employees ?? '—'}</p>
+                    <p>{company.employees ?? '—'}</p>
                   </div>
                   <div>
                     <h2 className="text-xs font-medium mb-1 uppercase tracking-wide text-muted-foreground">
                       Israel Employees
                     </h2>
-                    <p>{company.Israeli_Employees ?? '—'}</p>
+                    <p>{company.israeliEmployees ?? '—'}</p>
                   </div>
                   <div>
                     <h2 className="text-xs font-medium mb-1 uppercase tracking-wide text-muted-foreground">Reg #</h2>
-                    <p>{company.Reg_Number ?? '—'}</p>
+                    <p>{company.regNumber ?? '—'}</p>
                   </div>
                 </div>
-                {company.Company_Description && (
+                {company.companyDescription && (
                   <ItemDescription className="!line-clamp-none text-[14px] leading-snug">
-                    {company.Company_Description}
+                    {company.companyDescription}
                   </ItemDescription>
                 )}
-                {company.Technology && (
+                {company.technology && (
                   <div className="text-[14px]">
                     <h2 className="text-xs font-medium mb-1 uppercase tracking-wide text-muted-foreground">
                       Technology
                     </h2>
-                    <p className="text-muted-foreground whitespace-pre-wrap leading-snug">{company.Technology}</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap leading-snug">{company.technology}</p>
                   </div>
                 )}
               </ItemContent>
@@ -101,8 +109,8 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
                   <>
                     <div className="flex flex-wrap gap-1.5">
                       {techToShow.map((tv) => (
-                        <Badge key={tv.Tags_ID} variant="outline" className="text-[12px] py-1 px-2">
-                          {tv.Tags_Name}
+                        <Badge key={tv.tagID} variant="outline" className="text-[12px] py-1 px-2">
+                          {tv.tagName}
                         </Badge>
                       ))}
                     </div>
@@ -143,9 +151,9 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
                       <TableBody>
                         {managementToShow.map((managementPosition, idx) => (
                           <TableRow key={idx} className="text-[13px]">
-                            <TableCell className="font-medium">{managementPosition.Contact_Name || '—'}</TableCell>
+                            <TableCell className="font-medium">{managementPosition.contactName || '—'}</TableCell>
                             <TableCell className="text-muted-foreground">
-                              {managementPosition.Position_Title || '—'}
+                              {managementPosition.positionTitle || '—'}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -185,12 +193,12 @@ export default function CompanyDetailsClient({ companyPromise }: { companyPromis
                         {boardToShow.map((boardMember, idx) => {
                           return (
                             <TableRow key={idx} className="text-[13px]">
-                              <TableCell className="font-medium">{boardMember.Board_Name || '—'}</TableCell>
+                              <TableCell className="font-medium">{boardMember.boardName || '—'}</TableCell>
                               <TableCell className="text-muted-foreground">
-                                {boardMember.Board_Position || '—'}
+                                {boardMember.boardPosition || '—'}
                               </TableCell>
                               <TableCell className="text-muted-foreground">
-                                {boardMember.Other_Positions || '—'}
+                                {boardMember.otherPositions || '—'}
                               </TableCell>
                             </TableRow>
                           );
@@ -230,7 +238,7 @@ function orderManagement(list: CompanyExecutive[]) {
     if (/vp|vice president/.test(r)) return 3;
     return 10;
   };
-  return [...list].sort((a, b) => weight(a.Position_Title) - weight(b.Position_Title));
+  return [...list].sort((a, b) => weight(a.positionTitle) - weight(b.positionTitle));
 }
 
 function orderBoard(list: CompanyBoardMember[]) {
@@ -243,10 +251,10 @@ function orderBoard(list: CompanyBoardMember[]) {
     return 99;
   };
   return [...list].sort((a, b) => {
-    const w = weight(a.Board_Position) - weight(b.Board_Position);
+    const w = weight(a.boardPosition) - weight(b.boardPosition);
     if (w !== 0) return w;
-    const an = a.Board_Name || '';
-    const bn = b.Board_Name || '';
+    const an = a.boardName || '';
+    const bn = b.boardName || '';
     return an.localeCompare(bn);
   });
 }

@@ -9,14 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
-import { Company } from '../../lib/model/profiiles';
 import { use } from 'react';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '../ui/empty';
+import { CompanyDetails } from '../../lib/model';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters;
   techVerticalsPromise: Promise<{ id: string; name: string }[]>;
-  companiesPromise: Promise<Company[]>;
+  companiesPromise: Promise<CompanyDetails[]>;
   companiesCountPromise: Promise<number>;
   page: number;
   pageSize: number;
@@ -109,9 +109,10 @@ export function CompaniesClient({
           2xl:grid-cols-4
         `}
       >
-        {companies.map((company) => (
-          <CompanyCard key={company.Company_ID} company={company} />
-        ))}
+        {companies.map((company) => {
+          console.dir(company);
+          return <CompanyCard key={company.companyID} company={company} />;
+        })}
       </div>
 
       {/* Empty state */}

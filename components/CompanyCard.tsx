@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { Doc } from '@/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
-import { Company } from '../lib/model';
 import { Separator } from './ui/separator';
+import { CompanyDetails, CompanyFullDetails } from '../lib/model';
 
 /* -------------------------------------------------------------------------- */
 /*                                 Types                                      */
@@ -17,26 +17,26 @@ export interface CompanyWithRelations extends Doc<'companies'> {
 }
 
 interface CompanyCardProps {
-  company: Company;
+  company: CompanyDetails;
 }
 
 export function CompanyCard({ company }: CompanyCardProps) {
   const {
-    Company_ID: id,
-    Company_Name: name,
-    Company_Description: description,
-    Stage: stageName,
-    Sector: sectorName,
+    companyID: id,
+    companyName: name,
+    companyDescription: description,
+    stage: stageName,
+    sector: sectorName,
   } = company;
-  const websiteUrl = company.Website
+  const websiteUrl = company.website
     ? new URL(
-        company.Website.startsWith('http://') || company.Website.startsWith('https://')
-          ? company.Website
-          : `https://${company.Website}`,
+        company.website.startsWith('http://') || company.website.startsWith('https://')
+          ? company.website
+          : `https://${company.website}`,
       )
     : undefined;
-  const techVerticals = company.Tech_Verticals ? company.Tech_Verticals.split(',') : [];
-  const tags = techVerticals.map((tv) => (
+  const techVerticals = company.techVerticalsNames ? company.techVerticalsNames.split(',') : [];
+  const tags = techVerticals.map((tv: string) => (
     <Badge variant="outline" key={tv} className="whitespace-nowrap">
       {tv}
     </Badge>
@@ -100,7 +100,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
           <dt className="font-medium">Stage</dt>
           <dd className="text-muted-foreground">{stageName ?? '—'}</dd>
           <dt className="font-medium">Year</dt>
-          <dd className="text-muted-foreground">{company.Established_Year ?? '—'}</dd>
+          <dd className="text-muted-foreground">{company.establishedYear ?? '—'}</dd>
           <dt className="font-medium">Sector</dt>
           <dd className="text-muted-foreground">{sectorName ?? '—'}</dd>
           {techVerticals.length > 0 && (
