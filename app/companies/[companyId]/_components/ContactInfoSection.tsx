@@ -4,6 +4,29 @@ import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
 import { CompanyContactInfo, CompanyPrimaryContactInfo } from '@/lib/model';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { CircleFlag } from 'react-circle-flags';
+import { countries } from 'country-data-list';
+
+// Build a quick lookup from country common name -> alpha2 code (lowercase) for flag rendering.
+// We do this once at module load to avoid recomputing per render.
+const countryNameToAlpha2: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  try {
+    for (const c of (countries as any).all || []) {
+      if (c?.name && c?.alpha2) {
+        map[c.name.toLowerCase()] = c.alpha2.toLowerCase();
+      }
+    }
+  } catch (e) {
+    // fail silently – flags will just not render
+  }
+  return map;
+})();
+
+function getCountryCode(name?: string | null): string | undefined {
+  if (!name) return undefined;
+  return countryNameToAlpha2[name.toLowerCase()];
+}
 
 interface ContactInfoData {
   primaryContactInfo?: CompanyPrimaryContactInfo;
@@ -122,9 +145,21 @@ function BranchPanel({
         >
           {expanded ? '−' : '+'}
         </span>
-        <span className="text-[13px] font-medium">
-          <span className="mr-1">{heading}:</span>
-          {summary || '—'}
+        <span className="flex-1 flex items-center justify-between gap-2 text-[13px] font-medium min-w-0">
+          <span className="truncate">
+            <span className="mr-1">{heading}:</span>
+            {summary || '—'}
+          </span>
+          {/* Country Flag aligned to the right */}
+          {(() => {
+            const code = getCountryCode(branch.country);
+            if (!code) return null;
+            return (
+              <span className="shrink-0 inline-flex items-center justify-center w-5 h-5 overflow-hidden rounded-full border border-border bg-background">
+                <CircleFlag countryCode={code} height={20} />
+              </span>
+            );
+          })()}
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent className="px-3 pb-3 pt-1 data-[state=closed]:animate-none">
@@ -150,7 +185,7 @@ function BranchPanel({
                   {primaryContactInfo?.contactName && (
                     <VerticalRow
                       label="Contact Person"
-                      value={`${primaryContactInfo.contactName}$$${
+                      value={`${primaryContactInfo.contactName}$${
                         primaryContactInfo.contactPosition ? ` (${primaryContactInfo.contactPosition})` : ''
                       }`.replace('$', '')}
                     />

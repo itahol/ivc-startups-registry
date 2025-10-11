@@ -62,6 +62,9 @@ importers:
       core-js:
         specifier: 3.45.1
         version: 3.45.1
+      country-data-list:
+        specifier: ^1.5.5
+        version: 1.5.5
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -80,6 +83,9 @@ importers:
       react:
         specifier: ^19.0.0
         version: 19.2.0
+      react-circle-flags:
+        specifier: ^0.0.23
+        version: 0.0.23(react@19.2.0)
       react-day-picker:
         specifier: ^9.11.1
         version: 9.11.1(react@19.2.0)
@@ -1980,6 +1986,9 @@ packages:
       typescript:
         optional: true
 
+  country-data-list@1.5.5:
+    resolution: {integrity: sha512-igoAbJvlD/foOq4+aB3t24Hndvb5y/DasXcrVOtJMZ0UFLgfYq/mPMcCcSjJAIykLcTWOHZehZgNUJyaKMz1iA==}
+
   cross-spawn@6.0.6:
     resolution: {integrity: sha512-VqCUuhcd1iB+dsv8gxPttb5iZh/D0iubSP21g36KXdEuf6I5JiioesUVjpCdHV9MZRUfVFlvwtIUyPfxo5trtw==}
     engines: {node: '>=4.8'}
@@ -3124,6 +3133,12 @@ packages:
         optional: true
       '@types/react-dom':
         optional: true
+
+  react-circle-flags@0.0.23:
+    resolution: {integrity: sha512-J35vkTnG4Iz7cgitq/UIw4/1i8aUWEkz2Z0MQTTWycWOHKezuey5+3BPAsXNr78gYMdjSBtZWmSzQc0oEeK4oQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: ^16.0.0 || 17.x || 18.x || 19.x
 
   react-day-picker@9.11.1:
     resolution: {integrity: sha512-l3ub6o8NlchqIjPKrRFUCkTUEq6KwemQlfv3XZzzwpUeGwmDJ+0u0Upmt38hJyd7D/vn2dQoOoLV/qAp0o3uUw==}
@@ -5459,6 +5474,8 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
+  country-data-list@1.5.5: {}
+
   cross-spawn@6.0.6:
     dependencies:
       nice-try: 1.0.5
@@ -6777,6 +6794,10 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.0
       '@types/react-dom': 19.2.0(@types/react@19.2.0)
+
+  react-circle-flags@0.0.23(react@19.2.0):
+    dependencies:
+      react: 19.2.0
 
   react-day-picker@9.11.1(react@19.2.0):
     dependencies:
