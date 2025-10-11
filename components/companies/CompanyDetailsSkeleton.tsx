@@ -5,7 +5,7 @@ export function CompanyDetailsSkeleton() {
       <div className="h-8 w-1/3 rounded bg-muted" />
 
       {/* Grid: About + Tech Verticals */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-4">
         {/* Left (About) */}
         <div className="lg:col-span-2 space-y-6">
           <div className="space-y-4">
@@ -32,7 +32,7 @@ export function CompanyDetailsSkeleton() {
         </div>
 
         {/* Right (Management + Board) */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           {/* Management */}
           <div className="space-y-3">
             <div className="h-4 w-28 rounded bg-muted" />

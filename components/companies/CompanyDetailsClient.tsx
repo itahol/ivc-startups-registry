@@ -4,6 +4,7 @@ import { Item, ItemGroup, ItemTitle, ItemContent, ItemDescription, ItemSeparator
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CompanyBoardMember, CompanyExecutive, CompanyFullDetails } from '../../lib/model';
+import CompanyFundingRounds from '@/components/companies/CompanyFundingRounds';
 import { notFound } from 'next/navigation';
 
 const TECH_PREVIEW = 8;
@@ -51,7 +52,7 @@ export default function CompanyDetailsClient({
         )}
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-4">
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
           <ItemGroup className="gap-4">
@@ -134,7 +135,9 @@ export default function CompanyDetailsClient({
         </div>
 
         {/* Right column */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-6">
+          <CompanyFundingRounds deals={company.deals || []} />
+          {/* Inserted feature parity financial rounds section */}
           <ItemGroup className="gap-4">
             <Item className="flex-col items-start p-0">
               <ItemTitle className="text-sm font-semibold">Management</ItemTitle>
