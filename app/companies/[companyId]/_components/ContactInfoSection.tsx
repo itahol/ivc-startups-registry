@@ -17,7 +17,7 @@ const countryNameToAlpha2: Record<string, string> = (() => {
         map[c.name.toLowerCase()] = c.alpha2.toLowerCase();
       }
     }
-  } catch (_) {
+  } catch {
     // fail silently – flags will just not render
   }
   return map;

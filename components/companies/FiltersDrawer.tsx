@@ -16,6 +16,7 @@ import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '../../convex/schema';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import YearRangePicker from '../YearRangePicker';
+import SearchInput from '@/components/SearchInput';
 
 export type SectorOption = (typeof SECTOR_VALUES)[number];
 export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
@@ -44,7 +45,13 @@ export function FiltersDrawer({ value, onApply, techVerticals }: FiltersDrawerPr
 
   const verticalOperator = draft.techVerticals?.operator ?? 'OR';
   const selectedVerticalIds = React.useMemo(() => draft.techVerticals?.ids ?? [], [draft.techVerticals]);
-  const hasAnyFilters = !!(draft.techVerticals || draft.sectors || draft.stages || draft.yearEstablished);
+  const hasAnyFilters = !!(
+    draft.techVerticals ||
+    draft.sectors ||
+    draft.stages ||
+    draft.yearEstablished ||
+    draft.keyword
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -61,6 +68,20 @@ export function FiltersDrawer({ value, onApply, techVerticals }: FiltersDrawerPr
 
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-8 p-6">
+            {/* Keyword Search */}
+            <fieldset className="mb-6" aria-labelledby="keyword-label">
+              <legend id="keyword-label" className="mb-2 text-sm font-medium">
+                Keyword
+              </legend>
+              <SearchInput
+                value={draft.keyword ?? ''}
+                onChange={(value) => setDraft((prev) => ({ ...prev, keyword: value.trim() || undefined }))}
+                placeholder="Search by keyword..."
+                hideSubmitButton={true}
+                hideLabel={true}
+              />
+            </fieldset>
+
             {/* Tech Verticals */}
             <fieldset className="mb-6" aria-labelledby="tech-verticals-label">
               <legend id="tech-verticals-label" className="mb-2 text-sm font-medium">

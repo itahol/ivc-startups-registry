@@ -42,12 +42,14 @@ export default async function CompaniesPage({
     QUERIES.getCompanies({
       limit: pageSize,
       offset,
+      keyword: initialFilters.keyword,
       techVerticalsFilter: initialFilters.techVerticals,
       sectors: initialFilters.sectors,
       stages: initialFilters.stages,
       yearEstablished: initialFilters.yearEstablished,
     }),
     QUERIES.getCompaniesCount({
+      keyword: initialFilters.keyword,
       techVerticalsFilter: initialFilters.techVerticals,
       sectors: initialFilters.sectors,
       stages: initialFilters.stages,

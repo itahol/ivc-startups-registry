@@ -12,6 +12,7 @@ import { CompanyCard } from '@/components/CompanyCard';
 import { use } from 'react';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '../ui/empty';
 import { CompanyDetails } from '../../lib/model';
+import SearchInput from '@/components/SearchInput';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters;
@@ -35,6 +36,14 @@ export function CompaniesClient({
 
   // Derive filters from URL each render (URL = source of truth)
   const currentFilters = React.useMemo(() => readCompanyFilters(searchParams), [searchParams]);
+
+  // Local state for keyword input (controlled component)
+  const [keywordInput, setKeywordInput] = React.useState(currentFilters.keyword ?? '');
+
+  // Sync keyword input with URL changes
+  React.useEffect(() => {
+    setKeywordInput(currentFilters.keyword ?? '');
+  }, [currentFilters.keyword]);
 
   const techVerticals = use(techVerticalsPromise);
   const companies = use(companiesPromise);
@@ -63,10 +72,14 @@ export function CompaniesClient({
 
   const onApply = React.useCallback(
     (next: CompanyFilters) => {
-      const nextSp = encodeCompanyFilters(next).toString();
+      const nextSp = encodeCompanyFilters(next);
       const currentQuery = searchParams.toString();
-      if (nextSp === currentQuery) return; // no change
-      router.push(nextSp ? `${pathname}?${nextSp}` : pathname, { scroll: false });
+      if (nextSp.toString() === currentQuery) return; // no change
+
+      // Reset pagination when filters change
+      nextSp.delete('page');
+
+      router.push(nextSp.toString() ? `${pathname}?${nextSp.toString()}` : pathname, { scroll: false });
     },
     [pathname, router, searchParams],
   );
@@ -74,6 +87,15 @@ export function CompaniesClient({
   const clearAll = React.useCallback(() => {
     onApply({});
   }, [onApply]);
+
+  const handleKeywordSubmit = React.useCallback(() => {
+    const trimmedKeyword = keywordInput.trim();
+    const nextFilters: CompanyFilters = {
+      ...currentFilters,
+      keyword: trimmedKeyword || undefined,
+    };
+    onApply(nextFilters);
+  }, [keywordInput, currentFilters, onApply]);
 
   return (
     <div>
@@ -85,6 +107,14 @@ export function CompaniesClient({
         `}
       >
         <div className="flex flex-wrap items-center gap-2 min-h-8">
+          <SearchInput
+            value={keywordInput}
+            onChange={setKeywordInput}
+            onSubmit={handleKeywordSubmit}
+            label="Search companies"
+            placeholder="Search by keyword..."
+            hideLabel={true}
+          />
           <FiltersDrawer value={currentFilters} onApply={onApply} techVerticals={techVerticals} />
           {hasActiveFilters ? (
             <Button
