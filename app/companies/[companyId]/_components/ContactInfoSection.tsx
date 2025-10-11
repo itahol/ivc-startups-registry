@@ -12,12 +12,12 @@ import { countries } from 'country-data-list';
 const countryNameToAlpha2: Record<string, string> = (() => {
   const map: Record<string, string> = {};
   try {
-    for (const c of (countries as any).all || []) {
+    for (const c of countries.all || []) {
       if (c?.name && c?.alpha2) {
         map[c.name.toLowerCase()] = c.alpha2.toLowerCase();
       }
     }
-  } catch (e) {
+  } catch (_) {
     // fail silently – flags will just not render
   }
   return map;

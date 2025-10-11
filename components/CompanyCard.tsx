@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import type { Doc } from '@/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
-import { CompanyDetails, CompanyFullDetails } from '../lib/model';
+import { CompanyDetails } from '../lib/model';
 
 /* -------------------------------------------------------------------------- */
 /*                                 Types                                      */
