@@ -100,6 +100,9 @@ importers:
       tedious:
         specifier: ^18.6.1
         version: 18.6.1
+      typesense-ts:
+        specifier: ^0.2.3
+        version: 0.2.3
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -4207,6 +4210,10 @@ packages:
     engines: { node: '>=14.17' }
     hasBin: true
 
+  typesense-ts@0.2.3:
+    resolution:
+      { integrity: sha512-BvSa3rmzpykLJxZcWg1+AatYc9ql1+SweRnJJNsRfwuNYl/6LfQOHkvfoW1K8pijrvDCSknkZ/4ISZfg8Bf12Q== }
+
   unbox-primitive@1.1.0:
     resolution:
       { integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw== }
@@ -8010,6 +8017,8 @@ snapshots:
       reflect.getprototypeof: 1.0.10
 
   typescript@5.9.3: {}
+
+  typesense-ts@0.2.3: {}
 
   unbox-primitive@1.1.0:
     dependencies:

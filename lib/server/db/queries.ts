@@ -188,6 +188,9 @@ export const QUERIES = {
 
     return { primaryContactInfo, branchesContactInfo };
   },
+
+  // Escape hatch
+  dbRead: db,
 };
 
 function getCompanyManagement({
