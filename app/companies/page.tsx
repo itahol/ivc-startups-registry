@@ -1,8 +1,8 @@
 import { cache, Suspense } from 'react';
 import Navbar from '../../components/Navbar';
 import { readCompanyFilters } from '@/lib/companies/filtersUrl';
-import { CompaniesSkeleton } from '@/components/companies/CompaniesSkeleton';
-import { CompaniesInstantSearch } from '@/components/companies/CompaniesInstantSearch';
+import { CompaniesInstantSearch } from './_components/CompaniesInstantSearch';
+import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
 
 const getTechVerticals = cache(async () => {
   // TODO: Replace with Typesense facet values when facets are wired

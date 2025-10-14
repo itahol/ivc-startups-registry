@@ -6,7 +6,7 @@ import { InstantSearch, Configure } from 'react-instantsearch';
 import { useHits, usePagination, useInstantSearch } from 'react-instantsearch';
 import { searchClient } from '@/lib/instantsearch/typesenseAdapter';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
-import { FiltersDrawer } from '@/components/companies/FiltersDrawer';
+import { FiltersDrawer } from '@/app/companies/_components/FiltersDrawer';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
@@ -14,7 +14,7 @@ import { CompanyCard } from '@/components/CompanyCard';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
 import SearchInput from '@/components/SearchInput';
 import { useSearchBox } from 'react-instantsearch';
-import { CompanyDetails } from '../../lib/model';
+import { CompanyDetails } from '../../../lib/model';
 
 function CompaniesSearchBox({ initialKeyword }: { initialKeyword?: string }) {
   const { refine, query } = useSearchBox();
