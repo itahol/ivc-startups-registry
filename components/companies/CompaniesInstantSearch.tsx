@@ -1,0 +1,211 @@
+'use client';
+
+import * as React from 'react';
+import { use } from 'react';
+import { InstantSearch, Configure } from 'react-instantsearch';
+import { useHits, usePagination, useInstantSearch } from 'react-instantsearch';
+import { searchClient } from '@/lib/instantsearch/typesenseAdapter';
+import type { CompanyFilters } from '@/lib/companies/filtersUrl';
+import { FiltersDrawer } from '@/components/companies/FiltersDrawer';
+import { Button } from '@/components/ui/button';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { CompanyCard } from '@/components/CompanyCard';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
+import SearchInput from '@/components/SearchInput';
+import { useSearchBox } from 'react-instantsearch';
+import { CompanyDetails } from '../../lib/model';
+
+function CompaniesSearchBox({ initialKeyword }: { initialKeyword?: string }) {
+  const { refine, query } = useSearchBox();
+  const [input, setInput] = React.useState(query ?? initialKeyword ?? '');
+
+  const handleChange = (value: string) => {
+    setInput(value);
+    refine(value.trim() || '');
+  };
+
+  const handleSubmit = () => {
+    refine(input.trim() || '');
+  };
+
+  return (
+    <SearchInput
+      value={input}
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+      label="Search companies"
+      placeholder="Search by keyword..."
+      hideLabel={true}
+      size="large"
+    />
+  );
+}
+
+function CompaniesHits() {
+  const { items } = useHits<CompanyDetails & { techVerticals: string[] | null }>();
+
+  if (items.length === 0) {
+    return null;
+  }
+  return (
+    <div
+      className={`
+        grid grid-cols-1 gap-8
+        sm:grid-cols-2
+        lg:grid-cols-3
+        2xl:grid-cols-4
+      `}
+    >
+      {items.map((company) => (
+        <CompanyCard
+          key={company.companyID}
+          company={{
+            ...company,
+            techVerticalsNames: Array.isArray(company.techVerticals) ? company.techVerticals.join(',') : null,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ---------- Custom Pagination widget replicating existing UI ----------
+function CustomPagination() {
+  const { currentRefinement: page, refine, nbPages } = usePagination();
+  const pageOne = page + 1; // InstantSearch is 0-based
+  const totalPages = Math.max(nbPages, 1);
+
+  const prevDisabled = pageOne <= 1;
+  const nextDisabled = pageOne >= totalPages;
+
+  const goPrev = () => !prevDisabled && refine(page - 1);
+  const goNext = () => !nextDisabled && refine(page + 1);
+
+  return (
+    <div className="mt-12 flex flex-col items-center gap-3">
+      <Pagination>
+        <PaginationContent className="gap-3">
+          <PaginationItem>
+            <PaginationLink
+              className={prevDisabled ? 'pointer-events-none opacity-50' : ''}
+              href="#"
+              aria-label="Go to previous page"
+              onClick={(e) => {
+                e.preventDefault();
+                goPrev();
+              }}
+            >
+              <ChevronLeftIcon size={16} aria-hidden="true" />
+            </PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <p className="text-muted-foreground text-sm" aria-live="polite">
+              Page <span className="text-foreground">{pageOne}</span> of{' '}
+              <span className="text-foreground">{totalPages}</span>
+            </p>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink
+              className={nextDisabled ? 'pointer-events-none opacity-50' : ''}
+              href="#"
+              aria-label="Go to next page"
+              onClick={(e) => {
+                e.preventDefault();
+                goNext();
+              }}
+            >
+              <ChevronRightIcon size={16} aria-hidden="true" />
+            </PaginationLink>
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+      <ResultsSummary />
+    </div>
+  );
+}
+
+// ---------- Results summary ----------
+function ResultsSummary() {
+  const { results } = useInstantSearch();
+  if (!results) return null;
+  const { nbHits, hitsPerPage, page } = results;
+  const from = nbHits === 0 ? 0 : page * hitsPerPage + 1;
+  const to = Math.min((page + 1) * hitsPerPage, nbHits);
+  return (
+    <div className="text-xs text-muted-foreground">
+      {nbHits.toLocaleString()} results · Showing {from.toLocaleString()}–{to.toLocaleString()}
+    </div>
+  );
+}
+
+// ---------- Empty state ----------
+function CustomEmptyState({ hasFilters }: { hasFilters: boolean }) {
+  return (
+    <Empty className="border border-dashed">
+      <EmptyHeader>
+        <EmptyTitle>No companies found for these filters.</EmptyTitle>
+        {hasFilters ? (
+          <EmptyDescription>Try adjusting your filters to find what you&apos;re looking for.</EmptyDescription>
+        ) : null}
+      </EmptyHeader>
+      <EmptyContent>
+        {hasFilters ? (
+          <div className="mt-4">
+            <Button size="sm" variant="outline" aria-label="Clear filters to show all products">
+              Clear filters
+            </Button>
+          </div>
+        ) : null}
+      </EmptyContent>
+    </Empty>
+  );
+}
+
+// ---------- Main component ----------
+export interface CompaniesInstantSearchClientProps {
+  initialFilters: CompanyFilters;
+  techVerticalsPromise: Promise<{ id: string; name: string }[]>;
+  pageSize: number;
+}
+
+export function CompaniesInstantSearch({
+  initialFilters,
+  techVerticalsPromise,
+  pageSize,
+}: CompaniesInstantSearchClientProps) {
+  const techVerticals = use(techVerticalsPromise);
+  const hasActiveFilters = !!initialFilters.keyword; // only keyword for now
+
+  return (
+    <InstantSearch
+      searchClient={searchClient}
+      indexName="companies"
+      initialUiState={{ companies: { query: initialFilters.keyword ?? '' } }}
+    >
+      <Configure hitsPerPage={pageSize} />
+
+      {/* Search Section - Centered and Prominent */}
+      <div className="mb-8 flex flex-col items-center gap-6">
+        <div className="w-full max-w-2xl">
+          <CompaniesSearchBox initialKeyword={initialFilters.keyword ?? ''} />
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 min-h-8">
+          <FiltersDrawer value={initialFilters} onApply={() => {}} techVerticals={techVerticals} />
+          {hasActiveFilters ? (
+            <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground hover:text-foreground">
+              Clear
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="relative">
+        <CompaniesHits />
+        <CustomEmptyState hasFilters={hasActiveFilters} />
+      </div>
+
+      <CustomPagination />
+    </InstantSearch>
+  );
+}

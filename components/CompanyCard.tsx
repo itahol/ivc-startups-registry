@@ -9,14 +9,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import { CompanyDetails } from '../lib/model';
 
-/* -------------------------------------------------------------------------- */
-/*                                 Types                                      */
-/* -------------------------------------------------------------------------- */
-export interface CompanyWithRelations extends Doc<'companies'> {
-  techVerticals: Doc<'techVerticals'>[];
-}
-
-interface CompanyCardProps {
+export interface CompanyCardProps {
   company: CompanyDetails;
 }
 

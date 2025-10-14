@@ -10,6 +10,11 @@
       "type": "local",
       "command": ["npx", "shadcn@latest", "mcp"],
       "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp", "--api-key", "ctx7sk-563e5170-c444-4d84-bf12-120b7b25d151"],
+      "enabled": true
     }
   }
 }
