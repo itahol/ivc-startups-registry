@@ -4,9 +4,13 @@ import * as React from 'react';
 import { use } from 'react';
 import { InstantSearch, Configure } from 'react-instantsearch';
 import { useHits, usePagination, useInstantSearch, useSearchBox } from 'react-instantsearch';
+import { RefinementList } from 'react-instantsearch';
 import { searchClient } from '@/lib/instantsearch/typesenseAdapter';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { FiltersDrawer } from '@/app/companies/_components/FiltersDrawer';
+import { CurrentRefinements } from '@/components/instantsearch/current-refinements';
+import { RangeFilter } from '@/components/instantsearch/range-menu';
+import NumericMenu from '@/components/instantsearch/numeric-menu';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
@@ -265,32 +269,123 @@ function CompaniesInstantSearchInner({
     <>
       <Configure hitsPerPage={pageSize} filters={instantSearchFilters} />
 
-      {/* Search Section - Centered and Prominent */}
-      <div className="mb-8 flex flex-col items-center gap-6">
-        <div className="w-full max-w-2xl">
-          <CompaniesSearchBox />
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2 min-h-8">
-          <FiltersDrawer value={filters} onApply={handleFiltersApply} techVerticals={techVerticals} />
-          {hasActiveFilters ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full text-muted-foreground hover:text-foreground"
-              onClick={handleClearFilters}
-            >
-              Clear
-            </Button>
-          ) : null}
-        </div>
-      </div>
+      <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[320px_1fr] lg:gap-12">
+        <aside className="flex flex-col gap-6">
+          {/* Current Refinements */}
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Active Filters</h3>
+            <CurrentRefinements />
+          </div>
 
-      <div className="relative">
-        <CompaniesHits />
-        <CustomEmptyState hasFilters={hasActiveFilters} />
-      </div>
+          {/* Bounded Facets - Non-searchable */}
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Sector</h3>
+            <RefinementList attribute="sector" limit={10} operator="or" />
+          </div>
 
-      <CustomPagination />
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Stage</h3>
+            <RefinementList attribute="stage" limit={10} operator="or" />
+          </div>
+
+          {/* Unbounded Facets - Searchable with show more */}
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Tech Verticals</h3>
+            <RefinementList
+              attribute="techVerticals"
+              searchable={true}
+              showMore={true}
+              showMoreLimit={50}
+              limit={10}
+              operator="or"
+            />
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Key Executives</h3>
+            <RefinementList
+              attribute="executives"
+              searchable={true}
+              showMore={true}
+              showMoreLimit={50}
+              limit={10}
+              operator="or"
+            />
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Investors</h3>
+            <RefinementList
+              attribute="investors"
+              searchable={true}
+              showMore={true}
+              showMoreLimit={50}
+              limit={10}
+              operator="or"
+            />
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Board Members</h3>
+            <RefinementList
+              attribute="boardMembers"
+              searchable={true}
+              showMore={true}
+              showMoreLimit={50}
+              limit={10}
+              operator="or"
+            />
+          </div>
+
+          {/* Numeric Controls */}
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Founded Year</h3>
+            <RangeFilter attribute="establishedYear" />
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Employees</h3>
+            <NumericMenu
+              attribute="employees"
+              items={[
+                { label: 'Under 10', end: 10 },
+                { label: '10-50', start: 10, end: 50 },
+                { label: '50-250', start: 50, end: 250 },
+                { label: '250-1000', start: 250, end: 1000 },
+                { label: 'Over 1000', start: 1000 },
+              ]}
+            />
+          </div>
+        </aside>
+
+        <section className="flex flex-col gap-10">
+          <div className="flex flex-col items-center gap-6 lg:items-start">
+            <div className="w-full max-w-2xl lg:max-w-none">
+              <CompaniesSearchBox />
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2 min-h-8 lg:justify-start">
+              <FiltersDrawer value={filters} onApply={handleFiltersApply} techVerticals={techVerticals} />
+              {hasActiveFilters ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full text-muted-foreground hover:text-foreground"
+                  onClick={handleClearFilters}
+                >
+                  Clear
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="relative">
+            <CompaniesHits />
+            <CustomEmptyState hasFilters={hasActiveFilters} />
+          </div>
+
+          <CustomPagination />
+        </section>
+      </div>
     </>
   );
 }
