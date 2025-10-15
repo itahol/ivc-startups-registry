@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { attributeMetaMap } from "@/lib/server/typesense/schema";
 import { formatNumber } from "@/lib/utils";
 import { X } from "lucide-react";
-import { useCurrentRefinements, UseCurrentRefinementsProps } from "react-instantsearch";
+import { useClearRefinements, useCurrentRefinements, UseCurrentRefinementsProps } from "react-instantsearch";
 
 type CurrentRefinement = (ReturnType<typeof useCurrentRefinements>['items'])[number]['refinements'][number];
 
@@ -35,10 +35,12 @@ function formatLabel(label: string): string {
 }
 
 export function CurrentRefinements(props: UseCurrentRefinementsProps) {
+  const {refine: clearRefinements } = useClearRefinements();
   const { items, refine } = useCurrentRefinements(props);
   console.dir(items);
 
   return (
+    <div >
     <div className="flex gap-3 flex-wrap h-15">
       {items
         .sort((a, b) => a.label.localeCompare(b.label))
@@ -65,6 +67,16 @@ export function CurrentRefinements(props: UseCurrentRefinementsProps) {
             );
           }),
         )}
+    </div>
+    {items.length !== 0 ?
+      <Button
+        variant="ghost"
+        size="sm"
+        className="rounded-full text-muted-foreground hover:text-foreground"
+        onClick={clearRefinements}
+      >
+        Clear
+      </Button> : null}
     </div>
   );
 }

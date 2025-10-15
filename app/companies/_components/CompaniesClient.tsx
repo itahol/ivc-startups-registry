@@ -4,7 +4,6 @@ import * as React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { readCompanyFilters, encodeCompanyFilters, hasActiveCompanyFilters } from '@/lib/companies/filtersUrl';
-import { FiltersDrawer } from '@/app/companies/_components/FiltersDrawer';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
@@ -112,22 +111,6 @@ export function CompaniesClient({
             hideLabel={true}
             size="large"
           />
-        </div>
-
-        {/* Filters Row - Below Search */}
-        <div className="flex flex-wrap items-center justify-center gap-2 min-h-8">
-          <FiltersDrawer value={currentFilters} onApply={onApply} techVerticals={techVerticals} />
-          {hasActiveFilters ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              aria-label="Clear all selected filters"
-              className="rounded-full text-muted-foreground hover:text-foreground"
-            >
-              Clear
-            </Button>
-          ) : null}
         </div>
       </div>
 

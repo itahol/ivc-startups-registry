@@ -6,7 +6,6 @@ import { InstantSearch, Configure } from 'react-instantsearch';
 import { useHits, usePagination, useInstantSearch, useSearchBox } from 'react-instantsearch';
 import { searchClient } from '@/lib/instantsearch/typesenseAdapter';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
-import { FiltersDrawer } from '@/app/companies/_components/FiltersDrawer';
 import { CurrentRefinements } from '@/components/instantsearch/current-refinements';
 import { RangeFilter } from '@/components/instantsearch/range-menu';
 import NumericMenu from '@/components/instantsearch/numeric-menu';
@@ -237,7 +236,7 @@ function CompaniesInstantSearchInner({
   pageSize: number;
 }) {
   const [filters, setFilters] = React.useState<CompanyFilters>(initialFilters);
-  const { refine } = useSearchBox();
+  const { refine} = useSearchBox();
 
   // Convert filters to InstantSearch format
   const instantSearchFilters = React.useMemo(() => filtersToInstantSearchState(filters), [filters]);
@@ -358,17 +357,6 @@ function CompaniesInstantSearchInner({
               <CompaniesSearchBox />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 min-h-8 lg:justify-start">
-              <FiltersDrawer value={filters} onApply={handleFiltersApply} techVerticals={techVerticals} />
-              {hasActiveFilters ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full text-muted-foreground hover:text-foreground"
-                  onClick={handleClearFilters}
-                >
-                  Clear
-                </Button>
-              ) : null}
             </div>
             {/* Current Refinements */}
             {
