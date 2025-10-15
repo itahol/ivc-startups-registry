@@ -4,13 +4,13 @@ import * as React from 'react';
 import { use } from 'react';
 import { InstantSearch, Configure } from 'react-instantsearch';
 import { useHits, usePagination, useInstantSearch, useSearchBox } from 'react-instantsearch';
-import { RefinementList } from 'react-instantsearch';
 import { searchClient } from '@/lib/instantsearch/typesenseAdapter';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { FiltersDrawer } from '@/app/companies/_components/FiltersDrawer';
 import { CurrentRefinements } from '@/components/instantsearch/current-refinements';
 import { RangeFilter } from '@/components/instantsearch/range-menu';
 import NumericMenu from '@/components/instantsearch/numeric-menu';
+import { StyledRefinementList } from '@/components/instantsearch/refinement-list';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
@@ -271,27 +271,21 @@ function CompaniesInstantSearchInner({
 
       <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[320px_1fr] lg:gap-12">
         <aside className="flex flex-col gap-6">
-          {/* Current Refinements */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Active Filters</h3>
-            <CurrentRefinements />
-          </div>
-
           {/* Bounded Facets - Non-searchable */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Sector</h3>
-            <RefinementList attribute="sector" limit={10} operator="or" />
+            <StyledRefinementList attribute="sector" limit={10} operator="or" />
           </div>
 
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Stage</h3>
-            <RefinementList attribute="stage" limit={10} operator="or" />
+            <StyledRefinementList attribute="stage" limit={10} operator="or" />
           </div>
 
           {/* Unbounded Facets - Searchable with show more */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Tech Verticals</h3>
-            <RefinementList
+            <StyledRefinementList
               attribute="techVerticals"
               searchable={true}
               showMore={true}
@@ -303,7 +297,7 @@ function CompaniesInstantSearchInner({
 
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Key Executives</h3>
-            <RefinementList
+            <StyledRefinementList
               attribute="executives"
               searchable={true}
               showMore={true}
@@ -315,7 +309,7 @@ function CompaniesInstantSearchInner({
 
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Investors</h3>
-            <RefinementList
+            <StyledRefinementList
               attribute="investors"
               searchable={true}
               showMore={true}
@@ -327,7 +321,7 @@ function CompaniesInstantSearchInner({
 
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Board Members</h3>
-            <RefinementList
+            <StyledRefinementList
               attribute="boardMembers"
               searchable={true}
               showMore={true}
@@ -376,6 +370,17 @@ function CompaniesInstantSearchInner({
                 </Button>
               ) : null}
             </div>
+            {/* Current Refinements */}
+            {
+              <div className="w-full max-w-2xl lg:max-w-none">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Active Filters
+                  </h3>
+                  <CurrentRefinements />
+                </div>
+              </div>
+            }
           </div>
 
           <div className="relative">
