@@ -32,3 +32,9 @@ declare module 'typesense-ts' {
     companies: typeof companiesSchema.schema;
   }
 }
+
+export const attributeLabelMap: Record<string, string> = {
+  boardMembers: "Board Members",
+  executives: "Key Excecutives",
+
+} satisfies { [K in keyof Partial<typeof companiesSchema.infer>]: string };
