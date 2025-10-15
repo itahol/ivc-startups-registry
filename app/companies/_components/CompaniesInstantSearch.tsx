@@ -17,6 +17,7 @@ import { CompanyCard } from '@/components/CompanyCard';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
 import SearchInput from '@/components/SearchInput';
 import { CompanyDetails } from '../../../lib/model';
+import { InstantSearchNext } from 'react-instantsearch-nextjs';
 
 function CompaniesSearchBox() {
   const { refine, query } = useSearchBox();
@@ -212,15 +213,16 @@ export function CompaniesInstantSearch({
   techVerticalsPromise,
   pageSize,
 }: CompaniesInstantSearchClientProps) {
+  console.count('InstantSearch mount');
   return (
-    <InstantSearch
+    <InstantSearchNext
       searchClient={searchClient}
       indexName="companies"
       initialUiState={{ companies: { query: initialFilters.keyword ?? '' } }}
       routing={true}
     >
       <CompaniesInstantSearchInner initialFilters={initialFilters} pageSize={pageSize} />
-    </InstantSearch>
+    </InstantSearchNext>
   );
 }
 
@@ -255,11 +257,11 @@ function CompaniesInstantSearchInner({
     }
   };
 
-  const handleClearFilters = () => {
+  const handleClearFilters = React.useCallback(() => {
     const clearedFilters: CompanyFilters = {};
     setFilters(clearedFilters);
     refine('');
-  };
+  }, [setFilters, refine]);
 
   return (
     <>
