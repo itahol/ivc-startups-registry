@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import { attributeLabelMap } from "@/lib/server/typesense/schema";
 import { formatNumber } from "@/lib/utils";
@@ -46,7 +47,10 @@ export function CurrentRefinements(props: UseCurrentRefinementsProps) {
                 key={[item.indexName, item.label, refinement.label].join("/")}
                 size="sm"
               >
-                <span>{`${formattedLabel}: ${formattedRefinementLabel}`}</span>
+                <span>
+                  <span className="font-bold">{`${formattedLabel}: `}</span>
+                  {`${formattedRefinementLabel}`}
+                </span>
                 <X className="h-5" />
               </Button>
             );

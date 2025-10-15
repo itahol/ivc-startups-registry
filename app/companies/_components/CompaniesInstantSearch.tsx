@@ -274,12 +274,12 @@ function CompaniesInstantSearchInner({
           {/* Bounded Facets - Non-searchable */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Sector</h3>
-            <StyledRefinementList attribute="sector" limit={10} operator="or" />
+            <StyledRefinementList attribute="sector" limit={10} enableOperatorToggle />
           </div>
 
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Stage</h3>
-            <StyledRefinementList attribute="stage" limit={10} operator="or" />
+            <StyledRefinementList attribute="stage" limit={10} enableOperatorToggle />
           </div>
 
           {/* Unbounded Facets - Searchable with show more */}
@@ -291,7 +291,7 @@ function CompaniesInstantSearchInner({
               showMore={true}
               showMoreLimit={50}
               limit={10}
-              operator="or"
+              enableOperatorToggle
             />
           </div>
 
@@ -303,7 +303,7 @@ function CompaniesInstantSearchInner({
               showMore={true}
               showMoreLimit={50}
               limit={10}
-              operator="or"
+              enableOperatorToggle
             />
           </div>
 
@@ -315,7 +315,7 @@ function CompaniesInstantSearchInner({
               showMore={true}
               showMoreLimit={50}
               limit={10}
-              operator="or"
+              enableOperatorToggle
             />
           </div>
 
@@ -327,16 +327,11 @@ function CompaniesInstantSearchInner({
               showMore={true}
               showMoreLimit={50}
               limit={10}
-              operator="or"
+              enableOperatorToggle
             />
           </div>
 
           {/* Numeric Controls */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Founded Year</h3>
-            <RangeFilter attribute="establishedYear" />
-          </div>
-
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Employees</h3>
             <NumericMenu
@@ -349,6 +344,11 @@ function CompaniesInstantSearchInner({
                 { label: 'Over 1000', start: 1000 },
               ]}
             />
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Founded Year</h3>
+            <RangeFilter attribute="establishedYear" />
           </div>
         </aside>
 
