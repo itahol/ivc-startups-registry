@@ -3,10 +3,15 @@ import Navbar from '../../components/Navbar';
 import { readCompanyFilters } from '@/lib/companies/filtersUrl';
 import { CompaniesInstantSearch } from './_components/CompaniesInstantSearch';
 import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '@/convex/_generated/api';
+import { QUERIES } from '../../lib/server/db/queries';
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 const getTechVerticals = cache(async () => {
-  // TODO: Replace with Typesense facet values when facets are wired
-  return [] as { id: string; name: string }[];
+  const techVerticals = await QUERIES.getTechVerticals();
+  return techVerticals as { id: string; name: string }[];
 });
 
 /* -------------------------------------------------------------------------- */
@@ -16,7 +21,7 @@ const getTechVerticals = cache(async () => {
 export default async function CompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const resolved = await searchParams;
   const usp = new URLSearchParams();

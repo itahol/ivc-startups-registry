@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { use } from 'react';
 import { InstantSearch, Configure } from 'react-instantsearch';
-import { useHits, usePagination, useInstantSearch } from 'react-instantsearch';
+import { useHits, usePagination, useInstantSearch, useSearchBox } from 'react-instantsearch';
 import { searchClient } from '@/lib/instantsearch/typesenseAdapter';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { FiltersDrawer } from '@/app/companies/_components/FiltersDrawer';
@@ -13,12 +13,11 @@ import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
 import SearchInput from '@/components/SearchInput';
-import { useSearchBox } from 'react-instantsearch';
 import { CompanyDetails } from '../../../lib/model';
 
-function CompaniesSearchBox({ initialKeyword }: { initialKeyword?: string }) {
+function CompaniesSearchBox() {
   const { refine, query } = useSearchBox();
-  const [input, setInput] = React.useState(query ?? initialKeyword ?? '');
+  const [input, setInput] = React.useState(query ?? '');
 
   const handleChange = (value: string) => {
     setInput(value);
@@ -162,6 +161,42 @@ function CustomEmptyState({ hasFilters }: { hasFilters: boolean }) {
   );
 }
 
+// ---------- Helper to convert filters to InstantSearch format ----------
+function filtersToInstantSearchState(filters: CompanyFilters) {
+  const filterParts: string[] = [];
+
+  // Tech verticals
+  if (filters.techVerticals?.ids?.length) {
+    const verticalFilters = filters.techVerticals.ids.map((id) => `techVerticals:${id}`);
+    if (filters.techVerticals.operator === 'AND') {
+      filterParts.push(`(${verticalFilters.join(' && ')})`);
+    } else {
+      filterParts.push(`(${verticalFilters.join(' || ')})`);
+    }
+  }
+
+  // Sectors
+  if (filters.sectors?.length) {
+    const sectorFilters = filters.sectors.map((sector) => `sector:${sector}`);
+    filterParts.push(`(${sectorFilters.join(' || ')})`);
+  }
+
+  // Stages
+  if (filters.stages?.length) {
+    const stageFilters = filters.stages.map((stage) => `stage:${stage}`);
+    filterParts.push(`(${stageFilters.join(' || ')})`);
+  }
+
+  // Year established
+  if (filters.yearEstablished?.min !== undefined || filters.yearEstablished?.max !== undefined) {
+    const min = filters.yearEstablished.min ?? '*';
+    const max = filters.yearEstablished.max ?? '*';
+    filterParts.push(`establishedYear:[${min}..${max}]`);
+  }
+
+  return filterParts.join(' && ');
+}
+
 // ---------- Main component ----------
 export interface CompaniesInstantSearchClientProps {
   initialFilters: CompanyFilters;
@@ -175,7 +210,6 @@ export function CompaniesInstantSearch({
   pageSize,
 }: CompaniesInstantSearchClientProps) {
   const techVerticals = use(techVerticalsPromise);
-  const hasActiveFilters = !!initialFilters.keyword; // only keyword for now
 
   return (
     <InstantSearch
@@ -183,17 +217,68 @@ export function CompaniesInstantSearch({
       indexName="companies"
       initialUiState={{ companies: { query: initialFilters.keyword ?? '' } }}
     >
-      <Configure hitsPerPage={pageSize} />
+      <CompaniesInstantSearchInner initialFilters={initialFilters} techVerticals={techVerticals} pageSize={pageSize} />
+    </InstantSearch>
+  );
+}
+
+// ---------- Inner component that has access to InstantSearch context ----------
+function CompaniesInstantSearchInner({
+  initialFilters,
+  techVerticals,
+  pageSize,
+}: {
+  initialFilters: CompanyFilters;
+  techVerticals: { id: string; name: string }[];
+  pageSize: number;
+}) {
+  const [filters, setFilters] = React.useState<CompanyFilters>(initialFilters);
+  const { refine } = useSearchBox();
+
+  // Convert filters to InstantSearch format
+  const instantSearchFilters = React.useMemo(() => filtersToInstantSearchState(filters), [filters]);
+
+  const hasActiveFilters = !!(
+    filters.techVerticals ||
+    filters.sectors ||
+    filters.stages ||
+    filters.yearEstablished ||
+    filters.keyword
+  );
+
+  const handleFiltersApply = (newFilters: CompanyFilters) => {
+    setFilters(newFilters);
+
+    // Update search query if keyword changed
+    if (newFilters.keyword !== filters.keyword) {
+      refine(newFilters.keyword ?? '');
+    }
+  };
+
+  const handleClearFilters = () => {
+    const clearedFilters: CompanyFilters = {};
+    setFilters(clearedFilters);
+    refine('');
+  };
+
+  return (
+    <>
+      <Configure hitsPerPage={pageSize} filters={instantSearchFilters} />
 
       {/* Search Section - Centered and Prominent */}
       <div className="mb-8 flex flex-col items-center gap-6">
         <div className="w-full max-w-2xl">
-          <CompaniesSearchBox initialKeyword={initialFilters.keyword ?? ''} />
+          <CompaniesSearchBox />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2 min-h-8">
-          <FiltersDrawer value={initialFilters} onApply={() => {}} techVerticals={techVerticals} />
+          <FiltersDrawer value={filters} onApply={handleFiltersApply} techVerticals={techVerticals} />
           {hasActiveFilters ? (
-            <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground hover:text-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full text-muted-foreground hover:text-foreground"
+              onClick={handleClearFilters}
+            >
               Clear
             </Button>
           ) : null}
@@ -206,6 +291,6 @@ export function CompaniesInstantSearch({
       </div>
 
       <CustomPagination />
-    </InstantSearch>
+    </>
   );
 }
