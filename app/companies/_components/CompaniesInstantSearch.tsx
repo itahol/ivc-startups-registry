@@ -217,6 +217,7 @@ export function CompaniesInstantSearch({
       searchClient={searchClient}
       indexName="companies"
       initialUiState={{ companies: { query: initialFilters.keyword ?? '' } }}
+      routing={true}
     >
       <CompaniesInstantSearchInner initialFilters={initialFilters} pageSize={pageSize} />
     </InstantSearch>
