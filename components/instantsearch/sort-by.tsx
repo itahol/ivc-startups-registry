@@ -1,15 +1,15 @@
-"use client";
-import { Button } from "@/components/ui/button";
+'use client';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ArrowDownWideNarrow } from "lucide-react";
-import type { UseSortByProps } from "react-instantsearch";
-import { useSortBy } from "react-instantsearch";
+} from '@/components/ui/dropdown-menu';
+import { ArrowDownWideNarrow } from 'lucide-react';
+import type { UseSortByProps } from 'react-instantsearch';
+import { useSortBy } from 'react-instantsearch';
 
 export function SortBy(props: UseSortByProps) {
   const { currentRefinement, options, refine } = useSortBy(props);
@@ -24,10 +24,7 @@ export function SortBy(props: UseSortByProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56">
-          <DropdownMenuRadioGroup
-            value={currentRefinement}
-            onValueChange={(value) => refine(value)}
-          >
+          <DropdownMenuRadioGroup value={currentRefinement} onValueChange={(value) => refine(value)}>
             {options.map((option) => (
               <DropdownMenuRadioItem key={option.value} value={option.value}>
                 {option.label}

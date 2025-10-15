@@ -1,7 +1,7 @@
-"use client";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useNumericMenu, UseNumericMenuProps } from "react-instantsearch";
+'use client';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useNumericMenu, UseNumericMenuProps } from 'react-instantsearch';
 
 export default function NumericMenu(props: UseNumericMenuProps) {
   const { items, refine } = useNumericMenu(props);

@@ -212,15 +212,13 @@ export function CompaniesInstantSearch({
   techVerticalsPromise,
   pageSize,
 }: CompaniesInstantSearchClientProps) {
-  const techVerticals = use(techVerticalsPromise);
-
   return (
     <InstantSearch
       searchClient={searchClient}
       indexName="companies"
       initialUiState={{ companies: { query: initialFilters.keyword ?? '' } }}
     >
-      <CompaniesInstantSearchInner initialFilters={initialFilters} techVerticals={techVerticals} pageSize={pageSize} />
+      <CompaniesInstantSearchInner initialFilters={initialFilters} pageSize={pageSize} />
     </InstantSearch>
   );
 }
@@ -228,15 +226,13 @@ export function CompaniesInstantSearch({
 // ---------- Inner component that has access to InstantSearch context ----------
 function CompaniesInstantSearchInner({
   initialFilters,
-  techVerticals,
   pageSize,
 }: {
   initialFilters: CompanyFilters;
-  techVerticals: { id: string; name: string }[];
   pageSize: number;
 }) {
   const [filters, setFilters] = React.useState<CompanyFilters>(initialFilters);
-  const { refine} = useSearchBox();
+  const { refine } = useSearchBox();
 
   // Convert filters to InstantSearch format
   const instantSearchFilters = React.useMemo(() => filtersToInstantSearchState(filters), [filters]);
@@ -288,7 +284,7 @@ function CompaniesInstantSearchInner({
               attribute="techVerticals"
               searchable={true}
               showMore={true}
-              showMoreLimit={50}
+              showMoreLimit={20}
               limit={10}
               enableOperatorToggle
             />
@@ -356,19 +352,7 @@ function CompaniesInstantSearchInner({
             <div className="w-full max-w-2xl lg:max-w-none">
               <CompaniesSearchBox />
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2 min-h-8 lg:justify-start">
-            </div>
-            {/* Current Refinements */}
-            {
-              <div className="w-full max-w-2xl lg:max-w-none">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Active Filters
-                  </h3>
-                  <CurrentRefinements />
-                </div>
-              </div>
-            }
+            <CurrentRefinements onClear={handleClearFilters} />
           </div>
 
           <div className="relative">

@@ -1,13 +1,7 @@
-"use client";
-import { useHitsPerPage, UseHitsPerPageProps } from "react-instantsearch";
+'use client';
+import { useHitsPerPage, UseHitsPerPageProps } from 'react-instantsearch';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function HitsPerPageSelect(props: UseHitsPerPageProps) {
   const { items, refine } = useHitsPerPage(props);

@@ -12,7 +12,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const getTechVerticals = cache(async () => {
   // const techVerticals = await QUERIES.getTechVerticals();
   // return techVerticals as { id: string; name: string }[];
-  return [{ id: 'foo', name: 'bar' }]
+  return [{ id: 'foo', name: 'bar' }];
 });
 
 /* -------------------------------------------------------------------------- */
