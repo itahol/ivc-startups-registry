@@ -1,6 +1,6 @@
 import NumericMenu from "@/components/instantsearch/numeric-menu";
 import { RangeFilter } from "@/components/instantsearch/range-menu";
-import { attributeLabelMap } from "@/lib/server/typesense/schema";
+import { attributeMetaMap } from "@/lib/server/typesense/schema";
 
 function Facet({ attribute }: { attribute: string }) {
   switch (attribute) {
@@ -9,14 +9,14 @@ function Facet({ attribute }: { attribute: string }) {
     case "max_owners":
       return (
         <>
-          <h3 className="mb-1 text-xl font-semibold">{attributeLabelMap[attribute]}</h3>
+          <h3 className="mb-1 text-xl font-semibold">{attributeMetaMap[attribute].label}</h3>
           <RangeFilter attribute={attribute} />
         </>
       );
     case "hltb_single":
       return (
         <>
-          <h3 className="mb-1 text-xl font-semibold">{attributeLabelMap[attribute]}</h3>
+          <h3 className="mb-1 text-xl font-semibold">{attributeMetaMap[attribute].label}</h3>
           <NumericMenu
             attribute="hltb_single"
             items={[
@@ -32,7 +32,7 @@ function Facet({ attribute }: { attribute: string }) {
     case "negative":
       return (
         <>
-          <h3 className="mb-1 text-xl font-semibold">{attributeLabelMap[attribute]}</h3>
+          <h3 className="mb-1 text-xl font-semibold">{attributeMetaMap[attribute].label}</h3>
           <NumericMenu
             attribute="negative"
             items={[

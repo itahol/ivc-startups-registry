@@ -33,13 +33,13 @@ declare module 'typesense-ts' {
   }
 }
 
-export const attributeLabelMap: Record<string, string> = {
-  boardMembers: "Board Members",
-  executives: "Key Excecutives",
-  techVerticals: "Tech verticals",
-  employees: "Employees count",
-  sector: "Sector",
-  stage: "Stage",
-  establishedYear: "Founded at",
+export const attributeMetaMap: Record<string, { label: string, formatRefinementLabel?: boolean }> = {
+  boardMembers: {label: "Board Members"},
+  executives: {label: "Key Excecutives"},
+  techVerticals: {label: "Tech verticals"},
+  employees: {label: "Employees count"},
+  sector: {label: "Sector"},
+  stage: { label: "Stage"},
+  establishedYear: { label: "Founded at", formatRefinementLabel: false },
 
-} satisfies { [K in keyof Partial<typeof companiesSchema.infer>]: string };
+} satisfies { [K in keyof Partial<typeof companiesSchema.infer>]: { label: string, formatRefinementLabel?: boolean } };

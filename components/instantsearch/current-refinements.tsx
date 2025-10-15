@@ -1,10 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { attributeLabelMap } from "@/lib/server/typesense/schema";
+import { attributeMetaMap } from "@/lib/server/typesense/schema";
 import { formatNumber } from "@/lib/utils";
 import { X } from "lucide-react";
 import { useCurrentRefinements, UseCurrentRefinementsProps } from "react-instantsearch";
+
+type CurrentRefinement = (ReturnType<typeof useCurrentRefinements>['items'])[number]['refinements'][number];
 
 const formatRefinementLabel = (label: string): string => {
   const labelParts = label.split(" ");
@@ -17,16 +19,24 @@ const formatRefinementLabel = (label: string): string => {
   return label;
 };
 
-function isAttributeLabel(label: string): label is keyof typeof attributeLabelMap {
-  return label in attributeLabelMap;
+function formatRefinement(refinement: CurrentRefinement) {
+  const shouldFormatLabel = attributeMetaMap[refinement.attribute]?.formatRefinementLabel !== false;
+  const label = formatLabel(refinement.attribute)
+  const value = shouldFormatLabel ?  formatRefinementLabel(refinement.label): refinement.label;
+  return { label, value}
+}
+
+function isAttributeLabel(label: string): label is keyof typeof attributeMetaMap {
+  return label in attributeMetaMap;
 }
 
 function formatLabel(label: string): string {
-  return isAttributeLabel(label) ? attributeLabelMap[label] : label;
+  return isAttributeLabel(label) ? attributeMetaMap[label].label : label;
 }
 
 export function CurrentRefinements(props: UseCurrentRefinementsProps) {
   const { items, refine } = useCurrentRefinements(props);
+  console.dir(items);
 
   return (
     <div className="flex gap-3 flex-wrap h-15">
@@ -34,8 +44,7 @@ export function CurrentRefinements(props: UseCurrentRefinementsProps) {
         .sort((a, b) => a.label.localeCompare(b.label))
         .map((item) =>
           item.refinements.map((refinement) => {
-            const formattedRefinementLabel = formatRefinementLabel(refinement.label);
-            const formattedLabel = formatLabel(item.label);
+            const {label: formattedLabel, value: formattedRefinementLabel} = formatRefinement(refinement);
 
             return (
               <Button
