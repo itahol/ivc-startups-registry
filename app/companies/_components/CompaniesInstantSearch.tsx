@@ -74,22 +74,43 @@ function splitTopLevelAnd(expression: string): string[] {
   return segments.filter(Boolean);
 }
 
+/**
+ * Checks if a string segment matches any of the valid attribute formats:
+ * 1. key:[value1,value2]
+ * 2. key:`value`
+ * 3. key:=`value`
+ * 4. key:value
+ */
 function isSingleAttributeList(segment: string): boolean {
   const s = segment.trim();
-  return /^\w+:\[[^\]]+\]$/.test(s) || /^\w+:`[^`]+`$/.test(s) || /^\w+:=`[^`]+`$/.test(s);
+  return (
+    // Existing checks for bracketed lists or backticked values
+    /^\w+:\[[^\]]+\]$/.test(s) ||
+    /^\w+:=?`[^`]+`$/.test(s) ||
+    // New check for a simple key:value pair.
+    // This pattern ensures there's a key, a colon, and a non-empty value.
+    /^\w+:[^:]+$/.test(s)
+  );
 }
 
+/**
+ * Extracts the attribute and values from a string segment.
+ * Handles all formats validated by isSingleAttributeList.
+ */
 function extractAttributeList(segment: string): { attr: string; values: string[] } {
   const s = segment.trim();
 
+  // 1. Check for the bracketed list format: key:[val1,val2]
   const listMatch = s.match(/^(\w+):\[([^\]]+)\]$/);
   if (listMatch) {
     const attr = listMatch[1]!;
     const valuesPart = listMatch[2]!;
+    // Split by comma, trim whitespace from each value, and remove surrounding backticks if any
     const values = valuesPart.split(',').map((v) => v.trim().replace(/^`|`$/g, ''));
     return { attr, values };
   }
 
+  // 2. Check for backticked formats: key:`value` or key:=`value`
   const singleMatch = s.match(/^(\w+):=?`([^`]+)`$/);
   if (singleMatch) {
     const attr = singleMatch[1]!;
@@ -97,6 +118,17 @@ function extractAttributeList(segment: string): { attr: string; values: string[]
     return { attr, values: [value] };
   }
 
+  // 3. Check for the simple key:value format
+  // This runs only if the previous, more specific patterns failed.
+  const simpleValueMatch = s.match(/^(\w+):(.+)$/);
+  if (simpleValueMatch) {
+    const attr = simpleValueMatch[1]!;
+    // The value is everything after the colon, trimmed of whitespace.
+    const value = simpleValueMatch[2]!.trim();
+    return { attr, values: [value] };
+  }
+
+  // If no patterns match, return an empty result.
   return { attr: '', values: [] };
 }
 
