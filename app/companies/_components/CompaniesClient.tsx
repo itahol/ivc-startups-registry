@@ -87,14 +87,17 @@ export function CompaniesClient({
     onApply({});
   }, [onApply]);
 
-  const handleKeywordSubmit = React.useCallback(() => {
-    const trimmedKeyword = keywordInput.trim();
-    const nextFilters: CompanyFilters = {
-      ...currentFilters,
-      keyword: trimmedKeyword || undefined,
-    };
-    onApply(nextFilters);
-  }, [keywordInput, currentFilters, onApply]);
+  const handleKeywordSubmit = React.useCallback(
+    (submittedValue: string) => {
+      const trimmedKeyword = submittedValue.trim();
+      const nextFilters: CompanyFilters = {
+        ...currentFilters,
+        keyword: trimmedKeyword || undefined,
+      };
+      onApply(nextFilters);
+    },
+    [currentFilters, onApply],
+  );
 
   return (
     <div>

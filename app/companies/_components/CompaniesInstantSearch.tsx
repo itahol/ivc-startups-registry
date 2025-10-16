@@ -1,10 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { use } from 'react';
-import { InstantSearch, Configure } from 'react-instantsearch';
+import { Configure } from 'react-instantsearch';
 import { useHits, usePagination, useInstantSearch, useSearchBox } from 'react-instantsearch';
-import { searchClient } from '@/lib/instantsearch/typesenseAdapter';
+import {
+  BASE_SEARCH_PARAMETERS,
+  NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS,
+  searchClient,
+  setNaturalLanguageSearch,
+} from '@/lib/instantsearch/typesenseAdapter';
+import { typesenseConfig } from '@/lib/server/typesense';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { CurrentRefinements } from '@/components/instantsearch/current-refinements';
 import { RangeFilter } from '@/components/instantsearch/range-menu';
@@ -18,18 +23,86 @@ import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '
 import SearchInput from '@/components/SearchInput';
 import { CompanyDetails } from '../../../lib/model';
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
+import * as Typesense from 'typesense';
+import { companiesSchema } from '@/lib/server/typesense/schema';
 
-function CompaniesSearchBox() {
+const typesenseClient = new Typesense.Client(typesenseConfig);
+
+const INDEX_NAME = 'companies';
+
+interface NaturalLanguageAugmentation {
+  filterBy?: string;
+  refinedQuery?: string;
+  sortBy?: string | string[];
+}
+
+const deriveNaturalLanguageFilterClauses = (expression?: string | null): string[] => {
+  if (!expression) return [];
+
+  return expression
+    .split('&&')
+    .map((clause) => clause.replace(/^[()\s]+|[()\s]+$/g, '').trim())
+    .filter(Boolean);
+};
+
+async function fetchNaturalLanguageAugmentation(query: string): Promise<NaturalLanguageAugmentation | null> {
+  const response = await typesenseClient
+    .collections<typeof companiesSchema.infer>('companies')
+    .documents()
+    .search({
+      ...BASE_SEARCH_PARAMETERS,
+      ...NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS,
+      q: query,
+      per_page: 0,
+    });
+  const augmentedParams = response?.parsed_nl_query?.augmented_params;
+
+  if (!augmentedParams) {
+    return null;
+  }
+
+  return {
+    refinedQuery: augmentedParams.q,
+    filterBy: augmentedParams.filter_by,
+    sortBy: augmentedParams.sort_by,
+  };
+}
+
+interface CompaniesSearchBoxProps {
+  naturalLanguageEnabled: boolean;
+  onNaturalLanguageToggle: (enabled: boolean) => void;
+  onSubmit: (query: string, context: { naturalLanguageEnabled: boolean }) => void;
+  resolvedQuery: string;
+}
+
+function CompaniesSearchBox({
+  naturalLanguageEnabled,
+  onNaturalLanguageToggle,
+  onSubmit,
+  resolvedQuery,
+}: CompaniesSearchBoxProps) {
   const { refine, query } = useSearchBox();
-  const [input, setInput] = React.useState(query ?? '');
+  const [input, setInput] = React.useState(resolvedQuery ?? query ?? '');
+
+  React.useEffect(() => {
+    setInput(resolvedQuery ?? '');
+  }, [resolvedQuery]);
 
   const handleChange = (value: string) => {
     setInput(value);
-    refine(value.trim() || '');
+    if (!naturalLanguageEnabled) {
+      refine(value.trim() || '');
+    }
   };
 
-  const handleSubmit = () => {
-    refine(input.trim() || '');
+  const handleSubmit = (value: string) => {
+    const trimmed = value.trim();
+    setInput(trimmed);
+    onSubmit(trimmed, { naturalLanguageEnabled });
+  };
+
+  const handleToggle = (checked: boolean) => {
+    onNaturalLanguageToggle(checked);
   };
 
   return (
@@ -37,6 +110,8 @@ function CompaniesSearchBox() {
       value={input}
       onChange={handleChange}
       onSubmit={handleSubmit}
+      nlEnabled={naturalLanguageEnabled}
+      onNLToggle={handleToggle}
       label="Search companies"
       placeholder="Search by keyword..."
       hideLabel={true}
@@ -217,8 +292,8 @@ export function CompaniesInstantSearch({
   return (
     <InstantSearchNext
       searchClient={searchClient}
-      indexName="companies"
-      initialUiState={{ companies: { query: initialFilters.keyword ?? '' } }}
+      indexName={INDEX_NAME}
+      initialUiState={{ [INDEX_NAME]: { query: initialFilters.keyword ?? '' } }}
       routing={true}
     >
       <CompaniesInstantSearchInner initialFilters={initialFilters} pageSize={pageSize} />
@@ -237,35 +312,114 @@ function CompaniesInstantSearchInner({
   const [filters, setFilters] = React.useState<CompanyFilters>(initialFilters);
   const { refine } = useSearchBox();
 
-  // Convert filters to InstantSearch format
-  const instantSearchFilters = React.useMemo(() => filtersToInstantSearchState(filters), [filters]);
+  const [naturalLanguageEnabled, setNaturalLanguageEnabled] = React.useState(false);
+  const [resolvedQuery, setResolvedQuery] = React.useState(initialFilters.keyword ?? '');
+  const [naturalLanguageFilterExpression, setNaturalLanguageFilterExpression] = React.useState<string | null>(null);
+  const [naturalLanguageFilterClauses, setNaturalLanguageFilterClauses] = React.useState<string[]>([]);
 
-  const hasActiveFilters = !!(
-    filters.techVerticals ||
-    filters.sectors ||
-    filters.stages ||
-    filters.yearEstablished ||
-    filters.keyword
-  );
+  React.useEffect(() => {
+    return () => {
+      setNaturalLanguageSearch(false);
+    };
+  }, []);
 
-  const handleFiltersApply = (newFilters: CompanyFilters) => {
-    setFilters(newFilters);
+  const clearNaturalLanguageFilters = React.useCallback(() => {
+    setNaturalLanguageFilterExpression(null);
+    setNaturalLanguageFilterClauses([]);
+  }, []);
 
-    // Update search query if keyword changed
-    if (newFilters.keyword !== filters.keyword) {
-      refine(newFilters.keyword ?? '');
+  const instantSearchFilters = React.useMemo(() => {
+    const baseFilters = filtersToInstantSearchState(filters);
+    if (baseFilters && naturalLanguageFilterExpression) {
+      return `${baseFilters} && (${naturalLanguageFilterExpression})`;
     }
-  };
+    if (naturalLanguageFilterExpression) {
+      return naturalLanguageFilterExpression;
+    }
+    return baseFilters;
+  }, [filters, naturalLanguageFilterExpression]);
+
+  const configureFilters = React.useMemo(() => {
+    if (!instantSearchFilters || !instantSearchFilters.trim()) {
+      return undefined;
+    }
+    return instantSearchFilters;
+  }, [instantSearchFilters]);
+
+  const hasActiveFilters =
+    Boolean(filters.techVerticals || filters.sectors || filters.stages || filters.yearEstablished || filters.keyword) ||
+    naturalLanguageFilterClauses.length > 0;
 
   const handleClearFilters = React.useCallback(() => {
     const clearedFilters: CompanyFilters = {};
     setFilters(clearedFilters);
+    clearNaturalLanguageFilters();
+    setResolvedQuery('');
     refine('');
-  }, [setFilters, refine]);
+  }, [clearNaturalLanguageFilters, refine]);
+
+  const handleNaturalLanguageToggle = React.useCallback(
+    (enabled: boolean) => {
+      setNaturalLanguageEnabled(enabled);
+      setNaturalLanguageSearch(enabled);
+      if (!enabled) {
+        clearNaturalLanguageFilters();
+        refine(resolvedQuery.trim() || '');
+      }
+    },
+    [clearNaturalLanguageFilters, refine, resolvedQuery],
+  );
+
+  const handleSearchSubmit = React.useCallback(
+    async (
+      submittedQuery: string,
+      { naturalLanguageEnabled: submitWithNaturalLanguage }: { naturalLanguageEnabled: boolean },
+    ) => {
+      const trimmedQuery = submittedQuery.trim();
+
+      if (!submitWithNaturalLanguage) {
+        setResolvedQuery(trimmedQuery);
+        clearNaturalLanguageFilters();
+        refine(trimmedQuery);
+        return;
+      }
+
+      setNaturalLanguageEnabled(true);
+      setNaturalLanguageSearch(true);
+
+      if (!trimmedQuery) {
+        clearNaturalLanguageFilters();
+        setResolvedQuery('');
+        refine('');
+        return;
+      }
+
+      try {
+        const augmentation = await fetchNaturalLanguageAugmentation(trimmedQuery);
+        const refinedQuery = augmentation?.refinedQuery?.trim?.() || trimmedQuery;
+
+        setResolvedQuery(refinedQuery);
+        setNaturalLanguageFilterExpression(augmentation?.filterBy ?? null);
+        setNaturalLanguageFilterClauses(deriveNaturalLanguageFilterClauses(augmentation?.filterBy));
+        refine(refinedQuery);
+      } catch (error) {
+        console.error('Failed to interpret natural language query', error);
+        setResolvedQuery(trimmedQuery);
+        clearNaturalLanguageFilters();
+        refine(trimmedQuery);
+      }
+    },
+    [clearNaturalLanguageFilters, refine],
+  );
+
+  const clearNaturalLanguageFiltersAndRefresh = React.useCallback(() => {
+    clearNaturalLanguageFilters();
+    refine(resolvedQuery.trim() || '');
+  }, [clearNaturalLanguageFilters, refine, resolvedQuery]);
 
   return (
     <>
-      <Configure hitsPerPage={pageSize} filters={instantSearchFilters} />
+      <Configure hitsPerPage={pageSize} filters={configureFilters} />
 
       <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[320px_1fr] lg:gap-12">
         <aside className="flex flex-col gap-6">
@@ -353,9 +507,18 @@ function CompaniesInstantSearchInner({
         <section className="flex flex-col gap-10">
           <div className="flex flex-col items-center gap-6 lg:items-start">
             <div className="w-full max-w-2xl lg:max-w-none">
-              <CompaniesSearchBox />
+              <CompaniesSearchBox
+                naturalLanguageEnabled={naturalLanguageEnabled}
+                onNaturalLanguageToggle={handleNaturalLanguageToggle}
+                onSubmit={handleSearchSubmit}
+                resolvedQuery={resolvedQuery}
+              />
             </div>
-            <CurrentRefinements onClear={handleClearFilters} />
+            <CurrentRefinements
+              onClear={handleClearFilters}
+              naturalLanguageFilters={naturalLanguageFilterClauses}
+              onClearNaturalLanguageFilters={clearNaturalLanguageFiltersAndRefresh}
+            />
           </div>
 
           <div className="relative">

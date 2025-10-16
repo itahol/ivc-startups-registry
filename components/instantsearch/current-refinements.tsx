@@ -20,6 +20,8 @@ const formatRefinementLabel = (label: string): string => {
 };
 
 function formatRefinement(refinement: CurrentRefinement) {
+  console.log('Refinement:', refinement);
+  console.dir(refinement);
   const shouldFormatLabel = attributeMetaMap[refinement.attribute]?.formatRefinementLabel !== false;
   const label = formatLabel(refinement.attribute);
   const value = shouldFormatLabel ? formatRefinementLabel(refinement.label) : refinement.label;
@@ -34,9 +36,32 @@ function formatLabel(label: string): string {
   return isAttributeLabel(label) ? attributeMetaMap[label].label : label;
 }
 
-export function CurrentRefinements(props: UseCurrentRefinementsProps & { onClear?: () => void }) {
+interface CurrentRefinementsProps extends UseCurrentRefinementsProps {
+  onClear?: () => void;
+  naturalLanguageFilters?: string[];
+  onClearNaturalLanguageFilters?: () => void;
+}
+
+export function CurrentRefinements({
+  onClear,
+  naturalLanguageFilters = [],
+  onClearNaturalLanguageFilters,
+  ...props
+}: CurrentRefinementsProps) {
   const { refine: clearRefinements } = useClearRefinements();
   const { items, refine } = useCurrentRefinements(props);
+  const hasStandardRefinements = items.length !== 0;
+  const hasNaturalLanguageFilters = naturalLanguageFilters.length > 0;
+
+  const handleClearAll = () => {
+    if (hasStandardRefinements) {
+      clearRefinements();
+    }
+    if (hasNaturalLanguageFilters) {
+      onClearNaturalLanguageFilters?.();
+    }
+    onClear?.();
+  };
 
   return (
     <div className="space-y-2">
@@ -66,17 +91,31 @@ export function CurrentRefinements(props: UseCurrentRefinementsProps & { onClear
               );
             }),
           )}
+        {naturalLanguageFilters.map((filter, index) => (
+          <Button
+            key={`nl-filter-${index}`}
+            onClick={() => {
+              onClearNaturalLanguageFilters?.();
+            }}
+            variant="outline"
+            className="rounded-full"
+            size="sm"
+          >
+            <span>
+              <span className="font-bold">Natural Language: </span>
+              {filter}
+            </span>
+            <X className="h-5" />
+          </Button>
+        ))}
       </div>
-      {items.length !== 0 ? (
+      {hasStandardRefinements || hasNaturalLanguageFilters ? (
         <div className="flex items-center">
           <Button
             variant="ghost"
             size="sm"
             className="rounded-full text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              clearRefinements();
-              props.onClear?.();
-            }}
+            onClick={handleClearAll}
           >
             Clear
           </Button>
