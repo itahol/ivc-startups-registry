@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Configure } from 'react-instantsearch';
-import { useHits, usePagination, useInstantSearch, useSearchBox } from 'react-instantsearch';
+import { useHits, usePagination, useInstantSearch } from 'react-instantsearch';
 import {
   BASE_SEARCH_PARAMETERS,
   NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS,
@@ -19,8 +19,9 @@ import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
+import KeywordSearchBox from '@/components/KeywordSearchBox';
+import NaturalLanguageFilterInput from '@/components/NaturalLanguageFilterInput';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
-import SearchInput from '@/components/SearchInput';
 import { CompanyDetails } from '../../../lib/model';
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
 import * as Typesense from 'typesense';
@@ -270,58 +271,6 @@ async function fetchNaturalLanguageAugmentation(query: string): Promise<NaturalL
   };
 }
 
-interface CompaniesSearchBoxProps {
-  naturalLanguageEnabled: boolean;
-  onNaturalLanguageToggle: (enabled: boolean) => void;
-  onSubmit: (query: string, context: { naturalLanguageEnabled: boolean }) => void;
-  resolvedQuery: string;
-}
-
-function CompaniesSearchBox({
-  naturalLanguageEnabled,
-  onNaturalLanguageToggle,
-  onSubmit,
-  resolvedQuery,
-}: CompaniesSearchBoxProps) {
-  const { refine, query } = useSearchBox();
-  const [input, setInput] = React.useState(resolvedQuery ?? query ?? '');
-
-  React.useEffect(() => {
-    setInput(resolvedQuery ?? '');
-  }, [resolvedQuery]);
-
-  const handleChange = (value: string) => {
-    setInput(value);
-    if (!naturalLanguageEnabled) {
-      refine(value.trim() || '');
-    }
-  };
-
-  const handleSubmit = (value: string) => {
-    const trimmed = value.trim();
-    setInput(trimmed);
-    onSubmit(trimmed, { naturalLanguageEnabled });
-  };
-
-  const handleToggle = (checked: boolean) => {
-    onNaturalLanguageToggle(checked);
-  };
-
-  return (
-    <SearchInput
-      value={input}
-      onChange={handleChange}
-      onSubmit={handleSubmit}
-      nlEnabled={naturalLanguageEnabled}
-      onNLToggle={handleToggle}
-      label="Search companies"
-      placeholder="Search by keyword..."
-      hideLabel={true}
-      size="large"
-    />
-  );
-}
-
 function CompaniesHits() {
   const { items } = useHits<CompanyDetails & { techVerticals: string[] | null }>();
 
@@ -470,11 +419,8 @@ function CompaniesInstantSearchInner({
   pageSize: number;
 }) {
   const [filters, setFilters] = React.useState<CompanyFilters>(initialFilters);
-  const { refine } = useSearchBox();
   const { setUiState } = useInstantSearch();
 
-  const [naturalLanguageEnabled, setNaturalLanguageEnabled] = React.useState(false);
-  const [resolvedQuery, setResolvedQuery] = React.useState(initialFilters.keyword ?? '');
   const [nlPromotedRefinements, setNlPromotedRefinements] = React.useState<ParsedNLFilters>({
     refinementList: {},
     range: {},
@@ -483,6 +429,7 @@ function CompaniesInstantSearchInner({
   });
   const [nlResidualExpression, setNlResidualExpression] = React.useState<string | null>(null);
   const [naturalLanguageFilterClauses, setNaturalLanguageFilterClauses] = React.useState<string[]>([]);
+  const [isNLLoading, setIsNLLoading] = React.useState(false);
 
   React.useEffect(() => {
     return () => {
@@ -504,7 +451,6 @@ function CompaniesInstantSearchInner({
     const clearedFilters: CompanyFilters = {};
     setFilters(clearedFilters);
     clearNaturalLanguageFilters();
-    setResolvedQuery('');
 
     setUiState((prev) => ({
       ...prev,
@@ -518,81 +464,25 @@ function CompaniesInstantSearchInner({
     }));
   }, [clearNaturalLanguageFilters, setUiState]);
 
-  const handleNaturalLanguageToggle = React.useCallback(
-    (enabled: boolean) => {
-      setNaturalLanguageEnabled(enabled);
-      setNaturalLanguageSearch(enabled);
-      if (!enabled) {
-        const promoted = nlPromotedRefinements;
-
-        setUiState((prev) => {
-          const updatedRefinementList = { ...(prev[INDEX_NAME]?.refinementList ?? {}) };
-          const updatedRange = { ...(prev[INDEX_NAME]?.range ?? {}) };
-          const updatedNumericMenu = { ...(prev[INDEX_NAME]?.numericMenu ?? {}) };
-
-          for (const attr in promoted.refinementList) {
-            delete updatedRefinementList[attr];
-          }
-
-          for (const attr in promoted.range) {
-            delete updatedRange[attr];
-          }
-
-          for (const attr in promoted.numericMenu) {
-            delete updatedNumericMenu[attr];
-          }
-
-          return {
-            ...prev,
-            [INDEX_NAME]: {
-              ...prev[INDEX_NAME],
-              refinementList: updatedRefinementList,
-              range: updatedRange,
-              numericMenu: updatedNumericMenu,
-              query: resolvedQuery.trim() || '',
-            },
-          };
-        });
-
-        clearNaturalLanguageFilters();
-      }
-    },
-    [clearNaturalLanguageFilters, nlPromotedRefinements, resolvedQuery, setUiState],
-  );
-
-  const handleSearchSubmit = React.useCallback(
-    async (
-      submittedQuery: string,
-      { naturalLanguageEnabled: submitWithNaturalLanguage }: { naturalLanguageEnabled: boolean },
-    ) => {
+  const handleNaturalLanguageSubmit = React.useCallback(
+    async (submittedQuery: string) => {
       const trimmedQuery = submittedQuery.trim();
-
-      if (!submitWithNaturalLanguage) {
-        setResolvedQuery(trimmedQuery);
-        clearNaturalLanguageFilters();
-        refine(trimmedQuery);
-        return;
-      }
-
-      setNaturalLanguageEnabled(true);
-      setNaturalLanguageSearch(true);
 
       if (!trimmedQuery) {
         clearNaturalLanguageFilters();
-        setResolvedQuery('');
-        refine('');
         return;
       }
 
+      setIsNLLoading(true);
+      setNaturalLanguageSearch(true);
+
       try {
         const augmentation = await fetchNaturalLanguageAugmentation(trimmedQuery);
-        const refinedQuery = augmentation?.refinedQuery?.trim?.() || trimmedQuery;
         const parsed = parseNLFilter(augmentation?.filterBy);
 
         console.log('[NL Debug] Raw filterBy:', augmentation?.filterBy);
         console.log('[NL Debug] Parsed:', parsed);
 
-        setResolvedQuery(refinedQuery);
         setNlResidualExpression(parsed.residual);
         setNaturalLanguageFilterClauses(deriveNaturalLanguageFilterClauses(parsed.residual));
         setNlPromotedRefinements(parsed);
@@ -602,7 +492,6 @@ function CompaniesInstantSearchInner({
             ...prev,
             [INDEX_NAME]: {
               ...prev[INDEX_NAME],
-              query: refinedQuery,
               refinementList: {
                 ...(prev[INDEX_NAME]?.refinementList ?? {}),
                 ...parsed.refinementList,
@@ -623,12 +512,12 @@ function CompaniesInstantSearchInner({
         });
       } catch (error) {
         console.error('Failed to interpret natural language query', error);
-        setResolvedQuery(trimmedQuery);
         clearNaturalLanguageFilters();
-        refine(trimmedQuery);
+      } finally {
+        setIsNLLoading(false);
       }
     },
-    [clearNaturalLanguageFilters, refine, setUiState],
+    [clearNaturalLanguageFilters, setUiState],
   );
 
   const clearNaturalLanguageFiltersAndRefresh = React.useCallback(() => {
@@ -658,13 +547,12 @@ function CompaniesInstantSearchInner({
           refinementList: updatedRefinementList,
           range: updatedRange,
           numericMenu: updatedNumericMenu,
-          query: resolvedQuery.trim() || '',
         },
       };
     });
 
     clearNaturalLanguageFilters();
-  }, [clearNaturalLanguageFilters, nlPromotedRefinements, resolvedQuery, setUiState]);
+  }, [clearNaturalLanguageFilters, nlPromotedRefinements, setUiState]);
 
   return (
     <>
@@ -672,7 +560,8 @@ function CompaniesInstantSearchInner({
 
       <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[320px_1fr] lg:gap-12">
         <aside className="flex flex-col gap-6">
-          {/* Bounded Facets - Non-searchable */}
+          <NaturalLanguageFilterInput onSubmit={handleNaturalLanguageSubmit} isLoading={isNLLoading} />
+
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Sector</h3>
             <StyledRefinementList attribute="sector" limit={10} enableOperatorToggle />
@@ -683,7 +572,6 @@ function CompaniesInstantSearchInner({
             <StyledRefinementList attribute="stage" limit={10} enableOperatorToggle />
           </div>
 
-          {/* Unbounded Facets - Searchable with show more */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Tech Verticals</h3>
             <StyledRefinementList
@@ -732,7 +620,6 @@ function CompaniesInstantSearchInner({
             />
           </div>
 
-          {/* Numeric Controls */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Employees</h3>
             <NumericMenu
@@ -756,12 +643,7 @@ function CompaniesInstantSearchInner({
         <section className="flex flex-col gap-10">
           <div className="flex flex-col items-center gap-6 lg:items-start">
             <div className="w-full max-w-2xl lg:max-w-none">
-              <CompaniesSearchBox
-                naturalLanguageEnabled={naturalLanguageEnabled}
-                onNaturalLanguageToggle={handleNaturalLanguageToggle}
-                onSubmit={handleSearchSubmit}
-                resolvedQuery={resolvedQuery}
-              />
+              <KeywordSearchBox />
             </div>
             <CurrentRefinements
               onClear={handleClearFilters}
