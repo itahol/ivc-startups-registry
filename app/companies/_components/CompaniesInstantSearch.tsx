@@ -274,9 +274,6 @@ async function fetchNaturalLanguageAugmentation(query: string): Promise<NaturalL
 function CompaniesHits() {
   const { items } = useHits<CompanyDetails & { techVerticals: string[] | null }>();
 
-  if (items.length === 0) {
-    return null;
-  }
   return (
     <div
       className={`
@@ -365,29 +362,6 @@ function ResultsSummary() {
     <div className="text-xs text-muted-foreground">
       {nbHits.toLocaleString()} results · Showing {from.toLocaleString()}–{to.toLocaleString()}
     </div>
-  );
-}
-
-// ---------- Empty state ----------
-function CustomEmptyState({ hasFilters }: { hasFilters: boolean }) {
-  return (
-    <Empty className="border border-dashed">
-      <EmptyHeader>
-        <EmptyTitle>No companies found for these filters.</EmptyTitle>
-        {hasFilters ? (
-          <EmptyDescription>Try adjusting your filters to find what you&apos;re looking for.</EmptyDescription>
-        ) : null}
-      </EmptyHeader>
-      <EmptyContent>
-        {hasFilters ? (
-          <div className="mt-4">
-            <Button size="sm" variant="outline" aria-label="Clear filters to show all products">
-              Clear filters
-            </Button>
-          </div>
-        ) : null}
-      </EmptyContent>
-    </Empty>
   );
 }
 
@@ -654,7 +628,6 @@ function CompaniesInstantSearchInner({
 
           <div className="relative">
             <CompaniesHits />
-            <CustomEmptyState hasFilters={hasActiveFilters} />
           </div>
 
           <CustomPagination />
