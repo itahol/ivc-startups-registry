@@ -9,7 +9,7 @@ export const BASE_SEARCH_PARAMETERS = {
 
 export const NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS = {
   nl_query: true,
-  nl_model_id: 'gemini-model',
+  nl_model_id: 'gemini-model-2',
 } satisfies SearchParams<typeof companiesSchema.infer>;
 
 const buildConfiguration = (naturalLanguageEnabled: boolean) => ({

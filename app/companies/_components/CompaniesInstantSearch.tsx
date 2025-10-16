@@ -45,6 +45,176 @@ const deriveNaturalLanguageFilterClauses = (expression?: string | null): string[
     .filter(Boolean);
 };
 
+function splitTopLevelAnd(expression: string): string[] {
+  const segments: string[] = [];
+  let current = '';
+  let depth = 0;
+
+  for (let i = 0; i < expression.length; i++) {
+    const char = expression[i];
+    if (char === '(') {
+      depth++;
+      current += char;
+    } else if (char === ')') {
+      depth--;
+      current += char;
+    } else if (char === '&' && expression[i + 1] === '&' && depth === 0) {
+      segments.push(current.trim());
+      current = '';
+      i++;
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.trim()) {
+    segments.push(current.trim());
+  }
+
+  return segments.filter(Boolean);
+}
+
+function isSingleAttributeList(segment: string): boolean {
+  const s = segment.trim();
+  return /^\w+:\[[^\]]+\]$/.test(s) || /^\w+:`[^`]+`$/.test(s) || /^\w+:=`[^`]+`$/.test(s);
+}
+
+function extractAttributeList(segment: string): { attr: string; values: string[] } {
+  const s = segment.trim();
+
+  const listMatch = s.match(/^(\w+):\[([^\]]+)\]$/);
+  if (listMatch) {
+    const attr = listMatch[1]!;
+    const valuesPart = listMatch[2]!;
+    const values = valuesPart.split(',').map((v) => v.trim().replace(/^`|`$/g, ''));
+    return { attr, values };
+  }
+
+  const singleMatch = s.match(/^(\w+):=?`([^`]+)`$/);
+  if (singleMatch) {
+    const attr = singleMatch[1]!;
+    const value = singleMatch[2]!;
+    return { attr, values: [value] };
+  }
+
+  return { attr: '', values: [] };
+}
+
+function isSimpleRange(segment: string): boolean {
+  return /^\w+:\[[^\]]+\.\.[^\]]*\]$/.test(segment.trim());
+}
+
+function extractRange(segment: string): { attr: string; min?: number; max?: number } {
+  const match = segment.trim().match(/^(\w+):\[([^\]]+)\.\.([^\]]*)\]$/);
+  if (!match) return { attr: '' };
+
+  const attr = match[1]!;
+  const minPart = match[2]!.trim();
+  const maxPart = match[3]!.trim();
+
+  return {
+    attr,
+    min: minPart !== '*' && minPart !== '' ? parseInt(minPart, 10) : undefined,
+    max: maxPart !== '*' && maxPart !== '' ? parseInt(maxPart, 10) : undefined,
+  };
+}
+
+function containsCrossAttributeOr(segment: string): boolean {
+  if (!segment.includes('||')) return false;
+
+  const parts = segment.split('||').map((p) => p.trim());
+  const attributes = new Set<string>();
+
+  for (const part of parts) {
+    const attrMatch = part.match(/^\(?(\w+):/);
+    if (attrMatch) {
+      attributes.add(attrMatch[1]!);
+    }
+  }
+
+  return attributes.size > 1;
+}
+
+function mapEmployeesRangeToBucket(min?: number, max?: number): string | null {
+  if (min === undefined && max === 10) return ':10';
+  if (min === 10 && max === 50) return '10:50';
+  if (min === 50 && max === 250) return '50:250';
+  if (min === 250 && max === 1000) return '250:1000';
+  if (min === 1000 && max === undefined) return '1000:';
+  return null;
+}
+
+interface ParsedNLFilters {
+  refinementList: Record<string, string[]>;
+  range: Record<string, string>;
+  numericMenu: Record<string, string>;
+  residual: string | null;
+}
+
+function parseNLFilter(filterBy?: string): ParsedNLFilters {
+  if (!filterBy) {
+    return { refinementList: {}, range: {}, numericMenu: {}, residual: null };
+  }
+
+  const segments = splitTopLevelAnd(filterBy);
+  const refinementList: Record<string, string[]> = {};
+  const range: Record<string, string> = {};
+  const numericMenu: Record<string, string> = {};
+  const residualParts: string[] = [];
+
+  for (let seg of segments) {
+    seg = seg.trim();
+    console.log('Processing segment:', seg);
+
+    if (seg.startsWith('(') && seg.endsWith(')')) {
+      seg = seg.slice(1, -1).trim();
+    }
+
+    if (containsCrossAttributeOr(seg)) {
+      console.log('Skipping cross-attribute OR segment:', seg);
+      residualParts.push(seg);
+      continue;
+    }
+
+    if (isSingleAttributeList(seg)) {
+      console.log('Processing attribute list segment:', seg);
+      const { attr, values } = extractAttributeList(seg);
+      if (attr && values.length > 0) {
+        console.log(` - Attribute: ${attr}, Values: ${values.join(', ')}`);
+        refinementList[attr] = [...(refinementList[attr] ?? []), ...values];
+        continue;
+      }
+      console.log(' - Failed to extract attribute list from segment:', seg);
+    }
+
+    if (isSimpleRange(seg)) {
+      console.log('Processing range segment:', seg);
+      const { attr, min, max } = extractRange(seg);
+      if (attr === 'employees') {
+        const bucket = mapEmployeesRangeToBucket(min, max);
+        if (bucket) {
+          numericMenu['employees'] = bucket;
+          continue;
+        }
+      } else if (attr) {
+        const minStr = min !== undefined ? min.toString() : '';
+        const maxStr = max !== undefined ? max.toString() : '';
+        range[attr] = `${minStr}:${maxStr}`;
+        continue;
+      }
+    }
+
+    residualParts.push(seg);
+  }
+
+  return {
+    refinementList,
+    range,
+    numericMenu,
+    residual: residualParts.length > 0 ? residualParts.join(' && ') : null,
+  };
+}
+
 async function fetchNaturalLanguageAugmentation(query: string): Promise<NaturalLanguageAugmentation | null> {
   const response = await typesenseClient
     .collections<typeof companiesSchema.infer>('companies')
@@ -240,55 +410,13 @@ function CustomEmptyState({ hasFilters }: { hasFilters: boolean }) {
   );
 }
 
-// ---------- Helper to convert filters to InstantSearch format ----------
-function filtersToInstantSearchState(filters: CompanyFilters) {
-  const filterParts: string[] = [];
-
-  // Tech verticals
-  if (filters.techVerticals?.ids?.length) {
-    const verticalFilters = filters.techVerticals.ids.map((id) => `techVerticals:${id}`);
-    if (filters.techVerticals.operator === 'AND') {
-      filterParts.push(`(${verticalFilters.join(' && ')})`);
-    } else {
-      filterParts.push(`(${verticalFilters.join(' || ')})`);
-    }
-  }
-
-  // Sectors
-  if (filters.sectors?.length) {
-    const sectorFilters = filters.sectors.map((sector) => `sector:${sector}`);
-    filterParts.push(`(${sectorFilters.join(' || ')})`);
-  }
-
-  // Stages
-  if (filters.stages?.length) {
-    const stageFilters = filters.stages.map((stage) => `stage:${stage}`);
-    filterParts.push(`(${stageFilters.join(' || ')})`);
-  }
-
-  // Year established
-  if (filters.yearEstablished?.min !== undefined || filters.yearEstablished?.max !== undefined) {
-    const min = filters.yearEstablished.min ?? '*';
-    const max = filters.yearEstablished.max ?? '*';
-    filterParts.push(`establishedYear:[${min}..${max}]`);
-  }
-
-  return filterParts.join(' && ');
-}
-
-// ---------- Main component ----------
 export interface CompaniesInstantSearchClientProps {
   initialFilters: CompanyFilters;
   techVerticalsPromise: Promise<{ id: string; name: string }[]>;
   pageSize: number;
 }
 
-export function CompaniesInstantSearch({
-  initialFilters,
-  techVerticalsPromise,
-  pageSize,
-}: CompaniesInstantSearchClientProps) {
-  console.count('InstantSearch mount');
+export function CompaniesInstantSearch({ initialFilters, pageSize }: CompaniesInstantSearchClientProps) {
   return (
     <InstantSearchNext
       searchClient={searchClient}
@@ -311,10 +439,17 @@ function CompaniesInstantSearchInner({
 }) {
   const [filters, setFilters] = React.useState<CompanyFilters>(initialFilters);
   const { refine } = useSearchBox();
+  const { setUiState } = useInstantSearch();
 
   const [naturalLanguageEnabled, setNaturalLanguageEnabled] = React.useState(false);
   const [resolvedQuery, setResolvedQuery] = React.useState(initialFilters.keyword ?? '');
-  const [naturalLanguageFilterExpression, setNaturalLanguageFilterExpression] = React.useState<string | null>(null);
+  const [nlPromotedRefinements, setNlPromotedRefinements] = React.useState<ParsedNLFilters>({
+    refinementList: {},
+    range: {},
+    numericMenu: {},
+    residual: null,
+  });
+  const [nlResidualExpression, setNlResidualExpression] = React.useState<string | null>(null);
   const [naturalLanguageFilterClauses, setNaturalLanguageFilterClauses] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -324,27 +459,10 @@ function CompaniesInstantSearchInner({
   }, []);
 
   const clearNaturalLanguageFilters = React.useCallback(() => {
-    setNaturalLanguageFilterExpression(null);
+    setNlResidualExpression(null);
     setNaturalLanguageFilterClauses([]);
+    setNlPromotedRefinements({ refinementList: {}, range: {}, numericMenu: {}, residual: null });
   }, []);
-
-  const instantSearchFilters = React.useMemo(() => {
-    const baseFilters = filtersToInstantSearchState(filters);
-    if (baseFilters && naturalLanguageFilterExpression) {
-      return `${baseFilters} && (${naturalLanguageFilterExpression})`;
-    }
-    if (naturalLanguageFilterExpression) {
-      return naturalLanguageFilterExpression;
-    }
-    return baseFilters;
-  }, [filters, naturalLanguageFilterExpression]);
-
-  const configureFilters = React.useMemo(() => {
-    if (!instantSearchFilters || !instantSearchFilters.trim()) {
-      return undefined;
-    }
-    return instantSearchFilters;
-  }, [instantSearchFilters]);
 
   const hasActiveFilters =
     Boolean(filters.techVerticals || filters.sectors || filters.stages || filters.yearEstablished || filters.keyword) ||
@@ -355,19 +473,59 @@ function CompaniesInstantSearchInner({
     setFilters(clearedFilters);
     clearNaturalLanguageFilters();
     setResolvedQuery('');
-    refine('');
-  }, [clearNaturalLanguageFilters, refine]);
+
+    setUiState((prev) => ({
+      ...prev,
+      [INDEX_NAME]: {
+        query: '',
+        refinementList: {},
+        range: {},
+        numericMenu: {},
+        page: 1,
+      },
+    }));
+  }, [clearNaturalLanguageFilters, setUiState]);
 
   const handleNaturalLanguageToggle = React.useCallback(
     (enabled: boolean) => {
       setNaturalLanguageEnabled(enabled);
       setNaturalLanguageSearch(enabled);
       if (!enabled) {
+        const promoted = nlPromotedRefinements;
+
+        setUiState((prev) => {
+          const updatedRefinementList = { ...(prev[INDEX_NAME]?.refinementList ?? {}) };
+          const updatedRange = { ...(prev[INDEX_NAME]?.range ?? {}) };
+          const updatedNumericMenu = { ...(prev[INDEX_NAME]?.numericMenu ?? {}) };
+
+          for (const attr in promoted.refinementList) {
+            delete updatedRefinementList[attr];
+          }
+
+          for (const attr in promoted.range) {
+            delete updatedRange[attr];
+          }
+
+          for (const attr in promoted.numericMenu) {
+            delete updatedNumericMenu[attr];
+          }
+
+          return {
+            ...prev,
+            [INDEX_NAME]: {
+              ...prev[INDEX_NAME],
+              refinementList: updatedRefinementList,
+              range: updatedRange,
+              numericMenu: updatedNumericMenu,
+              query: resolvedQuery.trim() || '',
+            },
+          };
+        });
+
         clearNaturalLanguageFilters();
-        refine(resolvedQuery.trim() || '');
       }
     },
-    [clearNaturalLanguageFilters, refine, resolvedQuery],
+    [clearNaturalLanguageFilters, nlPromotedRefinements, resolvedQuery, setUiState],
   );
 
   const handleSearchSubmit = React.useCallback(
@@ -397,11 +555,40 @@ function CompaniesInstantSearchInner({
       try {
         const augmentation = await fetchNaturalLanguageAugmentation(trimmedQuery);
         const refinedQuery = augmentation?.refinedQuery?.trim?.() || trimmedQuery;
+        const parsed = parseNLFilter(augmentation?.filterBy);
+
+        console.log('[NL Debug] Raw filterBy:', augmentation?.filterBy);
+        console.log('[NL Debug] Parsed:', parsed);
 
         setResolvedQuery(refinedQuery);
-        setNaturalLanguageFilterExpression(augmentation?.filterBy ?? null);
-        setNaturalLanguageFilterClauses(deriveNaturalLanguageFilterClauses(augmentation?.filterBy));
-        refine(refinedQuery);
+        setNlResidualExpression(parsed.residual);
+        setNaturalLanguageFilterClauses(deriveNaturalLanguageFilterClauses(parsed.residual));
+        setNlPromotedRefinements(parsed);
+
+        setUiState((prev) => {
+          const newState = {
+            ...prev,
+            [INDEX_NAME]: {
+              ...prev[INDEX_NAME],
+              query: refinedQuery,
+              refinementList: {
+                ...(prev[INDEX_NAME]?.refinementList ?? {}),
+                ...parsed.refinementList,
+              },
+              range: {
+                ...(prev[INDEX_NAME]?.range ?? {}),
+                ...parsed.range,
+              },
+              numericMenu: {
+                ...(prev[INDEX_NAME]?.numericMenu ?? {}),
+                ...parsed.numericMenu,
+              },
+              page: 1,
+            },
+          };
+          console.log('[NL Debug] Setting UI state:', newState[INDEX_NAME]);
+          return newState;
+        });
       } catch (error) {
         console.error('Failed to interpret natural language query', error);
         setResolvedQuery(trimmedQuery);
@@ -409,17 +596,47 @@ function CompaniesInstantSearchInner({
         refine(trimmedQuery);
       }
     },
-    [clearNaturalLanguageFilters, refine],
+    [clearNaturalLanguageFilters, refine, setUiState],
   );
 
   const clearNaturalLanguageFiltersAndRefresh = React.useCallback(() => {
+    const promoted = nlPromotedRefinements;
+
+    setUiState((prev) => {
+      const updatedRefinementList = { ...(prev[INDEX_NAME]?.refinementList ?? {}) };
+      const updatedRange = { ...(prev[INDEX_NAME]?.range ?? {}) };
+      const updatedNumericMenu = { ...(prev[INDEX_NAME]?.numericMenu ?? {}) };
+
+      for (const attr in promoted.refinementList) {
+        delete updatedRefinementList[attr];
+      }
+
+      for (const attr in promoted.range) {
+        delete updatedRange[attr];
+      }
+
+      for (const attr in promoted.numericMenu) {
+        delete updatedNumericMenu[attr];
+      }
+
+      return {
+        ...prev,
+        [INDEX_NAME]: {
+          ...prev[INDEX_NAME],
+          refinementList: updatedRefinementList,
+          range: updatedRange,
+          numericMenu: updatedNumericMenu,
+          query: resolvedQuery.trim() || '',
+        },
+      };
+    });
+
     clearNaturalLanguageFilters();
-    refine(resolvedQuery.trim() || '');
-  }, [clearNaturalLanguageFilters, refine, resolvedQuery]);
+  }, [clearNaturalLanguageFilters, nlPromotedRefinements, resolvedQuery, setUiState]);
 
   return (
     <>
-      <Configure hitsPerPage={pageSize} filters={configureFilters} />
+      <Configure hitsPerPage={pageSize} filters={nlResidualExpression ?? undefined} />
 
       <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[320px_1fr] lg:gap-12">
         <aside className="flex flex-col gap-6">
