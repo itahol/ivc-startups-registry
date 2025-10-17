@@ -99,6 +99,23 @@ export const QUERIES = {
     } while (people.length > 0);
   },
 
+  getPersonDetails: function ({ contactId }: { contactId: string }): Promise<Person | undefined> {
+    return db
+      .selectFrom('Contacts')
+      .select([
+        'Contact_ID as contactID',
+        'Contact_Name as name',
+        'Email as email',
+        'Phone as phone',
+        'CV as cv',
+        'Social_Network as linkedInProfile',
+      ])
+      .where('Contact_ID', '=', contactId)
+      .where('Publish_in_Web', '=', 'Yes')
+      .$narrowType<{ contactID: NotNull }>()
+      .executeTakeFirst();
+  },
+
   getPersonPositions: function ({ contactId }: { contactId: string }): Promise<
     {
       companyID: string;
