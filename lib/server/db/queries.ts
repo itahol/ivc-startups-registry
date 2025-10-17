@@ -99,6 +99,38 @@ export const QUERIES = {
     } while (people.length > 0);
   },
 
+  getPersonPositions: function ({ contactId }: { contactId: string }): Promise<
+    {
+      companyID: string;
+      positionTitle: string | null;
+      positionEndDate: Date | null;
+      companyName: string | null;
+      companyCeasedDate: Date | null;
+      companyType: string | null;
+      companySubType: string | null;
+      companyType2: string | null;
+    }[]
+  > {
+    return db
+      .selectFrom('Management')
+      .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
+      .where('Management.Contact_ID', '=', contactId)
+      .where('Management.Hide_Position', '=', 'No')
+      .where('Profiles.Published_Profile', '=', 'Yes')
+      .select([
+        'Management.Position_Title as positionTitle',
+        'Management.Position_End_Date as positionEndDate',
+        'Profiles.Company_ID as companyID',
+        'Profiles.Company_Name as companyName',
+        'Profiles.Ceased_Date as companyCeasedDate',
+        'Profiles.Company_Type as companyType',
+        'Profiles.Company_SubType as companySubType',
+        'Profiles.Company_Type2 as companyType2',
+      ])
+      .$narrowType<{ companyID: NotNull }>()
+      .execute();
+  },
+
   getTechVerticals: function () {
     return db
       .selectFrom(
