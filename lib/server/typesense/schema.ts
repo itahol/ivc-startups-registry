@@ -1,5 +1,12 @@
 import { collection } from 'typesense-ts';
 
+/**
+ * Useful for `type instantiation is excessively deep and possibly infinite` errors.
+ * [Reference](https://x.com/solinvictvs/status/1671507561143476226)
+ * @template T - The type to recurse.
+ */
+type Recurse<T> = T extends infer R ? R : never;
+
 export const companiesSchema = collection({
   name: 'companies',
   fields: [
@@ -24,12 +31,24 @@ export const companiesSchema = collection({
   ],
 });
 
-export const ALL_SCHEMAS = [companiesSchema];
+export const personSchema = collection({
+  name: 'person',
+  fields: [
+    { name: 'name', type: 'string', index: true },
+    { name: 'email', type: 'string', index: false, optional: true },
+    { name: 'phone', type: 'string', index: false, optional: true },
+    { name: 'cv', type: 'string', index: false, optional: true },
+    { name: 'linkedInProfile', type: 'string', index: false, optional: true },
+  ],
+});
+
+export const ALL_SCHEMAS: Recurse<[typeof companiesSchema, typeof personSchema]> = [companiesSchema, personSchema];
 
 // Register the collection globally for type safety
 declare module 'typesense-ts' {
   interface Collections {
     companies: typeof companiesSchema.schema;
+    person: typeof personSchema.schema;
   }
 }
 

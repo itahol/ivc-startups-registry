@@ -1,7 +1,8 @@
 import { NotNull } from 'kysely';
+import ora from 'ora';
 import { setDefaultConfiguration } from 'typesense-ts';
 import { QUERIES } from '../lib/server/db/queries';
-import { ALL_SCHEMAS, companiesSchema } from '../lib/server/typesense/schema';
+import { ALL_SCHEMAS, companiesSchema, personSchema } from '../lib/server/typesense/schema';
 
 const BATCH_SIZE = 200;
 const CONCURRENCY = 10;
@@ -17,7 +18,7 @@ async function initTypesense() {
   }
 }
 
-await initTypesense();
+// await initTypesense();
 type CompanyDoc = {
   companyID: string;
   companyName: string;
@@ -121,6 +122,53 @@ async function pLimitMap<T, R>(
   return results;
 }
 
+async function validateCollectionExists(schema: (typeof ALL_SCHEMAS)[number]) {
+  const spinner = ora('Checking collection');
+
+  try {
+    await schema.retrieve();
+    spinner.text = 'Collection already exists';
+  } catch (e: unknown) {
+    spinner.info('Creating collection');
+    await schema.create();
+  }
+}
+
+async function indexCollection<T extends (typeof ALL_SCHEMAS)[number]>(
+  schema: T,
+  documentsIterator: AsyncIterable<any[]>,
+) {
+  schema.infer;
+  const spinner = ora();
+  await validateCollectionExists(schema);
+  let importedDocs = 0;
+  let importedChunks = 0;
+
+  for await (const chunk of documentsIterator) {
+    if (chunk.length === 0) break;
+    importedChunks += 1;
+    spinner.text = `Importing chunk ${importedChunks}, Imported ${importedDocs} documents so far...`;
+    await schema.documents.import(chunk, { action: 'upsert', return_doc: false });
+    importedDocs += chunk.length;
+  }
+  return { importedDocs, importedChunks };
+}
+
+async function seedPeople() {
+  const spinner = ora('Starting Typesense seeding for people...').start();
+  async function* docs() {
+    for await (const peopleBatch of QUERIES.paginatePeople(10_000)) {
+      const docsBatch = peopleBatch.map((person) => ({
+        ...person,
+        id: person.contactID,
+      }));
+      yield docsBatch;
+    }
+  }
+  const { importedChunks, importedDocs } = await indexCollection(personSchema, docs());
+  spinner.succeed(`Seeding complete: imported ${importedDocs} people in ${importedChunks} chunks.`);
+}
+
 export async function seedCompanies() {
   console.log('Starting Typesense seeding...');
 
@@ -206,8 +254,12 @@ export async function seedCompanies() {
 }
 
 if (require.main === module) {
-  seedCompanies().catch((err) => {
-    console.error('Seeding failed:', err);
+  await seedPeople().catch((err) => {
+    console.error('Seeding people failed:', err);
     process.exit(1);
   });
+  // seedCompanies().catch((err) => {
+  //   console.error('Seeding failed:', err);
+  //   process.exit(1);
+  // });
 }

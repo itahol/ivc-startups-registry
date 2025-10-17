@@ -74,3 +74,12 @@ export type CompanyDetails = Pick<
   CompanyFullDetails,
   'companyID' | 'companyName' | 'companyDescription' | 'establishedYear' | 'stage' | 'sector' | 'website'
 > & { techVerticalsNames: string | null };
+
+export interface Person {
+  contactID: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  cv: string | null;
+  linkedInProfile: string | null;
+}

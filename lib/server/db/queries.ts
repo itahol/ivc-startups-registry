@@ -1,5 +1,3 @@
-import { Expression, ExpressionBuilder, expressionBuilder, SelectQueryBuilder, Simplify, sql, SqlBool } from 'kysely';
-import { DB } from 'kysely-codegen';
 import {
   CompanyBoardMember,
   CompanyContactInfo,
@@ -11,8 +9,20 @@ import {
   CompanyID,
   CompanyPrimaryContactInfo,
   DealID,
+  Person,
   TechVertical,
-} from '../../model';
+} from '@/lib/model';
+import {
+  Expression,
+  ExpressionBuilder,
+  expressionBuilder,
+  NotNull,
+  SelectQueryBuilder,
+  Simplify,
+  sql,
+  SqlBool,
+} from 'kysely';
+import { DB } from 'kysely-codegen';
 import { db } from './index';
 
 export const COMPANY_STAGE = {
@@ -62,6 +72,33 @@ export interface CompaniesQueryOptions {
 }
 
 export const QUERIES = {
+  paginatePeople: async function* (maxPageSize: number = 100): AsyncIterable<Person[]> {
+    let offset = 0;
+    let people: Person[] = [];
+
+    do {
+      people = await db
+        .selectFrom('Contacts')
+        .select([
+          'Contact_ID as contactID',
+          'Contact_Name as name',
+          'Email as email',
+          'Phone as phone',
+          'CV as cv',
+          'Social_Network as linkedInProfile',
+        ])
+        .where('Publish_in_Web', '=', 'Yes')
+        .orderBy('Contact_ID')
+        .offset(offset)
+        .fetch(maxPageSize)
+        .$narrowType<{ contactID: NotNull }>()
+        .execute();
+      if (people.length === 0) break;
+      yield people;
+      offset += people.length;
+    } while (people.length > 0);
+  },
+
   getTechVerticals: function () {
     return db
       .selectFrom(
