@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Configure } from 'react-instantsearch';
-import { useHits, usePagination, useInstantSearch } from 'react-instantsearch';
+import { Configure, Index, useHits, useInstantSearch, usePagination } from 'react-instantsearch';
 import {
   BASE_SEARCH_PARAMETERS,
   NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS,
@@ -24,10 +23,13 @@ import { CompanyDetails } from '../../../lib/model';
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
 import * as Typesense from 'typesense';
 import { companiesSchema } from '@/lib/server/typesense/schema';
+import { PersonPreviewCard, type PersonHit } from './PersonPreviewCard';
 
 const typesenseClient = new Typesense.Client(typesenseConfig);
 
 const INDEX_NAME = 'companies';
+const PERSON_INDEX_NAME = 'person';
+const PERSON_RESULTS_PAGE_SIZE = 4;
 
 interface NaturalLanguageAugmentation {
   filterBy?: string;
@@ -283,6 +285,34 @@ function CompaniesHits() {
           }}
         />
       ))}
+    </div>
+  );
+}
+
+function PeopleResultsSection() {
+  const { items, results } = useHits<PersonHit>();
+
+  if (!results || results.nbHits === 0) {
+    return null;
+  }
+
+  const showingCount = items.length;
+  const hasMore = results.nbHits > showingCount;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-xl font-semibold tracking-tight">People</h2>
+        <span className="text-sm text-muted-foreground">
+          Showing top {showingCount} {showingCount === 1 ? 'result' : 'results'}
+          {hasMore ? ` · ${results.nbHits.toLocaleString()} total` : ''}
+        </span>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {items.map((hit) => (
+          <PersonPreviewCard key={hit.objectID ?? hit.id} hit={hit} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -611,6 +641,11 @@ function CompaniesInstantSearchInner({
               onClearNaturalLanguageFilters={clearNaturalLanguageFiltersAndRefresh}
             />
           </div>
+
+          <Index indexName={PERSON_INDEX_NAME}>
+            <Configure hitsPerPage={PERSON_RESULTS_PAGE_SIZE} />
+            <PeopleResultsSection />
+          </Index>
 
           <div className="relative">
             <CompaniesHits />

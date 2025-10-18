@@ -3,7 +3,7 @@ import { configure, setDefaultConfiguration } from 'typesense-ts';
 type Domain = NonNullable<Parameters<typeof configure>[0]['nodes'][number]['host']>;
 
 function assertDomain(value: string | Domain): asserts value is Domain {
-  if (value !== 'localhost' || !/\./.test(value)) {
+  if (value !== 'localhost' && !/\./.test(value)) {
     throw new Error(`Invalid domain: ${value}`);
   }
 }

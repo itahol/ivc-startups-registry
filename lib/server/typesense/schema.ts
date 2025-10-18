@@ -35,9 +35,9 @@ export const personSchema = collection({
   name: 'person',
   fields: [
     { name: 'name', type: 'string', index: true },
+    { name: 'cv', type: 'string', index: true, optional: true },
     { name: 'email', type: 'string', index: false, optional: true },
     { name: 'phone', type: 'string', index: false, optional: true },
-    { name: 'cv', type: 'string', index: false, optional: true },
     { name: 'linkedInProfile', type: 'string', index: false, optional: true },
   ],
 });
