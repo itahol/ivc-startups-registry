@@ -21,39 +21,7 @@ setDefaultConfiguration({
   nodes: [{ host: 'localhost', port: 8108, protocol: 'http' }],
 });
 
-async function initTypesense() {
-  for (const schmea of ALL_SCHEMAS) {
-    await schmea.create();
-  }
-}
-
-// await initTypesense();
-type CompanyDoc = {
-  id: string;
-  companyID: string;
-  companyName: string;
-  shortName?: string;
-  companyDescription?: string;
-  technology?: string;
-  sector: string;
-  stage: string;
-  establishedYear?: number;
-  employees?: number;
-  techVerticals: string[];
-  executives: string[];
-  boardMembers: string[];
-  investors: string[];
-};
-
-type ExecutiveDoc = {
-  id: string;
-  companyID: string;
-  personID: string;
-  companyName?: string;
-  personName?: string;
-  title?: string;
-  isCurrent?: boolean;
-};
+type CompanyDoc = typeof companiesSchema.infer;
 
 async function fetchAllIds(): Promise<string[]> {
   const idRows = await QUERIES.dbRead
@@ -175,7 +143,15 @@ async function indexCollection<T extends (typeof ALL_SCHEMAS)[number]>(
     if (chunk.length === 0) break;
     importedChunks += 1;
     spinner.text = `Importing chunk ${importedChunks}, Imported ${importedDocs} documents so far...`;
-    await schema.documents.import(chunk, { action: 'upsert', return_doc: false });
+    try {
+      await schema.documents.import(chunk, { action: 'upsert', return_doc: false }, { throw_on_failure: true });
+    } catch (error) {
+      const maybeError = error as unknown;
+      if (maybeError instanceof Error) {
+        spinner.fail(`Import failed for chunk ${importedChunks}. Example failure: ${JSON.stringify(chunk[0])}`);
+      }
+      throw error;
+    }
     importedDocs += chunk.length;
   }
   return { importedDocs, importedChunks };

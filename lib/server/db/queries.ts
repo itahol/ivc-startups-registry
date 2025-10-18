@@ -103,10 +103,9 @@ export const QUERIES = {
 
   paginateExecutives: async function* (maxPageSize: number = 100): AsyncIterable<ExecutiveCompanyRelation[]> {
     let offset = 0;
-    let executives: ExecutiveCompanyRelation[] = [];
 
-    do {
-      executives = await db
+    for (;;) {
+      const executives = await db
         .selectFrom('Management')
         .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
         .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
@@ -118,14 +117,7 @@ export const QUERIES = {
           'Management.Position_Title as positionTitle',
         ])
         .select(({ eb }) =>
-          eb
-            .case()
-            .when('Management.Past_Position', '=', 'No')
-            .then(eb.val(1))
-            .else(eb.val(0))
-            .end()
-            .$castTo<boolean>()
-            .as('isCurrent'),
+          eb.case().when('Management.Past_Position', '=', 'No').then(eb.val(1)).else(eb.val(0)).end().as('isCurrent'),
         )
         .where('Profiles.Company_Type2', '=', 'HT')
         .where('Profiles.Published_Profile', '=', 'Yes')
@@ -135,21 +127,24 @@ export const QUERIES = {
         .orderBy('Management.Contact_ID')
         .offset(offset)
         .fetch(maxPageSize)
-        .$narrowType<{ companyID: NotNull; contactID: NotNull; isCurrent: NotNull }>()
-        .$assertType<ExecutiveCompanyRelation>()
+        .$narrowType<{ companyID: NotNull; contactID: NotNull; isCurrent: SqlBool }>()
         .execute();
+
       if (executives.length === 0) break;
-      yield executives;
+
+      yield executives.map((executive) => ({
+        ...executive,
+        isCurrent: Boolean(executive.isCurrent),
+      }));
       offset += executives.length;
-    } while (executives.length > 0);
+    }
   },
 
   paginateBoardMembers: async function* (maxPageSize: number = 100): AsyncIterable<BoardMemberCompanyRelation[]> {
     let offset = 0;
-    let members: BoardMemberCompanyRelation[] = [];
 
-    do {
-      members = await db
+    for (;;) {
+      const members = await db
         .selectFrom('Board')
         .innerJoin('Profiles', 'Profiles.Company_ID', 'Board.Company_ID')
         .innerJoin('Contacts', 'Contacts.Contact_ID', 'Board.Contact_ID')
@@ -170,12 +165,12 @@ export const QUERIES = {
         .offset(offset)
         .fetch(maxPageSize)
         .$narrowType<{ companyID: NotNull; contactID: NotNull }>()
-        .$assertType<BoardMemberCompanyRelation>()
         .execute();
+
       if (members.length === 0) break;
       yield members;
       offset += members.length;
-    } while (members.length > 0);
+    }
   },
 
   getPersonDetails: function ({ contactId }: { contactId: string }): Promise<Person | undefined> {
@@ -283,12 +278,14 @@ export const QUERIES = {
       ?.then((result) => result?.count ?? 0);
   },
 
-  getCompanyManagement: function ({ companyId }: { companyId: string }): Promise<CompanyExecutive[]> {
-    return getCompanyManagement({ companyId }).execute();
+  getCompanyManagement: async function ({ companyId }: { companyId: string }): Promise<CompanyExecutive[]> {
+    const rows = await getCompanyManagementQuery({ companyId }).execute();
+    return rows.map((row) => ({ ...row, isPersonPublished: Boolean(row.isPersonPublished) }));
   },
 
-  getCompanyBoard: function ({ companyId }: { companyId: CompanyID }): Promise<CompanyBoardMember[]> {
-    return getCompanyBoard({ companyId }).execute();
+  getCompanyBoard: async function ({ companyId }: { companyId: CompanyID }): Promise<CompanyBoardMember[]> {
+    const rows = await getCompanyBoardQuery({ companyId }).execute();
+    return rows.map((row) => ({ ...row, isPersonPublished: Boolean(row.isPersonPublished) }));
   },
 
   getCompanyDeals: function ({ companyId }: { companyId: CompanyID }): Promise<CompanyFundingDeal[]> {
@@ -325,43 +322,48 @@ export const QUERIES = {
   }: {
     companyId: CompanyID;
   }): Promise<{ primaryContactInfo?: CompanyPrimaryContactInfo; branchesContactInfo: CompanyContactInfo[] }> {
-    const [primaryContactInfo, branchesContactInfo] = await Promise.all([
-      db
-        .selectFrom('PrimaryContacts')
-        .leftJoin('Contacts', 'Contacts.Contact_ID', 'PrimaryContacts.Contact_ID')
-        .where('Company_ID', '=', companyId)
-        .select([
-          'PrimaryContacts.Contact_ID as contactID',
-          'PrimaryContacts.Contact_Name as contactName',
-          'PrimaryContacts.Email as contactEmail',
-          'PrimaryContacts.Position as contactPosition',
-        ])
-        .select(({ eb }) =>
-          eb
-            .case()
-            .when('Contacts.Publish_in_Web', '=', 'Yes')
-            .then(eb.val(1))
-            .else(eb.val(0))
-            .end()
-            .$castTo<boolean>()
-            .as('isPersonPublished'),
-        )
-        .$assertType<CompanyPrimaryContactInfo>()
-        .executeTakeFirst(),
+    const primaryContactPromise = db
+      .selectFrom('PrimaryContacts')
+      .leftJoin('Contacts', 'Contacts.Contact_ID', 'PrimaryContacts.Contact_ID')
+      .where('Company_ID', '=', companyId)
+      .select([
+        'PrimaryContacts.Contact_ID as contactID',
+        'PrimaryContacts.Contact_Name as contactName',
+        'PrimaryContacts.Email as contactEmail',
+        'PrimaryContacts.Position as contactPosition',
+      ])
+      .select(({ eb }) =>
+        eb
+          .case()
+          .when('Contacts.Publish_in_Web', '=', 'Yes')
+          .then(eb.val(1))
+          .else(eb.val(0))
+          .end()
+          .as('isPersonPublished'),
+      )
+      .executeTakeFirst();
 
-      db
-        .selectFrom('Main_Branch_Addresses')
-        .where('Company_ID', '=', companyId)
-        .select([
-          'Address_Type as type',
-          'Country as country',
-          'City as city',
-          'State as state',
-          'Address as address',
-          'ZIP_Code as zipCode',
-        ])
-        .execute(),
-    ]);
+    const branchesPromise = db
+      .selectFrom('Main_Branch_Addresses')
+      .where('Company_ID', '=', companyId)
+      .select([
+        'Address_Type as type',
+        'Country as country',
+        'City as city',
+        'State as state',
+        'Address as address',
+        'ZIP_Code as zipCode',
+      ])
+      .execute();
+
+    const [primaryContactRaw, branchesContactInfo] = await Promise.all([primaryContactPromise, branchesPromise]);
+
+    const primaryContactInfo = primaryContactRaw
+      ? {
+          ...primaryContactRaw,
+          isPersonPublished: Boolean(primaryContactRaw.isPersonPublished),
+        }
+      : undefined;
 
     return { primaryContactInfo, branchesContactInfo };
   },
@@ -370,11 +372,15 @@ export const QUERIES = {
   dbRead: db,
 };
 
-function getCompanyManagement({
+function getCompanyManagementQuery({
   companyId,
 }: {
   companyId: Expression<CompanyID> | CompanyID;
-}): SelectQueryBuilder<DB, 'Management', CompanyExecutive> {
+}): SelectQueryBuilder<
+  DB,
+  'Management' | 'Contacts',
+  { contactID: string | null; contactName: string | null; positionTitle: string | null } & { isPersonPublished: number }
+> {
   return db
     .selectFrom('Management')
     .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
@@ -393,17 +399,20 @@ function getCompanyManagement({
         .then(eb.val(1))
         .else(eb.val(0))
         .end()
-        .$castTo<boolean>()
         .as('isPersonPublished'),
-    )
-    .$assertType<CompanyExecutive>();
+    );
 }
 
-function getCompanyBoard({
-  companyId,
-}: {
-  companyId: Expression<CompanyID> | CompanyID;
-}): SelectQueryBuilder<DB, 'Board', CompanyBoardMember> {
+function getCompanyBoardQuery({ companyId }: { companyId: Expression<CompanyID> | CompanyID }): SelectQueryBuilder<
+  DB,
+  'Board' | 'Contacts',
+  {
+    contactID: string | null;
+    boardName: string | null;
+    boardPosition: string | null;
+    otherPositions: string | null;
+  } & { isPersonPublished: number }
+> {
   return db
     .selectFrom('Board')
     .innerJoin('Contacts', 'Contacts.Contact_ID', 'Board.Contact_ID')
@@ -421,10 +430,8 @@ function getCompanyBoard({
         .then(eb.val(1))
         .else(eb.val(0))
         .end()
-        .$castTo<boolean>()
         .as('isPersonPublished'),
-    )
-    .$assertType<CompanyBoardMember>();
+    );
 }
 
 function getCompanyTechVerticals({
@@ -559,6 +566,8 @@ function hasTechVerticals({
         .having(sql<number>`count(distinct "Tags"."Tags_ID")`, '=', tagIds.length),
     );
   }
+
+  return undefined;
 }
 
 function jsonArrayFrom<O>(expr: Expression<O>) {
