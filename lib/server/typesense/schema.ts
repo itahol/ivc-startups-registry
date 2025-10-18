@@ -45,25 +45,25 @@ export const personSchema = collection({
 export const executiveSchema = collection({
   name: 'executive',
   fields: [
-    { name: 'companyID', type: 'string', reference: 'companies.companyID', async_reference: true },
+    { name: 'companyID', type: 'string', reference: 'companies.id', async_reference: true },
     { name: 'personID', type: 'string', reference: 'person.id', async_reference: true },
     { name: 'companyName', type: 'string', index: true, optional: true },
     { name: 'personName', type: 'string', index: true, optional: true },
-    { name: 'title', type: 'string', index: true, optional: true },
-    { name: 'isCurrent', type: 'bool', optional: true },
+    { name: 'title', type: 'string', index: false, optional: true },
+    { name: 'isCurrent', type: 'bool', index: false, optional: true },
   ],
 });
 
 export const boardMemberSchema = collection({
   name: 'boardMember',
   fields: [
-    { name: 'companyID', type: 'string', reference: 'companies.companyID', async_reference: true },
+    { name: 'companyID', type: 'string', reference: 'companies.id', async_reference: true },
     { name: 'personID', type: 'string', reference: 'person.id', async_reference: true },
     { name: 'companyName', type: 'string', index: true, optional: true },
     { name: 'personName', type: 'string', index: true, optional: true },
-    { name: 'boardName', type: 'string', index: true, optional: true },
-    { name: 'boardPosition', type: 'string', index: true, optional: true },
-    { name: 'otherPositions', type: 'string', index: true, optional: true },
+    { name: 'boardName', type: 'string', index: false, optional: true },
+    { name: 'boardPosition', type: 'string', index: false, optional: true },
+    { name: 'otherPositions', type: 'string', index: false, optional: true },
   ],
 });
 

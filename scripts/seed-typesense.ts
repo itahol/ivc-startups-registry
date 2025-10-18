@@ -14,6 +14,8 @@ import {
 const BATCH_SIZE = 200;
 const CONCURRENCY = 10;
 
+const spinner = ora().start();
+
 setDefaultConfiguration({
   apiKey: 'xyz',
   nodes: [{ host: 'localhost', port: 8108, protocol: 'http' }],
@@ -27,6 +29,7 @@ async function initTypesense() {
 
 // await initTypesense();
 type CompanyDoc = {
+  id: string;
   companyID: string;
   companyName: string;
   shortName?: string;
@@ -50,17 +53,6 @@ type ExecutiveDoc = {
   personName?: string;
   title?: string;
   isCurrent?: boolean;
-};
-
-type BoardMemberDoc = {
-  id: string;
-  companyID: string;
-  personID: string;
-  companyName?: string;
-  personName?: string;
-  boardName?: string;
-  boardPosition?: string;
-  otherPositions?: string;
 };
 
 async function fetchAllIds(): Promise<string[]> {
@@ -102,6 +94,7 @@ function numOrUndefined(value: number | null | undefined): number | undefined {
 
 function stripEmpty(doc: CompanyDoc): CompanyDoc {
   const result: Partial<CompanyDoc> = {
+    id: doc.id,
     companyID: doc.companyID,
     companyName: doc.companyName,
     sector: doc.sector,
@@ -121,15 +114,9 @@ function stripEmpty(doc: CompanyDoc): CompanyDoc {
   return result as CompanyDoc;
 }
 
-function makeRelationId({
-  companyId,
-  personId,
-}: {
-  companyId: string;
-  personId: string;
-  extra?: string | null;
-}): string {
-  const parts = [companyId.trim(), personId.trim()];
+function makeRelationId({ companyId, personId }: { companyId: string; personId: string }): string {
+  const sanitize = (value: string) => value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-');
+  const parts = [sanitize(companyId), sanitize(personId)];
   return parts.join('_');
 }
 
@@ -163,14 +150,15 @@ async function pLimitMap<T, R>(
 }
 
 async function validateCollectionExists(schema: (typeof ALL_SCHEMAS)[number]) {
-  const spinner = ora('Checking collection');
+  spinner.text = 'Checking collection';
 
   try {
     await schema.retrieve();
-    spinner.text = 'Collection already exists';
+    spinner.succeed('Collection already exists');
   } catch (e: unknown) {
     spinner.info('Creating collection');
     await schema.create();
+    spinner.succeed('Collection created');
   }
 }
 
@@ -178,12 +166,11 @@ async function indexCollection<T extends (typeof ALL_SCHEMAS)[number]>(
   schema: T,
   documentsIterator: AsyncIterable<any[]>,
 ) {
-  schema.infer;
-  const spinner = ora();
   await validateCollectionExists(schema);
   let importedDocs = 0;
   let importedChunks = 0;
 
+  spinner.info('Indexing collection');
   for await (const chunk of documentsIterator) {
     if (chunk.length === 0) break;
     importedChunks += 1;
@@ -195,7 +182,7 @@ async function indexCollection<T extends (typeof ALL_SCHEMAS)[number]>(
 }
 
 async function seedPeople() {
-  const spinner = ora('Starting Typesense seeding for people...').start();
+  spinner.text = 'Starting Typesense seeding for people...';
   async function* docs() {
     for await (const peopleBatch of QUERIES.paginatePeople(10_000)) {
       const docsBatch = peopleBatch.map((person) => ({
@@ -210,7 +197,7 @@ async function seedPeople() {
 }
 
 async function seedExecutives() {
-  const spinner = ora('Starting Typesense seeding for executives...').start();
+  spinner.text = 'Starting Typesense seeding for executives...';
   async function* docs() {
     for await (const executivesBatch of QUERIES.paginateExecutives(10_000)) {
       const docsBatch = executivesBatch
@@ -219,7 +206,7 @@ async function seedExecutives() {
           const personId = clean(executive.contactID);
           if (!companyId || !personId) return undefined;
 
-          const doc: ExecutiveDoc = {
+          const doc = {
             id: makeRelationId({ companyId, personId }),
             companyID: companyId,
             personID: personId,
@@ -231,7 +218,7 @@ async function seedExecutives() {
 
           return doc;
         })
-        .filter((doc): doc is ExecutiveDoc => doc !== undefined);
+        .filter((doc) => doc !== undefined);
       if (docsBatch.length > 0) {
         yield docsBatch;
       }
@@ -242,20 +229,17 @@ async function seedExecutives() {
 }
 
 async function seedBoardMembers() {
-  const spinner = ora('Starting Typesense seeding for board members...').start();
+  spinner.text = 'Starting Typesense seeding for board members...';
   async function* docs() {
     for await (const membersBatch of QUERIES.paginateBoardMembers(10_000)) {
       const docsBatch = membersBatch
-        .map<BoardMemberDoc | undefined>((member) => {
+        .map((member) => {
           const companyId = clean(member.companyID);
           const personId = clean(member.contactID);
           if (!companyId || !personId) return undefined;
 
           return {
-            id: makeRelationId({
-              companyId,
-              personId,
-            }),
+            id: makeRelationId({ companyId, personId }),
             companyID: companyId,
             personID: personId,
             companyName: clean(member.companyName),
@@ -265,7 +249,7 @@ async function seedBoardMembers() {
             otherPositions: clean(member.otherPositions),
           };
         })
-        .filter((doc): doc is BoardMemberDoc => doc !== undefined);
+        .filter((doc) => doc !== undefined);
 
       if (docsBatch.length > 0) {
         yield docsBatch;
@@ -311,8 +295,11 @@ export async function seedCompanies() {
           return;
         }
 
+        const companyKey = details.companyID.trim();
+
         const doc: CompanyDoc = {
-          companyID: details.companyID,
+          id: companyKey,
+          companyID: companyKey,
           companyName: details.companyName,
           shortName: clean(details.shortName),
           companyDescription: clean(details.companyDescription),
@@ -490,4 +477,5 @@ async function main() {
 
 if (require.main === module) {
   await main();
+  process.exit();
 }
