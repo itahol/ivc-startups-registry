@@ -4,7 +4,7 @@ import type { SearchBoxProps } from 'react-instantsearch';
 import { useSearchBox } from 'react-instantsearch';
 
 export const SearchBox = (props: SearchBoxProps) => {
-  const { refine, clear, isSearchStalled, ...rest } = useSearchBox(props);
+  const { refine, ...rest } = useSearchBox(props);
 
   return (
     <Input

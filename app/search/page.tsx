@@ -1,25 +1,14 @@
-import { cache, Suspense } from 'react';
-import Navbar from '../../components/Navbar';
+import { Suspense } from 'react';
+import Navbar from '@/components/Navbar';
 import { readCompanyFilters } from '@/lib/companies/filtersUrl';
 import { CompaniesInstantSearch } from './_components/CompaniesInstantSearch';
 import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '@/convex/_generated/api';
-import { QUERIES } from '../../lib/server/db/queries';
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-const getTechVerticals = cache(async () => {
-  // const techVerticals = await QUERIES.getTechVerticals();
-  // return techVerticals as { id: string; name: string }[];
-  return [{ id: 'foo', name: 'bar' }];
-});
 
 /* -------------------------------------------------------------------------- */
 /*                     Server Component Wrapper (RSC Page)                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function CompaniesPage({
+export default async function SearchPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -36,7 +25,6 @@ export default async function CompaniesPage({
     }
   }
   const initialFilters = readCompanyFilters(usp);
-  const techVerticals = getTechVerticals();
 
   const pageSizeParam = usp.get('limit');
   const pageSize = pageSizeParam ? Math.min(Math.max(parseInt(pageSizeParam, 10) || 20, 1), 100) : 20;
@@ -65,11 +53,7 @@ export default async function CompaniesPage({
             </div>
             <Suspense key={usp.toString()} fallback={<CompaniesSkeleton />}>
               {/* Client side InstantSearch */}
-              <CompaniesInstantSearch
-                initialFilters={initialFilters}
-                techVerticalsPromise={techVerticals}
-                pageSize={pageSize}
-              />
+              <CompaniesInstantSearch initialFilters={initialFilters} pageSize={pageSize} />
             </Suspense>
           </div>
         </main>

@@ -15,20 +15,13 @@ import SearchInput from '@/components/SearchInput';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters;
-  techVerticalsPromise: Promise<{ id: string; name: string }[]>;
   companiesPromise: Promise<CompanyDetails[]>;
   companiesCountPromise: Promise<number>;
   page: number;
   pageSize: number;
 }
 
-export function CompaniesClient({
-  companiesPromise,
-  companiesCountPromise,
-  techVerticalsPromise,
-  page,
-  pageSize,
-}: CompaniesClientProps) {
+export function CompaniesClient({ companiesPromise, companiesCountPromise, page, pageSize }: CompaniesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -44,7 +37,6 @@ export function CompaniesClient({
     setKeywordInput(currentFilters.keyword ?? '');
   }, [currentFilters.keyword]);
 
-  const techVerticals = use(techVerticalsPromise);
   const companies = use(companiesPromise);
   const total = use(companiesCountPromise);
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);

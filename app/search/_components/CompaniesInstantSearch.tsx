@@ -15,13 +15,11 @@ import { CurrentRefinements } from '@/components/instantsearch/current-refinemen
 import { RangeFilter } from '@/components/instantsearch/range-menu';
 import NumericMenu from '@/components/instantsearch/numeric-menu';
 import { StyledRefinementList } from '@/components/instantsearch/refinement-list';
-import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
 import KeywordSearchBox from '@/components/KeywordSearchBox';
 import NaturalLanguageFilterInput from '@/components/NaturalLanguageFilterInput';
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
 import { CompanyDetails } from '../../../lib/model';
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
 import * as Typesense from 'typesense';
@@ -360,7 +358,6 @@ function ResultsSummary() {
 
 export interface CompaniesInstantSearchClientProps {
   initialFilters: CompanyFilters;
-  techVerticalsPromise: Promise<{ id: string; name: string }[]>;
   pageSize: number;
 }
 
@@ -385,7 +382,7 @@ function CompaniesInstantSearchInner({
   initialFilters: CompanyFilters;
   pageSize: number;
 }) {
-  const [filters, setFilters] = React.useState<CompanyFilters>(initialFilters);
+  const [_, setFilters] = React.useState<CompanyFilters>(initialFilters);
   const { setUiState } = useInstantSearch();
 
   const [nlPromotedRefinements, setNlPromotedRefinements] = React.useState<ParsedNLFilters>({
@@ -409,10 +406,6 @@ function CompaniesInstantSearchInner({
     setNaturalLanguageFilterClauses([]);
     setNlPromotedRefinements({ refinementList: {}, range: {}, numericMenu: {}, residual: null });
   }, []);
-
-  const hasActiveFilters =
-    Boolean(filters.techVerticals || filters.sectors || filters.stages || filters.yearEstablished || filters.keyword) ||
-    naturalLanguageFilterClauses.length > 0;
 
   const handleClearFilters = React.useCallback(() => {
     const clearedFilters: CompanyFilters = {};

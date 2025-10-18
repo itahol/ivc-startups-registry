@@ -1,12 +1,22 @@
 import { configure, setDefaultConfiguration } from 'typesense-ts';
 
-const { TYPESENSE_HOST = 'localhost', TYPESENSE_PORT = '8108', TYPESENSE_API_KEY } = process.env;
+type Domain = NonNullable<Parameters<typeof configure>[0]['nodes'][number]['host']>;
+
+function assertDomain(value: string | Domain): asserts value is Domain {
+  if (value !== 'localhost' || !/\./.test(value)) {
+    throw new Error(`Invalid domain: ${value}`);
+  }
+}
+
+const { TYPESENSE_HOST = 'localhost' as const, TYPESENSE_PORT = '8108', TYPESENSE_API_KEY = 'xyz' } = process.env;
+
+assertDomain(TYPESENSE_HOST);
 
 export const typesenseConfig = configure({
-  apiKey: 'g46Vko1pA0ROhg9mobCwgv0mBIeGlvBQ',
+  apiKey: TYPESENSE_API_KEY,
   nodes: [
     {
-      host: 'localhost',
+      host: TYPESENSE_HOST,
       port: Number(TYPESENSE_PORT),
       protocol: 'http',
     },
