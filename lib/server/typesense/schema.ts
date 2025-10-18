@@ -42,13 +42,42 @@ export const personSchema = collection({
   ],
 });
 
-export const ALL_SCHEMAS: Recurse<[typeof companiesSchema, typeof personSchema]> = [companiesSchema, personSchema];
+export const executiveSchema = collection({
+  name: 'executive',
+  fields: [
+    { name: 'companyID', type: 'string', reference: 'companies.companyID', async_reference: true },
+    { name: 'personID', type: 'string', reference: 'person.id', async_reference: true },
+    { name: 'companyName', type: 'string', index: true, optional: true },
+    { name: 'personName', type: 'string', index: true, optional: true },
+    { name: 'title', type: 'string', index: true, optional: true },
+    { name: 'isCurrent', type: 'bool', optional: true },
+  ],
+});
+
+export const boardMemberSchema = collection({
+  name: 'boardMember',
+  fields: [
+    { name: 'companyID', type: 'string', reference: 'companies.companyID', async_reference: true },
+    { name: 'personID', type: 'string', reference: 'person.id', async_reference: true },
+    { name: 'companyName', type: 'string', index: true, optional: true },
+    { name: 'personName', type: 'string', index: true, optional: true },
+    { name: 'boardName', type: 'string', index: true, optional: true },
+    { name: 'boardPosition', type: 'string', index: true, optional: true },
+    { name: 'otherPositions', type: 'string', index: true, optional: true },
+  ],
+});
+
+export const ALL_SCHEMAS: Recurse<
+  [typeof companiesSchema, typeof personSchema, typeof executiveSchema, typeof boardMemberSchema]
+> = [companiesSchema, personSchema, executiveSchema, boardMemberSchema];
 
 // Register the collection globally for type safety
 declare module 'typesense-ts' {
   interface Collections {
     companies: typeof companiesSchema.schema;
     person: typeof personSchema.schema;
+    executive: typeof executiveSchema.schema;
+    boardMember: typeof boardMemberSchema.schema;
   }
 }
 

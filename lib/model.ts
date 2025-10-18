@@ -14,6 +14,7 @@ export interface CompanyDealInvestor {
   privateInvestorID: string | null;
   investorCompanyType: string | null;
   investorName: string | null;
+  isPrivateInvestorPublished: boolean;
 }
 
 export interface CompanyFundingDeal {
@@ -30,10 +31,31 @@ export interface CompanyExecutive {
   contactID: string | null;
   contactName: string | null;
   positionTitle: string | null;
+  isPersonPublished: boolean;
+}
+
+export interface ExecutiveCompanyRelation {
+  companyID: string;
+  companyName: string | null;
+  contactID: string;
+  contactName: string | null;
+  positionTitle: string | null;
+  isCurrent: boolean;
 }
 
 export interface CompanyBoardMember {
   contactID: string | null;
+  boardName: string | null;
+  boardPosition: string | null;
+  otherPositions: string | null;
+  isPersonPublished: boolean;
+}
+
+export interface BoardMemberCompanyRelation {
+  companyID: string;
+  companyName: string | null;
+  contactID: string;
+  contactName: string | null;
   boardName: string | null;
   boardPosition: string | null;
   otherPositions: string | null;
@@ -44,6 +66,7 @@ export interface CompanyPrimaryContactInfo {
   contactName: string | null;
   contactEmail: string | null;
   contactPosition: string | null;
+  isPersonPublished: boolean;
 }
 
 export interface CompanyContactInfo {

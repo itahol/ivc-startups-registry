@@ -188,7 +188,7 @@ function BranchPanel({
                       label="Contact Person"
                       value={
                         <>
-                          {primaryContactInfo.contactID ? (
+                          {primaryContactInfo.contactID && primaryContactInfo.isPersonPublished ? (
                             <Link
                               href={`/people/${primaryContactInfo.contactID}`}
                               className="text-primary hover:text-primary/80 hover:underline"

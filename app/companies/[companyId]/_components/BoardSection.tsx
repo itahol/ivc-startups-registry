@@ -49,7 +49,7 @@ export default function BoardSection({ board }: { board: CompanyBoardMember[] })
                   return (
                     <TableRow key={idx} className="text-[13px]">
                       <TableCell className="font-medium">
-                        {boardMember.contactID ? (
+                        {boardMember.contactID && boardMember.isPersonPublished ? (
                           <Link
                             href={`/people/${boardMember.contactID}`}
                             className="text-primary hover:text-primary/80 hover:underline"

@@ -1,4 +1,5 @@
 import {
+  BoardMemberCompanyRelation,
   CompanyBoardMember,
   CompanyContactInfo,
   CompanyDealInvestor,
@@ -9,6 +10,7 @@ import {
   CompanyID,
   CompanyPrimaryContactInfo,
   DealID,
+  ExecutiveCompanyRelation,
   Person,
   TechVertical,
 } from '@/lib/model';
@@ -97,6 +99,83 @@ export const QUERIES = {
       yield people;
       offset += people.length;
     } while (people.length > 0);
+  },
+
+  paginateExecutives: async function* (maxPageSize: number = 100): AsyncIterable<ExecutiveCompanyRelation[]> {
+    let offset = 0;
+    let executives: ExecutiveCompanyRelation[] = [];
+
+    do {
+      executives = await db
+        .selectFrom('Management')
+        .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
+        .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
+        .select([
+          'Management.Company_ID as companyID',
+          'Profiles.Company_Name as companyName',
+          'Management.Contact_ID as contactID',
+          'Contacts.Contact_Name as contactName',
+          'Management.Position_Title as positionTitle',
+        ])
+        .select(({ eb }) =>
+          eb
+            .case()
+            .when('Management.Past_Position', '=', 'No')
+            .then(eb.val(1))
+            .else(eb.val(0))
+            .end()
+            .$castTo<boolean>()
+            .as('isCurrent'),
+        )
+        .where('Profiles.Company_Type2', '=', 'HT')
+        .where('Profiles.Published_Profile', '=', 'Yes')
+        .where('Contacts.Publish_in_Web', '=', 'Yes')
+        .where('Management.Hide_Position', '=', 'No')
+        .orderBy('Management.Company_ID')
+        .orderBy('Management.Contact_ID')
+        .offset(offset)
+        .fetch(maxPageSize)
+        .$narrowType<{ companyID: NotNull; contactID: NotNull; isCurrent: NotNull }>()
+        .$assertType<ExecutiveCompanyRelation>()
+        .execute();
+      if (executives.length === 0) break;
+      yield executives;
+      offset += executives.length;
+    } while (executives.length > 0);
+  },
+
+  paginateBoardMembers: async function* (maxPageSize: number = 100): AsyncIterable<BoardMemberCompanyRelation[]> {
+    let offset = 0;
+    let members: BoardMemberCompanyRelation[] = [];
+
+    do {
+      members = await db
+        .selectFrom('Board')
+        .innerJoin('Profiles', 'Profiles.Company_ID', 'Board.Company_ID')
+        .innerJoin('Contacts', 'Contacts.Contact_ID', 'Board.Contact_ID')
+        .select([
+          'Board.Company_ID as companyID',
+          'Profiles.Company_Name as companyName',
+          'Board.Contact_ID as contactID',
+          'Contacts.Contact_Name as contactName',
+          'Board.Board_Name as boardName',
+          'Board.Board_Position as boardPosition',
+          'Board.Other_Positions as otherPositions',
+        ])
+        .where('Profiles.Company_Type2', '=', 'HT')
+        .where('Profiles.Published_Profile', '=', 'Yes')
+        .where('Contacts.Publish_in_Web', '=', 'Yes')
+        .orderBy('Board.Company_ID')
+        .orderBy('Board.Contact_ID')
+        .offset(offset)
+        .fetch(maxPageSize)
+        .$narrowType<{ companyID: NotNull; contactID: NotNull }>()
+        .$assertType<BoardMemberCompanyRelation>()
+        .execute();
+      if (members.length === 0) break;
+      yield members;
+      offset += members.length;
+    } while (members.length > 0);
   },
 
   getPersonDetails: function ({ contactId }: { contactId: string }): Promise<Person | undefined> {
@@ -249,13 +328,25 @@ export const QUERIES = {
     const [primaryContactInfo, branchesContactInfo] = await Promise.all([
       db
         .selectFrom('PrimaryContacts')
+        .leftJoin('Contacts', 'Contacts.Contact_ID', 'PrimaryContacts.Contact_ID')
         .where('Company_ID', '=', companyId)
         .select([
-          'Contact_ID as contactID',
-          'Contact_Name as contactName',
-          'Email as contactEmail',
-          'Position as contactPosition',
+          'PrimaryContacts.Contact_ID as contactID',
+          'PrimaryContacts.Contact_Name as contactName',
+          'PrimaryContacts.Email as contactEmail',
+          'PrimaryContacts.Position as contactPosition',
         ])
+        .select(({ eb }) =>
+          eb
+            .case()
+            .when('Contacts.Publish_in_Web', '=', 'Yes')
+            .then(eb.val(1))
+            .else(eb.val(0))
+            .end()
+            .$castTo<boolean>()
+            .as('isPersonPublished'),
+        )
+        .$assertType<CompanyPrimaryContactInfo>()
         .executeTakeFirst(),
 
       db
@@ -286,10 +377,26 @@ function getCompanyManagement({
 }): SelectQueryBuilder<DB, 'Management', CompanyExecutive> {
   return db
     .selectFrom('Management')
+    .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
     .where('Management.Company_ID', '=', companyId)
     .where('Hide_Position', '=', 'No')
     .where('Past_Position', '=', 'No')
-    .select(['Contact_ID as contactID', 'Contact_Name as contactName', 'Position_Title as positionTitle']);
+    .select([
+      'Management.Contact_ID as contactID',
+      'Management.Contact_Name as contactName',
+      'Management.Position_Title as positionTitle',
+    ])
+    .select(({ eb }) =>
+      eb
+        .case()
+        .when('Contacts.Publish_in_Web', '=', 'Yes')
+        .then(eb.val(1))
+        .else(eb.val(0))
+        .end()
+        .$castTo<boolean>()
+        .as('isPersonPublished'),
+    )
+    .$assertType<CompanyExecutive>();
 }
 
 function getCompanyBoard({
@@ -299,13 +406,24 @@ function getCompanyBoard({
 }): SelectQueryBuilder<DB, 'Board', CompanyBoardMember> {
   return db
     .selectFrom('Board')
+    .innerJoin('Contacts', 'Contacts.Contact_ID', 'Board.Contact_ID')
     .where('Board.Company_ID', '=', companyId)
     .select([
-      'Contact_ID as contactID',
-      'Board_Name as boardName',
-      'Board_Position as boardPosition',
-      'Other_Positions as otherPositions',
+      'Board.Contact_ID as contactID',
+      'Board.Board_Name as boardName',
+      'Board.Board_Position as boardPosition',
+      'Board.Other_Positions as otherPositions',
     ])
+    .select(({ eb }) =>
+      eb
+        .case()
+        .when('Contacts.Publish_in_Web', '=', 'Yes')
+        .then(eb.val(1))
+        .else(eb.val(0))
+        .end()
+        .$castTo<boolean>()
+        .as('isPersonPublished'),
+    )
     .$assertType<CompanyBoardMember>();
 }
 
@@ -358,8 +476,16 @@ function getDealInvestors({
       'Investors.Investment_Remarks as investmentRemarks',
       'Profiles.Company_SubType as investorCompanyType',
     ])
+    .select((eb) => eb.fn.coalesce(eb.ref('Profiles.Company_Name'), eb.ref('Contacts.Contact_Name')).as('investorName'))
     .select((eb) =>
-      eb.fn.coalesce(eb.ref('Profiles.Company_Name'), eb.ref('Contacts.Contact_Name')).as('investorName'),
+      eb
+        .case()
+        .when('Contacts.Publish_in_Web', '=', 'Yes')
+        .then(eb.val(1))
+        .else(eb.val(0))
+        .end()
+        .$castTo<boolean>()
+        .as('isPrivateInvestorPublished'),
     );
 }
 

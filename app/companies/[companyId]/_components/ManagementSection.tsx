@@ -42,7 +42,7 @@ export default function ManagementSection({ management }: { management: CompanyE
                 {managementToShow.map((managementPosition, idx) => (
                   <TableRow key={idx} className="text-[13px]">
                     <TableCell className="font-medium">
-                      {managementPosition.contactID ? (
+                      {managementPosition.contactID && managementPosition.isPersonPublished ? (
                         <Link
                           href={`/people/${managementPosition.contactID}`}
                           className="text-primary hover:text-primary/80 hover:underline"

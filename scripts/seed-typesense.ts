@@ -1,8 +1,15 @@
+import arg, { ArgError } from 'arg';
 import { NotNull } from 'kysely';
 import ora from 'ora';
 import { setDefaultConfiguration } from 'typesense-ts';
 import { QUERIES } from '../lib/server/db/queries';
-import { ALL_SCHEMAS, companiesSchema, personSchema } from '../lib/server/typesense/schema';
+import {
+  ALL_SCHEMAS,
+  boardMemberSchema,
+  companiesSchema,
+  executiveSchema,
+  personSchema,
+} from '../lib/server/typesense/schema';
 
 const BATCH_SIZE = 200;
 const CONCURRENCY = 10;
@@ -33,6 +40,27 @@ type CompanyDoc = {
   executives: string[];
   boardMembers: string[];
   investors: string[];
+};
+
+type ExecutiveDoc = {
+  id: string;
+  companyID: string;
+  personID: string;
+  companyName?: string;
+  personName?: string;
+  title?: string;
+  isCurrent?: boolean;
+};
+
+type BoardMemberDoc = {
+  id: string;
+  companyID: string;
+  personID: string;
+  companyName?: string;
+  personName?: string;
+  boardName?: string;
+  boardPosition?: string;
+  otherPositions?: string;
 };
 
 async function fetchAllIds(): Promise<string[]> {
@@ -91,6 +119,18 @@ function stripEmpty(doc: CompanyDoc): CompanyDoc {
   if (doc.employees !== undefined) result.employees = doc.employees;
 
   return result as CompanyDoc;
+}
+
+function makeRelationId({
+  companyId,
+  personId,
+}: {
+  companyId: string;
+  personId: string;
+  extra?: string | null;
+}): string {
+  const parts = [companyId.trim(), personId.trim()];
+  return parts.join('_');
 }
 
 async function pLimitMap<T, R>(
@@ -167,6 +207,73 @@ async function seedPeople() {
   }
   const { importedChunks, importedDocs } = await indexCollection(personSchema, docs());
   spinner.succeed(`Seeding complete: imported ${importedDocs} people in ${importedChunks} chunks.`);
+}
+
+async function seedExecutives() {
+  const spinner = ora('Starting Typesense seeding for executives...').start();
+  async function* docs() {
+    for await (const executivesBatch of QUERIES.paginateExecutives(10_000)) {
+      const docsBatch = executivesBatch
+        .map((executive) => {
+          const companyId = clean(executive.companyID);
+          const personId = clean(executive.contactID);
+          if (!companyId || !personId) return undefined;
+
+          const doc: ExecutiveDoc = {
+            id: makeRelationId({ companyId, personId }),
+            companyID: companyId,
+            personID: personId,
+            companyName: clean(executive.companyName),
+            personName: clean(executive.contactName),
+            title: clean(executive.positionTitle),
+            isCurrent: executive.isCurrent,
+          };
+
+          return doc;
+        })
+        .filter((doc): doc is ExecutiveDoc => doc !== undefined);
+      if (docsBatch.length > 0) {
+        yield docsBatch;
+      }
+    }
+  }
+  const { importedChunks, importedDocs } = await indexCollection(executiveSchema, docs());
+  spinner.succeed(`Seeding complete: imported ${importedDocs} executives in ${importedChunks} chunks.`);
+}
+
+async function seedBoardMembers() {
+  const spinner = ora('Starting Typesense seeding for board members...').start();
+  async function* docs() {
+    for await (const membersBatch of QUERIES.paginateBoardMembers(10_000)) {
+      const docsBatch = membersBatch
+        .map<BoardMemberDoc | undefined>((member) => {
+          const companyId = clean(member.companyID);
+          const personId = clean(member.contactID);
+          if (!companyId || !personId) return undefined;
+
+          return {
+            id: makeRelationId({
+              companyId,
+              personId,
+            }),
+            companyID: companyId,
+            personID: personId,
+            companyName: clean(member.companyName),
+            personName: clean(member.contactName),
+            boardName: clean(member.boardName),
+            boardPosition: clean(member.boardPosition),
+            otherPositions: clean(member.otherPositions),
+          };
+        })
+        .filter((doc): doc is BoardMemberDoc => doc !== undefined);
+
+      if (docsBatch.length > 0) {
+        yield docsBatch;
+      }
+    }
+  }
+  const { importedChunks, importedDocs } = await indexCollection(boardMemberSchema, docs());
+  spinner.succeed(`Seeding complete: imported ${importedDocs} board members in ${importedChunks} chunks.`);
 }
 
 export async function seedCompanies() {
@@ -253,13 +360,134 @@ export async function seedCompanies() {
   }
 }
 
+const COLLECTION_SEEDERS = {
+  people: seedPeople,
+  executives: seedExecutives,
+  boardMembers: seedBoardMembers,
+  companies: seedCompanies,
+} as const;
+
+type CollectionName = keyof typeof COLLECTION_SEEDERS;
+
+function resolveCollection(input: string): CollectionName | undefined {
+  const normalized = input
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-');
+  switch (normalized) {
+    case 'people':
+      return 'people';
+    case 'executives':
+      return 'executives';
+    case 'board-members':
+    case 'boardmembers':
+    case 'board_members':
+      return 'boardMembers';
+    case 'companies':
+    case 'company':
+      return 'companies';
+    default:
+      return undefined;
+  }
+}
+
+function printUsage(): void {
+  console.log('Usage: pnpm tsx scripts/seed-typesense.ts --all | --collection <names>');
+  console.log('  --all                 Seed all available collections.');
+  console.log('  --collection <names>  Comma-delimited list. Options: people, executives, board-members, companies.');
+  console.log('  --help, -h            Show this help message.');
+}
+
+function parseCliArgs(argv: string[]): CollectionName[] {
+  try {
+    const args = arg(
+      {
+        '--help': Boolean,
+        '-h': '--help',
+        '--all': Boolean,
+        '--collection': [String],
+      },
+      { argv },
+    );
+
+    if (args['--help']) {
+      printUsage();
+      process.exit(0);
+    }
+
+    if (args['--all']) {
+      return Object.keys(COLLECTION_SEEDERS) as CollectionName[];
+    }
+
+    const collectionInputs = args['--collection'] ?? [];
+
+    if (collectionInputs.length === 0) {
+      throw new Error('Missing --all or --collection option.');
+    }
+
+    const rawNames = collectionInputs
+      .flatMap((value) => value.split(','))
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0);
+
+    if (rawNames.length === 0) {
+      throw new Error('No valid collections provided.');
+    }
+
+    const invalid: string[] = [];
+    const resolved = rawNames
+      .map((name) => {
+        const value = resolveCollection(name);
+        if (!value) {
+          invalid.push(name);
+        }
+        return value;
+      })
+      .filter((value): value is CollectionName => value !== undefined);
+
+    if (invalid.length > 0) {
+      throw new Error(`Unknown collections: ${invalid.join(', ')}`);
+    }
+
+    if (resolved.length === 0) {
+      throw new Error('No valid collections provided.');
+    }
+
+    return Array.from(new Set(resolved));
+  } catch (err) {
+    if (err instanceof ArgError) {
+      throw new Error(err.message);
+    }
+    throw err;
+  }
+}
+
+async function main() {
+  try {
+    const collections = parseCliArgs(process.argv.slice(2));
+    let hasErrors = false;
+
+    for (const collection of collections) {
+      const seeder = COLLECTION_SEEDERS[collection];
+      try {
+        await seeder();
+      } catch (err) {
+        console.error(`Seeding ${collection} failed:`, err);
+        hasErrors = true;
+      }
+    }
+
+    if (hasErrors) {
+      process.exitCode = 1;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(message);
+    printUsage();
+    process.exitCode = 1;
+  }
+}
+
 if (require.main === module) {
-  await seedPeople().catch((err) => {
-    console.error('Seeding people failed:', err);
-    process.exit(1);
-  });
-  // seedCompanies().catch((err) => {
-  //   console.error('Seeding failed:', err);
-  //   process.exit(1);
-  // });
+  await main();
 }
