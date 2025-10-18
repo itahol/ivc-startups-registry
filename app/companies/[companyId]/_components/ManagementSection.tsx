@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CompanyExecutive } from '@/lib/model';
+import Link from 'next/link';
 
 const MANAGEMENT_PREVIEW = 5;
 
@@ -40,7 +41,18 @@ export default function ManagementSection({ management }: { management: CompanyE
               <TableBody>
                 {managementToShow.map((managementPosition, idx) => (
                   <TableRow key={idx} className="text-[13px]">
-                    <TableCell className="font-medium">{managementPosition.contactName || '—'}</TableCell>
+                    <TableCell className="font-medium">
+                      {managementPosition.contactID ? (
+                        <Link
+                          href={`/people/${managementPosition.contactID}`}
+                          className="text-primary hover:text-primary/80 hover:underline"
+                        >
+                          {managementPosition.contactName || '—'}
+                        </Link>
+                      ) : (
+                        managementPosition.contactName || '—'
+                      )}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{managementPosition.positionTitle || '—'}</TableCell>
                   </TableRow>
                 ))}

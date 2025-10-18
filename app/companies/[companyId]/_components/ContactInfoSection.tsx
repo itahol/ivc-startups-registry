@@ -1,5 +1,6 @@
 'use client';
 import { use, useState, useMemo } from 'react';
+import Link from 'next/link';
 import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
 import { CompanyContactInfo, CompanyPrimaryContactInfo } from '@/lib/model';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -185,9 +186,21 @@ function BranchPanel({
                   {primaryContactInfo?.contactName && (
                     <VerticalRow
                       label="Contact Person"
-                      value={`${primaryContactInfo.contactName}$${
-                        primaryContactInfo.contactPosition ? ` (${primaryContactInfo.contactPosition})` : ''
-                      }`.replace('$', '')}
+                      value={
+                        <>
+                          {primaryContactInfo.contactID ? (
+                            <Link
+                              href={`/people/${primaryContactInfo.contactID}`}
+                              className="text-primary hover:text-primary/80 hover:underline"
+                            >
+                              {primaryContactInfo.contactName}
+                            </Link>
+                          ) : (
+                            primaryContactInfo.contactName
+                          )}
+                          {primaryContactInfo.contactPosition && ` (${primaryContactInfo.contactPosition})`}
+                        </>
+                      }
                     />
                   )}
                   {primaryContactInfo?.contactEmail && (

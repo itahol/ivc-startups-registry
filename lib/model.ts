@@ -83,3 +83,12 @@ export interface Person {
   cv: string | null;
   linkedInProfile: string | null;
 }
+
+export interface PersonPosition {
+  companyID: string;
+  companyName: string | null;
+  companyType: string | null;
+  companyStatus: string | null;
+  title: string | null;
+  isCurrent: boolean;
+}
