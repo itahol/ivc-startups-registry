@@ -1,3 +1,32 @@
+export const COMPANY_STAGE = {
+  SEED: 'Seed',
+  RD: 'R&D',
+  INITIAL_REVENUES: 'Initial Revenues',
+  REVENUE_GROWTH: 'Revenue Growth',
+} as const;
+
+export const COMPANY_STAGE_VALUES = Object.values(COMPANY_STAGE);
+
+export type SectorOption = (typeof SECTOR_VALUES)[number];
+
+export const SECTORS = {
+  AGRITECH: 'Agritech',
+  BIOMED: 'Biomed',
+  DIGITAL_HEALTH: 'Digital Health',
+  MEDICAL_DEVICES: 'Medical Devices',
+  CLEANTECH: 'Cleantech',
+  ENERGY: 'Energy',
+  CONSUMER_SOFTWARE: 'Consumer-Oriented Software',
+  ENTERPRISE_SOFTWARE: 'Enterprise Software & Infrastructure',
+  NETWORK_INFRASTRUCTURE: 'Network Infrastructure',
+  HARDWARE_INDUSTRIAL: 'Hardware & Industrial',
+  SEMICONDUCTOR: 'Semiconductor',
+} as const;
+
+export const SECTOR_VALUES = Object.values(SECTORS);
+
+export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
+
 export type CompanyID = string | null;
 
 export type DealID = string | null;

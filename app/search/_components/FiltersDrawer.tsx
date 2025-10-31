@@ -16,10 +16,7 @@ import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import SearchInput from '@/components/SearchInput';
 import YearRangePicker from '@/components/YearRangePicker';
-import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '@/convex/schema';
-
-export type SectorOption = (typeof SECTOR_VALUES)[number];
-export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
+import { SECTOR_VALUES, COMPANY_STAGE_VALUES, CompanyStageOption } from '@/lib/model';
 
 interface FiltersDrawerProps {
   techVerticals: { id: string; name: string }[];
