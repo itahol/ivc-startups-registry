@@ -15,8 +15,9 @@ export const NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS = {
 } satisfies SearchParams<typeof companiesSchema.infer>;
 
 export const PERSON_SEARCH_PARAMETERS = {
-  query_by: ['name', 'cv'],
-  highlight_full_fields: ['cv'],
+  // query_by: ['*'],
+  // query_by: ['name', 'cv'],
+  // highlight_full_fields: ['cv'],
   include_fields: [
     '$executive(companyID,companyName,personName,title,isCurrent,strategy:nest_array)',
     '$boardMember(companyID,companyName,personName,boardName,boardPosition,otherPositions,strategy:nest_array)',
@@ -26,12 +27,11 @@ export const PERSON_SEARCH_PARAMETERS = {
 
 const buildConfiguration = (naturalLanguageEnabled: boolean) => ({
   server: typesenseConfig,
-  union: true,
   collectionSpecificSearchParameters: {
     companies: naturalLanguageEnabled
       ? { ...COMPANY_SEARCH_PARAMETERS, ...NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS }
       : COMPANY_SEARCH_PARAMETERS,
-    person: PERSON_SEARCH_PARAMETERS,
+    // person: PERSON_SEARCH_PARAMETERS,
   },
 });
 

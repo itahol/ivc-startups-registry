@@ -7,10 +7,11 @@ import { useState, useEffect } from 'react';
 
 interface KeywordSearchBoxProps {
   placeholder?: string;
+  query: string;
 }
 
-export default function KeywordSearchBox({ placeholder = 'Search by keyword...' }: KeywordSearchBoxProps) {
-  const { refine, query } = useSearchBox();
+export default function KeywordSearchBox({ query, placeholder = 'Search by keyword...' }: KeywordSearchBoxProps) {
+  const { refine } = useSearchBox();
   const [input, setInput] = useState(query ?? '');
 
   useEffect(() => {
@@ -19,7 +20,8 @@ export default function KeywordSearchBox({ placeholder = 'Search by keyword...' 
 
   const handleChange = (value: string) => {
     setInput(value);
-    refine(value.trim() || '');
+    // refine(value.trim() || '');
+    refine(query);
   };
 
   return (

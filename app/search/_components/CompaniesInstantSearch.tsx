@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Configure, Index, useHits, useInstantSearch, usePagination } from 'react-instantsearch';
+import { useDebounce } from 'use-debounce';
+import { Configure, Index, useHits, useInstantSearch, usePagination, useSearchBox } from 'react-instantsearch';
 import {
   BASE_SEARCH_PARAMETERS,
   NATURAL_LANGUAGE_ADDITIONAL_PARAMETERS,
@@ -24,6 +25,8 @@ import { InstantSearchNext } from 'react-instantsearch-nextjs';
 import * as Typesense from 'typesense';
 import { companiesSchema } from '@/lib/server/typesense/schema';
 import { PersonPreviewCard, type PersonHit } from './PersonPreviewCard';
+import { useCallback, useState } from 'react';
+import { Input } from '@/components/ui/input';
 
 const typesenseClient = new Typesense.Client(typesenseConfig);
 
@@ -289,31 +292,41 @@ function CompaniesHits() {
   );
 }
 
-function PeopleResultsSection() {
+function PeopleParams({ query }: { query: string }) {
+  // Always mount Configure so this index always has its params.
+  const filters = query.trim()
+    ? `$executive(companyName:${escapeTypesenseValue(query)}) || $boardMember(companyName:${escapeTypesenseValue(query)})`
+    : undefined;
+
+  return <Configure query="*" hitsPerPage={4} filters={filters} />;
+}
+
+function PeopleResultsSection({ query }: { query: string }) {
   const { items, results } = useHits<PersonHit>();
 
-  if (!results || results.nbHits === 0) {
-    return null;
-  }
-
-  const showingCount = items.length;
-  const hasMore = results.nbHits > showingCount;
+  const shouldHide = query === '*' || query.trim() === '' || !results || results.nbHits === 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xl font-semibold tracking-tight">People</h2>
-        <span className="text-sm text-muted-foreground">
-          Showing top {showingCount} {showingCount === 1 ? 'result' : 'results'}
-          {hasMore ? ` · ${results.nbHits.toLocaleString()} total` : ''}
-        </span>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        {items.map((hit) => (
-          <PersonPreviewCard key={hit.objectID ?? hit.id} hit={hit} />
-        ))}
-      </div>
-    </div>
+    <>
+      <PeopleParams query={query} />
+      {!shouldHide && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-semibold tracking-tight">People</h2>
+            <span className="text-sm text-muted-foreground">
+              Showing top {items.length}
+              {results && results.nbHits > items.length ? ` · ${results.nbHits.toLocaleString()} total` : ''}
+            </span>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {items.map((hit) => (
+              <PersonPreviewCard key={hit.objectID ?? hit.id} hit={hit} />
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -392,28 +405,46 @@ export interface CompaniesInstantSearchClientProps {
 }
 
 export function CompaniesInstantSearch({ initialFilters, pageSize }: CompaniesInstantSearchClientProps) {
+  const [query, setQuery] = useState('');
+  const [debounced] = useDebounce(query, 0);
+
   return (
     <InstantSearchNext
       searchClient={searchClient}
-      indexName={INDEX_NAME}
-      initialUiState={{ [INDEX_NAME]: { query: initialFilters.keyword ?? '' } }}
+      initialUiState={{
+        [INDEX_NAME]: { query: initialFilters.keyword ?? '' },
+      }}
       routing={true}
     >
-      <CompaniesInstantSearchInner initialFilters={initialFilters} pageSize={pageSize} />
+      <Input onChange={(e) => setQuery(e.target.value)} />
+      <Index indexName={PERSON_INDEX_NAME}>
+        <PeopleResultsSection query={debounced} />
+      </Index>
+
+      <Index indexName={INDEX_NAME}>
+        <CompaniesInstantSearchInner query={debounced} initialFilters={initialFilters} pageSize={pageSize} />
+      </Index>
     </InstantSearchNext>
   );
 }
 
 // ---------- Inner component that has access to InstantSearch context ----------
 function CompaniesInstantSearchInner({
+  query,
   initialFilters,
   pageSize,
 }: {
+  query: string;
   initialFilters: CompanyFilters;
   pageSize: number;
 }) {
   const [_, setFilters] = React.useState<CompanyFilters>(initialFilters);
   const { setUiState } = useInstantSearch();
+  const { refine } = useSearchBox();
+  React.useEffect(() => {
+    // Typesense requires q to be non-empty, so use '*' if empty
+    refine(query?.trim() ? query : '*');
+  }, [query, refine]);
 
   const [nlPromotedRefinements, setNlPromotedRefinements] = React.useState<ParsedNLFilters>({
     refinementList: {},
@@ -632,20 +663,12 @@ function CompaniesInstantSearchInner({
 
         <section className="flex flex-col gap-10">
           <div className="flex flex-col items-center gap-6 lg:items-start">
-            <div className="w-full max-w-2xl lg:max-w-none">
-              <KeywordSearchBox />
-            </div>
             <CurrentRefinements
               onClear={handleClearFilters}
               naturalLanguageFilters={naturalLanguageFilterClauses}
               onClearNaturalLanguageFilters={clearNaturalLanguageFiltersAndRefresh}
             />
           </div>
-
-          <Index indexName={PERSON_INDEX_NAME}>
-            <Configure hitsPerPage={PERSON_RESULTS_PAGE_SIZE} />
-            <PeopleResultsSection />
-          </Index>
 
           <div className="relative">
             <CompaniesHits />
@@ -656,4 +679,8 @@ function CompaniesInstantSearchInner({
       </div>
     </>
   );
+}
+
+function escapeTypesenseValue(value: string) {
+  return /\s|["'(),]/.test(value) ? `"${value.replace(/"/g, '\\"')}"` : value;
 }
