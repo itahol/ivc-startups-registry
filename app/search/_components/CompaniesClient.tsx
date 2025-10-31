@@ -9,19 +9,27 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
 import { use } from 'react';
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
 import { CompanyDetails } from '@/lib/model';
 import SearchInput from '@/components/SearchInput';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
+import { FiltersDrawer } from './FiltersDrawer';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters;
+  techVerticalsPromise: Promise<{ id: string; name: string }[]>;
   companiesPromise: Promise<CompanyDetails[]>;
   companiesCountPromise: Promise<number>;
   page: number;
   pageSize: number;
 }
 
-export function CompaniesClient({ companiesPromise, companiesCountPromise, page, pageSize }: CompaniesClientProps) {
+export function CompaniesClient({
+  companiesPromise,
+  companiesCountPromise,
+  techVerticalsPromise,
+  page,
+  pageSize,
+}: CompaniesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,6 +45,7 @@ export function CompaniesClient({ companiesPromise, companiesCountPromise, page,
     setKeywordInput(currentFilters.keyword ?? '');
   }, [currentFilters.keyword]);
 
+  const techVerticals = use(techVerticalsPromise);
   const companies = use(companiesPromise);
   const total = use(companiesCountPromise);
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
@@ -79,17 +88,14 @@ export function CompaniesClient({ companiesPromise, companiesCountPromise, page,
     onApply({});
   }, [onApply]);
 
-  const handleKeywordSubmit = React.useCallback(
-    (submittedValue: string) => {
-      const trimmedKeyword = submittedValue.trim();
-      const nextFilters: CompanyFilters = {
-        ...currentFilters,
-        keyword: trimmedKeyword || undefined,
-      };
-      onApply(nextFilters);
-    },
-    [currentFilters, onApply],
-  );
+  const handleKeywordSubmit = React.useCallback(() => {
+    const trimmedKeyword = keywordInput.trim();
+    const nextFilters: CompanyFilters = {
+      ...currentFilters,
+      keyword: trimmedKeyword || undefined,
+    };
+    onApply(nextFilters);
+  }, [keywordInput, currentFilters, onApply]);
 
   return (
     <div>
@@ -107,10 +113,33 @@ export function CompaniesClient({ companiesPromise, companiesCountPromise, page,
             size="large"
           />
         </div>
+
+        {/* Filters Row - Below Search */}
+        <div className="flex flex-wrap items-center justify-center gap-2 min-h-8">
+          <FiltersDrawer value={currentFilters} onApply={onApply} techVerticals={techVerticals} />
+          {hasActiveFilters ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAll}
+              aria-label="Clear all selected filters"
+              className="rounded-full text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-8">
+      <div
+        className={`
+          grid grid-cols-1 gap-8
+          sm:grid-cols-2
+          lg:grid-cols-3
+          2xl:grid-cols-4
+        `}
+      >
         {companies.map((company) => {
           return <CompanyCard key={company.companyID} company={company} />;
         })}

@@ -1,17 +1,22 @@
-import { Suspense } from 'react';
-import Navbar from '@/components/Navbar';
+import { cache, Suspense } from 'react';
+import Navbar from '../../components/Navbar';
 import { readCompanyFilters } from '@/lib/companies/filtersUrl';
-import { CompaniesInstantSearch } from './_components/CompaniesInstantSearch';
+import { QUERIES } from '../../lib/server/db/queries';
+import { CompaniesClient } from './_components/CompaniesClient';
 import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
+
+const getTechVerticals = cache(async () => {
+  return (await QUERIES.getTechVerticals()) as { id: string; name: string }[];
+});
 
 /* -------------------------------------------------------------------------- */
 /*                     Server Component Wrapper (RSC Page)                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function SearchPage({
+export default async function CompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
   const resolved = await searchParams;
   const usp = new URLSearchParams();
@@ -25,9 +30,32 @@ export default async function SearchPage({
     }
   }
   const initialFilters = readCompanyFilters(usp);
+  const techVerticals = getTechVerticals();
 
   const pageSizeParam = usp.get('limit');
+  const pageParam = usp.get('page');
   const pageSize = pageSizeParam ? Math.min(Math.max(parseInt(pageSizeParam, 10) || 20, 1), 100) : 20;
+  const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
+  const offset = (page - 1) * pageSize;
+
+  const [companies, companiesCount] = [
+    QUERIES.getCompanies({
+      limit: pageSize,
+      offset,
+      keyword: initialFilters.keyword,
+      techVerticalsFilter: initialFilters.techVerticals,
+      sectors: initialFilters.sectors,
+      stages: initialFilters.stages,
+      yearEstablished: initialFilters.yearEstablished,
+    }),
+    QUERIES.getCompaniesCount({
+      keyword: initialFilters.keyword,
+      techVerticalsFilter: initialFilters.techVerticals,
+      sectors: initialFilters.sectors,
+      stages: initialFilters.stages,
+      yearEstablished: initialFilters.yearEstablished,
+    }),
+  ];
 
   return (
     <>
@@ -52,8 +80,15 @@ export default async function SearchPage({
               </div>
             </div>
             <Suspense key={usp.toString()} fallback={<CompaniesSkeleton />}>
-              {/* Client side InstantSearch */}
-              <CompaniesInstantSearch initialFilters={initialFilters} pageSize={pageSize} />
+              {/* Client side filters + grid */}
+              <CompaniesClient
+                initialFilters={initialFilters}
+                companiesPromise={companies}
+                companiesCountPromise={companiesCount}
+                techVerticalsPromise={techVerticals}
+                page={page}
+                pageSize={pageSize}
+              />
             </Suspense>
           </div>
         </main>
