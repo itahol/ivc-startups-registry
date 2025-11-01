@@ -25,7 +25,7 @@ export default function CurrentPositionsSection({ positions }: { positions: Pers
                   <TableCell className="font-medium">
                     <Link
                       href={`/companies/${position.companyID}`}
-                      className="text-blue-600 hover:underline focus-visible:underline"
+                      className="text-primary hover:text-primary/80 hover:underline"
                     >
                       {position.companyName || '—'}
                     </Link>
