@@ -3,12 +3,12 @@ import { v } from 'convex/values';
 import { Doc, Id } from './_generated/dataModel';
 import { internalMutation } from './_generated/server';
 import { createCompany } from './model/company';
-import { COMPANY_STAGE } from './schema';
 
 // Seed data sourced from startups-info.json (subset of fields)
 // Because Convex server bundles functions, we inline JSON content at build time via import assertion.
 // If the JSON grows large consider streaming or chunking.
 // @ts-ignore - JSON import without type declaration
+import { COMPANY_STAGE } from '../lib/model';
 import startupsData from '../scratch/startups-info.json';
 
 export const SECTORS = {
