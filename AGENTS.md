@@ -5,7 +5,7 @@
 - **Build**: `pnpm build`
 - **Lint**: `pnpm lint`
 - **Format**: `pnpm format` (Prettier)
-- **Type check**: `tsc --noEmit` (run in root for Next.js, in convex/ for backend)
+- **Type check**: `tsc --noEmit` 
 - NEVER run the dev server, assume it is already running. If you suspect it's not, ask the user.
 
 ## Code Style
@@ -18,6 +18,6 @@
 ## Architecture
 
 - **Frontend**: Next.js 15 with App Router, React 19, Tailwind CSS 4
-- **Backend**: Convex (realtime database + server functions)
+- **Backend**: MSSQL database with Kysely query builder
 - **Auth**: WorkOS AuthKit with middleware protection
 - **Protected routes**: All except `/`, `/sign-in`, `/sign-up`

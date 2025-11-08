@@ -1,22 +1,17 @@
 {
-  "name": "template-convex-nextjs-authkit",
+  "name": "ivc-startups-registry",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
-  "homepage": "https://github.com/workos/template-convex-nextjs-authkit/#readme",
-  "convex-authkit-auto-provisioning": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/workos/template-convex-nextjs-authkit.git"
+    "url": "git+https://github.com/itahol/ivc-startups-registry.git"
   },
   "bugs": {
-    "url": "https://github.com/workos/template-convex-nextjs-authkit/issues"
+    "url": "https://github.com/itahol/ivc-startups-registry/issues"
   },
   "scripts": {
-    "dev": "npm-run-all --parallel dev:frontend dev:backend",
-    "dev:frontend": "next dev --turbopack",
-    "dev:backend": "convex dev",
-    "predev": "convex dev --until-success && convex dashboard",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -43,8 +38,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "convex": "^1.27.4",
-    "convex-helpers": "^0.1.104",
     "core-js": "3.45.1",
     "country-data-list": "^1.5.5",
     "date-fns": "^4.1.0",

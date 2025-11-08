@@ -1,5 +1,4 @@
-import { COMPANY_STAGE_VALUES, companyStageValidator, SECTOR_VALUES, sectorValidator } from '@/convex/schema';
-import { validate } from 'convex-helpers/validators';
+import { COMPANY_STAGE_VALUES, CompanyStageOption, SECTOR_VALUES, SectorOption } from '@/lib/model';
 
 export interface CompanyFilters {
   techVerticals?: { ids: string[]; operator: 'AND' | 'OR' };
@@ -11,9 +10,9 @@ export interface CompanyFilters {
 
 export const FILTER_PARAM_KEYS = ['tv', 'tvOp', 'sectors', 'stages', 'ymin', 'ymax', 'q'] as const;
 
-const isSector = (sector: unknown) => validate(sectorValidator, sector);
+const isSector = (sector: string): sector is SectorOption => SECTOR_VALUES.includes(sector as any);
 
-const isStage = (stage: unknown) => validate(companyStageValidator, stage);
+const isStage = (stage: string): stage is CompanyStageOption => COMPANY_STAGE_VALUES.includes(stage as any);
 
 export function readCompanyFilters(searchParams: URLSearchParams): CompanyFilters {
   const next: CompanyFilters = {};
