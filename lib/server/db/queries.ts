@@ -237,8 +237,10 @@ export const QUERIES = {
   },
 
   getCompaniesCount: async function (options: CompaniesQueryOptions = {}): Promise<number> {
-    return companiesQueryBuilder
+    return db
+      .selectFrom('Profiles')
       .select(({ fn }) => [fn.count<number>('Profiles.Company_ID').as('count')])
+      .where('Company_Type2', '=', 'HT')
       .where((eb) => matchesCompanyFilters(eb, options))
       .executeTakeFirst()
       ?.then((result) => result?.count ?? 0);
