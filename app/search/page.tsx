@@ -1,9 +1,10 @@
 import { cache, Suspense } from 'react';
 import Navbar from '../../components/Navbar';
-import { readCompanyFilters } from '@/lib/companies/filtersUrl';
+import { hasActiveCompanyFilters, readCompanyFilters } from '@/lib/companies/filtersUrl';
 import { QUERIES } from '../../lib/server/db/queries';
 import { CompaniesClient } from './_components/CompaniesClient';
 import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
+import { CompaniesResults } from './_components/CompaniesResults';
 
 const getTechVerticals = cache(async () => {
   return (await QUERIES.getTechVerticals()) as { id: string; name: string }[];
@@ -57,6 +58,32 @@ export default async function CompaniesPage({
     }),
   ];
 
+  const pathname = '/search';
+  const paramsSnapshot = usp.toString();
+  const buildHref = (sp: URLSearchParams) => {
+    const qs = sp.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  };
+
+  const prevHref = (() => {
+    const sp = new URLSearchParams(paramsSnapshot);
+    if (page <= 2) {
+      sp.delete('page');
+    } else {
+      sp.set('page', String(page - 1));
+    }
+    return buildHref(sp);
+  })();
+
+  const nextHref = (() => {
+    const sp = new URLSearchParams(paramsSnapshot);
+    sp.set('page', String(page + 1));
+    return buildHref(sp);
+  })();
+
+  const hasActiveFilters = hasActiveCompanyFilters(initialFilters);
+  const clearHref = pathname;
+
   return (
     <>
       <Navbar />
@@ -83,12 +110,19 @@ export default async function CompaniesPage({
               {/* Client side filters + grid */}
               <CompaniesClient
                 initialFilters={initialFilters}
-                companiesPromise={companies}
-                companiesCountPromise={companiesCount}
                 techVerticalsPromise={techVerticals}
-                page={page}
-                pageSize={pageSize}
-              />
+              >
+                <CompaniesResults
+                  companiesPromise={companies}
+                  companiesCountPromise={companiesCount}
+                  page={page}
+                  pageSize={pageSize}
+                  prevHref={prevHref}
+                  nextHref={nextHref}
+                  clearHref={clearHref}
+                  hasActiveFilters={hasActiveFilters}
+                />
+              </CompaniesClient>
             </Suspense>
           </div>
         </main>
