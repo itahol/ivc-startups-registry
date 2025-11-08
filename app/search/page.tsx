@@ -48,9 +48,7 @@ export default function CompaniesPage({
             <Suspense fallback={null}>
               <SearchControls techVerticalsPromise={techVerticalsPromise} />
             </Suspense>
-            <Suspense fallback={<CompaniesSkeleton />}>
-              <ResultsSection searchParamsPromise={searchParams} />
-            </Suspense>
+            <ResultsSection searchParamsPromise={searchParams} />
           </div>
         </main>
       </div>
@@ -101,15 +99,17 @@ async function ResultsSection({
   })();
 
   return (
-    <CompaniesResults
-      filters={filters}
-      page={page}
-      pageSize={pageSize}
-      prevHref={prevHref}
-      nextHref={nextHref}
-      clearHref={PATHNAME}
-      hasActiveFilters={hasFilters}
-    />
+    <Suspense fallback={<CompaniesSkeleton />}>
+      <CompaniesResults
+        filters={filters}
+        page={page}
+        pageSize={pageSize}
+        prevHref={prevHref}
+        nextHref={nextHref}
+        clearHref={PATHNAME}
+        hasActiveFilters={hasFilters}
+      />
+    </Suspense>
   );
 }
 
