@@ -43,6 +43,7 @@
     "@tediousjs/connection-string": "0.5.0",
     "@workos-inc/authkit-nextjs": "^2.7.1",
     "@workos-inc/node": "^7.70.0",
+    "babel-plugin-react-compiler": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
