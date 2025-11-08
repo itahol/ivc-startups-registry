@@ -14,7 +14,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "npx oxlint && next lint",
+    "lint": "npx oxlint",
+    "fix": "npx oxlint --fix",
     "format": "npx oxfmt",
     "test": "playwright test",
     "prepare": "husky"
