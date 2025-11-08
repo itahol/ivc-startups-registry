@@ -130,31 +130,39 @@ export const QUERIES = {
     });
   },
 
-  paginateExecutives: async function* (maxPageSize: number = 100): AsyncIterable<ExecutiveCompanyRelation[]> {
-    return paginateQuery({
-      queryBuilder: db
-        .selectFrom('Management')
-        .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
-        .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
-        .select([
-          'Management.Company_ID as companyID',
-          'Profiles.Company_Name as companyName',
-          'Management.Contact_ID as contactID',
-          'Contacts.Contact_Name as contactName',
-          'Management.Position_Title as positionTitle',
-        ])
-        .select(({ eb }) =>
-          eb.case().when('Management.Past_Position', '=', 'No').then(eb.val(1)).else(eb.val(0)).end().as('isCurrent'),
-        )
-        .where('Profiles.Company_Type2', '=', 'HT')
-        .where('Profiles.Published_Profile', '=', 'Yes')
-        .where('Contacts.Publish_in_Web', '=', 'Yes')
-        .where('Management.Hide_Position', '=', 'No')
-        .orderBy('Management.Company_ID')
-        .orderBy('Management.Contact_ID')
-        .$narrowType<{ companyID: NotNull; contactID: NotNull; isCurrent: SqlBool }>(),
-      paginationOptions: { maxPageSize },
-    });
+  paginateExecutives: function (maxPageSize: number = 100): AsyncIterable<ExecutiveCompanyRelation[]> {
+    return (async function* () {
+      const pagesIterator = paginateQuery({
+        queryBuilder: db
+          .selectFrom('Management')
+          .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
+          .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
+          .select([
+            'Management.Company_ID as companyID',
+            'Profiles.Company_Name as companyName',
+            'Management.Contact_ID as contactID',
+            'Contacts.Contact_Name as contactName',
+            'Management.Position_Title as positionTitle',
+          ])
+          .select(({ eb }) =>
+            eb.case().when('Management.Past_Position', '=', 'No').then(eb.val(1)).else(eb.val(0)).end().as('isCurrent'),
+          )
+          .where('Profiles.Company_Type2', '=', 'HT')
+          .where('Profiles.Published_Profile', '=', 'Yes')
+          .where('Contacts.Publish_in_Web', '=', 'Yes')
+          .where('Management.Hide_Position', '=', 'No')
+          .orderBy('Management.Company_ID')
+          .orderBy('Management.Contact_ID')
+          .$narrowType<{ companyID: NotNull; contactID: NotNull }>(),
+        paginationOptions: { maxPageSize },
+      });
+      for await (const page of pagesIterator) {
+        yield page.map((row) => ({
+          ...row,
+          isCurrent: Boolean(row.isCurrent),
+        }));
+      }
+    })();
   },
 
   paginateBoardMembers: function (maxPageSize: number = 100): AsyncIterable<BoardMemberCompanyRelation[]> {
