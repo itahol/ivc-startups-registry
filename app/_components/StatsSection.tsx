@@ -1,25 +1,26 @@
-'use client';
-
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
 import { Building2, Landmark, Users, Banknote } from 'lucide-react';
 
 export function StatsSection() {
-  const companies = useQuery(api.stats.companiesCount, {}) ?? 0;
-  const investmentFirms = useQuery(api.stats.investmentFirmsCount, {}) ?? 0;
-  const people = useQuery(api.stats.peopleCount, {}) ?? 0;
-  const funds = useQuery(api.stats.fundsCount, {}) ?? 0;
-
   const stats: { label: string; value: number; icon: React.ReactNode; testId: string }[] = [
-    { label: 'Companies', value: companies, icon: <Building2 className="h-5 w-5" aria-hidden />, testId: 'companies' },
     {
-      label: 'Investment Firms',
-      value: investmentFirms,
+      label: 'Active High-Tech Companies',
+      value: 8800,
+      icon: <Building2 className="h-5 w-5" aria-hidden />,
+      testId: 'companies',
+    },
+    {
+      label: 'Investors',
+      value: 2900,
       icon: <Landmark className="h-5 w-5" aria-hidden />,
       testId: 'investment-firms',
     },
-    { label: 'People', value: people, icon: <Users className="h-5 w-5" aria-hidden />, testId: 'people' },
-    { label: 'Funds', value: funds, icon: <Banknote className="h-5 w-5" aria-hidden />, testId: 'funds' },
+    {
+      label: 'Accelerators & Incubators',
+      value: 400,
+      icon: <Users className="h-5 w-5" aria-hidden />,
+      testId: 'people',
+    },
+    { label: 'MNC', value: 500, icon: <Banknote className="h-5 w-5" aria-hidden />, testId: 'funds' },
   ];
 
   return (
@@ -48,7 +49,7 @@ export function StatsSection() {
                 style={{ fontVariantNumeric: 'tabular-nums' }}
                 aria-label={`${s.value} ${s.label}`}
               >
-                {s.value}
+                {s.value.toLocaleString()}+
               </span>
             </div>
           </div>
