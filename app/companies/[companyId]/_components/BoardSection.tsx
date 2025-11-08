@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CompanyBoardMember } from '@/lib/model';
@@ -47,7 +48,18 @@ export default function BoardSection({ board }: { board: CompanyBoardMember[] })
                 {boardToShow.map((boardMember, idx) => {
                   return (
                     <TableRow key={idx} className="text-[13px]">
-                      <TableCell className="font-medium">{boardMember.boardName || '—'}</TableCell>
+                      <TableCell className="font-medium">
+                        {boardMember.contactID && boardMember.isPersonPublished ? (
+                          <Link
+                            href={`/people/${boardMember.contactID}`}
+                            className="text-primary hover:text-primary/80 hover:underline"
+                          >
+                            {boardMember.boardName || '—'}
+                          </Link>
+                        ) : (
+                          boardMember.boardName || '—'
+                        )}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{boardMember.boardPosition || '—'}</TableCell>
                       <TableCell className="text-muted-foreground">{boardMember.otherPositions || '—'}</TableCell>
                     </TableRow>

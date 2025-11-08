@@ -192,6 +192,13 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                                           {inv.investorName || '—'}
                                           <span className="ml-1 text-[10px] opacity-60">↗</span>
                                         </Link>
+                                      ) : inv.privateInvestorID && inv.isPrivateInvestorPublished ? (
+                                        <Link
+                                          href={`/people/${inv.privateInvestorID}`}
+                                          className="text-primary hover:text-primary/80 hover:underline"
+                                        >
+                                          {inv.investorName || '—'}
+                                        </Link>
                                       ) : (
                                         <span className="text-foreground">{inv.investorName || '—'}</span>
                                       )}

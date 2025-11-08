@@ -10,24 +10,24 @@ export function HeroClient() {
 
   const handleTryItNow = (e: React.FormEvent) => {
     e.preventDefault();
-    // Navigate to companies page with the search query
+    // Navigate to search page with the search query
     const params = new URLSearchParams();
     if (searchQuery.trim()) {
       params.set('q', searchQuery.trim());
     }
     const queryString = params.toString();
-    router.push(`/companies${queryString ? `?${queryString}` : ''}`);
+    router.push(`/search${queryString ? `?${queryString}` : ''}`);
   };
 
   const handleAdvancedSearch = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Navigate to companies page with the search query if there is one
+    // Navigate to search page with the search query if there is one
     const params = new URLSearchParams();
     if (searchQuery.trim()) {
       params.set('q', searchQuery.trim());
     }
     const queryString = params.toString();
-    router.push(`/companies${queryString ? `?${queryString}` : ''}`);
+    router.push(`/search${queryString ? `?${queryString}` : ''}`);
   };
 
   return (

@@ -27,6 +27,7 @@ const dialect = new MssqlDialect({
           database: process.env.DB_NAME,
           instanceName: process.env.DB_INSTANCE_NAME,
           trustServerCertificate: true,
+          requestTimeout: 60_000,
         },
         server: process.env.DB_SERVER!,
       }),

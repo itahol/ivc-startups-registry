@@ -1,6 +1,7 @@
 import { literals } from 'convex-helpers/validators';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { COMPANY_STAGE_VALUES, SECTOR_VALUES } from '../lib/model';
 
 // Enums
 export const entityType = v.union(
@@ -21,32 +22,7 @@ export const dealRole = v.union(
   v.literal('Co-Lead Legal Advisor'),
 );
 
-export const COMPANY_STAGE = {
-  SEED: 'Seed',
-  RD: 'R&D',
-  INITIAL_REVENUES: 'Initial Revenues',
-  REVENUE_GROWTH: 'Revenue Growth',
-} as const;
-
-export const COMPANY_STAGE_VALUES = Object.values(COMPANY_STAGE);
-
 export const companyStageValidator = literals(...COMPANY_STAGE_VALUES);
-
-export const SECTORS = {
-  AGRITECH: 'Agritech',
-  BIOMED: 'Biomed',
-  DIGITAL_HEALTH: 'Digital Health',
-  MEDICAL_DEVICES: 'Medical Devices',
-  CLEANTECH: 'Cleantech',
-  ENERGY: 'Energy',
-  CONSUMER_SOFTWARE: 'Consumer-Oriented Software',
-  ENTERPRISE_SOFTWARE: 'Enterprise Software & Infrastructure',
-  NETWORK_INFRASTRUCTURE: 'Network Infrastructure',
-  HARDWARE_INDUSTRIAL: 'Hardware & Industrial',
-  SEMICONDUCTOR: 'Semiconductor',
-} as const;
-
-export const SECTOR_VALUES = Object.values(SECTORS);
 
 export const sectorValidator = literals(...SECTOR_VALUES);
 

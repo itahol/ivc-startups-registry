@@ -10,7 +10,7 @@ import { cn } from '../lib/utils';
 
 const NAV_LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: '/', label: 'Home', exact: true },
-  { href: '/companies', label: 'Companies', exact: true },
+  { href: '/search', label: 'Search', exact: true },
 ];
 
 export default function Navbar() {

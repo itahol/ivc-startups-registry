@@ -13,13 +13,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
-import { SECTOR_VALUES, COMPANY_STAGE_VALUES } from '../../convex/schema';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
-import YearRangePicker from '../YearRangePicker';
 import SearchInput from '@/components/SearchInput';
-
-export type SectorOption = (typeof SECTOR_VALUES)[number];
-export type CompanyStageOption = (typeof COMPANY_STAGE_VALUES)[number];
+import YearRangePicker from '@/components/YearRangePicker';
+import { SECTOR_VALUES, COMPANY_STAGE_VALUES, CompanyStageOption } from '@/lib/model';
 
 interface FiltersDrawerProps {
   techVerticals: { id: string; name: string }[];

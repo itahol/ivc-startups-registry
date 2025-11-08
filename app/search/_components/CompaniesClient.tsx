@@ -4,15 +4,15 @@ import * as React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import { readCompanyFilters, encodeCompanyFilters, hasActiveCompanyFilters } from '@/lib/companies/filtersUrl';
-import { FiltersDrawer } from '@/components/companies/FiltersDrawer';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
 import { use } from 'react';
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '../ui/empty';
-import { CompanyDetails } from '../../lib/model';
+import { CompanyDetails } from '@/lib/model';
 import SearchInput from '@/components/SearchInput';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
+import { FiltersDrawer } from './FiltersDrawer';
 
 interface CompaniesClientProps {
   initialFilters: CompanyFilters;

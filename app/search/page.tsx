@@ -1,9 +1,9 @@
 import { cache, Suspense } from 'react';
 import Navbar from '../../components/Navbar';
 import { readCompanyFilters } from '@/lib/companies/filtersUrl';
-import { CompaniesSkeleton } from '@/components/companies/CompaniesSkeleton';
-import { CompaniesClient } from '@/components/companies/CompaniesClient';
 import { QUERIES } from '../../lib/server/db/queries';
+import { CompaniesClient } from './_components/CompaniesClient';
+import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
 
 const getTechVerticals = cache(async () => {
   return (await QUERIES.getTechVerticals()) as { id: string; name: string }[];

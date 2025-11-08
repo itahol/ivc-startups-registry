@@ -5,7 +5,7 @@ import CompanyDetailsClient from './_components/CompanyDetailsClient';
 import { CompanyDetailsSkeleton } from './_components/CompanyDetailsSkeleton';
 
 interface PageProps {
-  params: Promise<{ companyId: string }> | { companyId: string };
+  params: Promise<{ companyId: string }>;
 }
 
 export default async function CompanyDetailsPage({ params }: PageProps) {

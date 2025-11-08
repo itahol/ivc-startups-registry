@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const metadata: Metadata = {
-  title: 'Israeli High‑Tech Data Platform',
+  title: 'IVC',
   description: 'Tap into the digital ecosystem of Israeli high‑tech: companies, investment firms, people, and funds.',
 };
 
