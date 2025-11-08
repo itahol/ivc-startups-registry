@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense, use } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -17,14 +18,15 @@ import type { CompanyFilters } from '@/lib/companies/filtersUrl';
 import SearchInput from '@/components/SearchInput';
 import YearRangePicker from '@/components/YearRangePicker';
 import { SECTOR_VALUES, COMPANY_STAGE_VALUES, CompanyStageOption } from '@/lib/model';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FiltersDrawerProps {
-  techVerticals: { id: string; name: string }[];
+  techVerticalsPromise: Promise<{ id: string; name: string }[]>;
   value: CompanyFilters;
   onApply: (next: CompanyFilters) => void;
 }
 
-export function FiltersDrawer({ value, onApply, techVerticals }: FiltersDrawerProps) {
+export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersDrawerProps) {
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<CompanyFilters>(value);
 
@@ -86,21 +88,13 @@ export function FiltersDrawer({ value, onApply, techVerticals }: FiltersDrawerPr
               </legend>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <MultiSelectCombobox
-                    options={techVerticals}
-                    getOptionLabel={(o) => o.name}
-                    getOptionValue={(o) => o.id}
-                    value={selectedVerticalIds}
-                    onChange={(ids) =>
-                      setDraft((prev) => ({
-                        ...prev,
-                        techVerticals: ids.length
-                          ? { ids: ids, operator: prev.techVerticals?.operator ?? 'OR' }
-                          : undefined,
-                      }))
-                    }
-                    placeholder="Select verticals"
-                  />
+                  <Suspense fallback={<Skeleton className="h-10 flex-1 rounded-md" />}>
+                    <TechVerticalsCombobox
+                      techVerticalsPromise={techVerticalsPromise}
+                      selectedVerticalIds={selectedVerticalIds}
+                      setDraft={setDraft}
+                    />
+                  </Suspense>
                   {selectedVerticalIds.length > 0 && (
                     <Button
                       type="button"
@@ -302,5 +296,32 @@ export function FiltersDrawer({ value, onApply, techVerticals }: FiltersDrawerPr
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function TechVerticalsCombobox({
+  techVerticalsPromise,
+  selectedVerticalIds,
+  setDraft,
+}: {
+  techVerticalsPromise: Promise<{ id: string; name: string }[]>;
+  selectedVerticalIds: string[];
+  setDraft: React.Dispatch<React.SetStateAction<CompanyFilters>>;
+}) {
+  const techVerticals = use(techVerticalsPromise);
+  return (
+    <MultiSelectCombobox
+      options={techVerticals}
+      getOptionLabel={(o) => o.name}
+      getOptionValue={(o) => o.id}
+      value={selectedVerticalIds}
+      onChange={(ids) =>
+        setDraft((prev) => ({
+          ...prev,
+          techVerticals: ids.length ? { ids, operator: prev.techVerticals?.operator ?? 'OR' } : undefined,
+        }))
+      }
+      placeholder="Select verticals"
+    />
   );
 }

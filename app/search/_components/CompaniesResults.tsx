@@ -1,15 +1,15 @@
 import Link from 'next/link';
-import { use } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { CompanyCard } from '@/components/CompanyCard';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
+import type { CompanyFilters } from '@/lib/companies/filtersUrl';
+import { QUERIES } from '@/lib/server/db/queries';
 import { CompanyDetails } from '@/lib/model';
 
 interface CompaniesResultsProps {
-  companiesPromise: Promise<CompanyDetails[]>;
-  companiesCountPromise: Promise<number>;
+  filters: CompanyFilters;
   page: number;
   pageSize: number;
   prevHref: string;
@@ -18,9 +18,8 @@ interface CompaniesResultsProps {
   hasActiveFilters: boolean;
 }
 
-export function CompaniesResults({
-  companiesPromise,
-  companiesCountPromise,
+export async function CompaniesResults({
+  filters,
   page,
   pageSize,
   prevHref,
@@ -28,8 +27,25 @@ export function CompaniesResults({
   clearHref,
   hasActiveFilters,
 }: CompaniesResultsProps) {
-  const companies = use(companiesPromise);
-  const total = use(companiesCountPromise);
+  const offset = (page - 1) * pageSize;
+  const [companies, total] = await Promise.all([
+    QUERIES.getCompanies({
+      limit: pageSize,
+      offset,
+      keyword: filters.keyword,
+      techVerticalsFilter: filters.techVerticals,
+      sectors: filters.sectors,
+      stages: filters.stages,
+      yearEstablished: filters.yearEstablished,
+    }) as Promise<CompanyDetails[]>,
+    QUERIES.getCompaniesCount({
+      keyword: filters.keyword,
+      techVerticalsFilter: filters.techVerticals,
+      sectors: filters.sectors,
+      stages: filters.stages,
+      yearEstablished: filters.yearEstablished,
+    }) as Promise<number>,
+  ]);
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
   const isFirstPage = page === 1;
   const isLastPage = page === totalPages;
@@ -96,7 +112,8 @@ export function CompaniesResults({
             </PaginationItem>
             <PaginationItem>
               <p className="text-muted-foreground text-sm" aria-live="polite">
-                Page <span className="text-foreground">{page}</span> of <span className="text-foreground">{totalPages}</span>
+                Page <span className="text-foreground">{page}</span> of{' '}
+                <span className="text-foreground">{totalPages}</span>
               </p>
             </PaginationItem>
             <PaginationItem>
