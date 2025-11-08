@@ -1,12 +1,21 @@
-import { cache, Suspense } from 'react';
-import Navbar from '../../components/Navbar';
-import { hasActiveCompanyFilters, readCompanyFilters } from '@/lib/companies/filtersUrl';
-import { QUERIES } from '@/lib/server/db/queries';
-import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
-import { CompaniesResults } from './_components/CompaniesResults';
-import { SearchControls } from './_components/SearchControls';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
-import { Filter, Search, Building2 } from 'lucide-react';
+import { cache, Suspense } from "react";
+import Navbar from "../../components/Navbar";
+import {
+  hasActiveCompanyFilters,
+  readCompanyFilters,
+} from "@/lib/companies/filtersUrl";
+import { QUERIES } from "@/lib/server/db/queries";
+import { CompaniesSkeleton } from "./_components/CompaniesSkeleton";
+import { CompaniesResults } from "./_components/CompaniesResults";
+import { SearchControls } from "./_components/SearchControls";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Filter, Search, Building2 } from "lucide-react";
 
 export const experimental_ppr = true;
 
@@ -14,12 +23,14 @@ const getTechVerticals = cache(async () => {
   return (await QUERIES.getTechVerticals()) as { id: string; name: string }[];
 });
 
-const PATHNAME = '/search';
+const PATHNAME = "/search";
 
 export default function CompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+  searchParams:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
 }) {
   const techVerticalsPromise = getTechVerticals();
 
@@ -41,7 +52,9 @@ export default function CompaniesPage({
             >
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
-                <p className="mt-1 text-lg text-muted-foreground">Discover and explore the companies in our dataset.</p>
+                <p className="mt-1 text-lg text-muted-foreground">
+                  Discover and explore the companies in our dataset.
+                </p>
               </div>
             </div>
 
@@ -71,9 +84,11 @@ async function ResultsSection({
     return <NoFiltersCallout />;
   }
 
-  const pageSizeParam = usp.get('limit');
-  const pageParam = usp.get('page');
-  const pageSize = pageSizeParam ? Math.min(Math.max(parseInt(pageSizeParam, 10) || 20, 1), 100) : 20;
+  const pageSizeParam = usp.get("limit");
+  const pageParam = usp.get("page");
+  const pageSize = pageSizeParam
+    ? Math.min(Math.max(parseInt(pageSizeParam, 10) || 20, 1), 100)
+    : 20;
   const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
 
   const paramsSnapshot = usp.toString();
@@ -85,16 +100,16 @@ async function ResultsSection({
   const prevHref = (() => {
     const sp = new URLSearchParams(paramsSnapshot);
     if (page <= 2) {
-      sp.delete('page');
+      sp.delete("page");
     } else {
-      sp.set('page', String(page - 1));
+      sp.set("page", String(page - 1));
     }
     return buildHref(sp);
   })();
 
   const nextHref = (() => {
     const sp = new URLSearchParams(paramsSnapshot);
-    sp.set('page', String(page + 1));
+    sp.set("page", String(page + 1));
     return buildHref(sp);
   })();
 
@@ -130,7 +145,9 @@ function NoFiltersCallout() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold">Filter by attributes</p>
-              <p className="text-xs text-muted-foreground">Select tech verticals, stages, and more</p>
+              <p className="text-xs text-muted-foreground">
+                Select tech verticals, stages, and more
+              </p>
             </div>
           </div>
           <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-6 text-center">
@@ -139,7 +156,9 @@ function NoFiltersCallout() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold">Search by keyword</p>
-              <p className="text-xs text-muted-foreground">Find companies by their name, description, and more</p>
+              <p className="text-xs text-muted-foreground">
+                Find companies by their name, description, and more
+              </p>
             </div>
           </div>
           <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-6 text-center">
@@ -148,7 +167,9 @@ function NoFiltersCallout() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold">View results</p>
-              <p className="text-xs text-muted-foreground">Browse matching companies</p>
+              <p className="text-xs text-muted-foreground">
+                Browse matching companies
+              </p>
             </div>
           </div>
         </div>
@@ -158,12 +179,14 @@ function NoFiltersCallout() {
 }
 
 async function normalizeSearchParams(
-  searchParams: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>,
+  searchParams:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>,
 ) {
   const resolved = await searchParams;
   const usp = new URLSearchParams();
   for (const [key, value] of Object.entries(resolved)) {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       usp.set(key, value);
     } else if (Array.isArray(value)) {
       const first = value.at(0);

@@ -1,0 +1,11 @@
+name: Format
+
+on: [push]
+
+jobs:
+  oxfmt:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx --yes oxfmt@0.11.0 --check

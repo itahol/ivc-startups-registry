@@ -1,6 +1,6 @@
-import React from 'react';
-import { useAuth } from '@workos-inc/authkit-nextjs/components';
-import { ReactNode } from 'react';
+import React from "react";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
+import { ReactNode } from "react";
 
 export function Authenticated({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();

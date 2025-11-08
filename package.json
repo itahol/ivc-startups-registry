@@ -14,9 +14,17 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "npx oxlint && next lint",
-    "format": "prettier --write .",
-    "test": "playwright test"
+    "lint": "npx oxlint",
+    "fix": "npx oxlint --fix",
+    "format": "npx oxfmt",
+    "test": "playwright test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "npm run format",
+      "npm run fix"
+    ]
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
@@ -35,6 +43,7 @@
     "@tediousjs/connection-string": "0.5.0",
     "@workos-inc/authkit-nextjs": "^2.7.1",
     "@workos-inc/node": "^7.70.0",
+    "babel-plugin-react-compiler": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -62,8 +71,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
+    "husky": "^9.1.7",
     "kysely-codegen": "^0.19.0",
     "npm-run-all": "^4.1.5",
+    "oxfmt": "^0.11.0",
     "oxlint": "^1.22.0",
     "oxlint-tsgolint": "^0.5.1",
     "prettier": "^3.5.3",

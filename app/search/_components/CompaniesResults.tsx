@@ -1,12 +1,23 @@
-import Link from 'next/link';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { CompanyCard } from '@/components/CompanyCard';
-import { Button } from '@/components/ui/button';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
-import type { CompanyFilters } from '@/lib/companies/filtersUrl';
-import { QUERIES } from '@/lib/server/db/queries';
-import { CompanyDetails } from '@/lib/model';
+import Link from "next/link";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { CompanyCard } from "@/components/CompanyCard";
+import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+} from "@/components/ui/pagination";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import type { CompanyFilters } from "@/lib/companies/filtersUrl";
+import { QUERIES } from "@/lib/server/db/queries";
+import { CompanyDetails } from "@/lib/model";
 
 interface CompaniesResultsProps {
   filters: CompanyFilters;
@@ -68,14 +79,20 @@ export async function CompaniesResults({
           <EmptyHeader>
             <EmptyTitle>No companies found for these filters.</EmptyTitle>
             {hasActiveFilters ? (
-              <EmptyDescription>Try adjusting your filters to find what you&apos;re looking for.</EmptyDescription>
+              <EmptyDescription>
+                Try adjusting your filters to find what you&apos;re looking for.
+              </EmptyDescription>
             ) : null}
           </EmptyHeader>
           <EmptyContent>
             {hasActiveFilters ? (
               <div className="mt-4">
                 <Button size="sm" variant="outline" asChild>
-                  <Link href={clearHref} scroll={false} aria-label="Clear filters to show all products">
+                  <Link
+                    href={clearHref}
+                    scroll={false}
+                    aria-label="Clear filters to show all products"
+                  >
                     Clear filters
                   </Link>
                 </Button>
@@ -111,7 +128,7 @@ export async function CompaniesResults({
             </PaginationItem>
             <PaginationItem>
               <p className="text-muted-foreground text-sm" aria-live="polite">
-                Page <span className="text-foreground">{page}</span> of{' '}
+                Page <span className="text-foreground">{page}</span> of{" "}
                 <span className="text-foreground">{totalPages}</span>
               </p>
             </PaginationItem>
@@ -140,7 +157,8 @@ export async function CompaniesResults({
           </PaginationContent>
         </Pagination>
         <div className="text-xs text-muted-foreground">
-          {total.toLocaleString()} results · Showing {(total === 0 ? 0 : (page - 1) * pageSize + 1).toLocaleString()}–
+          {total.toLocaleString()} results · Showing{" "}
+          {(total === 0 ? 0 : (page - 1) * pageSize + 1).toLocaleString()}–
           {Math.min(page * pageSize, total).toLocaleString()}
         </div>
       </div>

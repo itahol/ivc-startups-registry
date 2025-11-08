@@ -1,5 +1,5 @@
-import { SelectQueryBuilder } from 'kysely';
-import { PaginationOptions } from './queries';
+import { SelectQueryBuilder } from "kysely";
+import { PaginationOptions } from "./queries";
 
 export async function getPage<DB, TB extends keyof DB, O>({
   queryBuilder,
@@ -23,7 +23,10 @@ export async function* paginateQuery<DB, TB extends keyof DB, O>({
   let page: O[] = [];
 
   do {
-    page = await getPage({ queryBuilder, paginationOptions: { offset, maxPageSize } });
+    page = await getPage({
+      queryBuilder,
+      paginationOptions: { offset, maxPageSize },
+    });
     yield page;
     offset += page.length;
   } while (page.length >= maxPageSize);

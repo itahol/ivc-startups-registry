@@ -1,9 +1,20 @@
-import { CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, Command } from '@/components/ui/command';
-import { cn } from '../../lib/utils';
-import { PopoverTrigger, PopoverContent, Popover } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import React from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import {
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  Command,
+} from "@/components/ui/command";
+import { cn } from "../../lib/utils";
+import {
+  PopoverTrigger,
+  PopoverContent,
+  Popover,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import React from "react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 
 export interface MultiSelectComboboxProps<T, V extends string> {
   options: T[];
@@ -26,14 +37,18 @@ function MultiSelectCombobox<T, V extends string = string>({
   value,
   defaultValue,
   onChange,
-  placeholder = 'Select...',
+  placeholder = "Select...",
   className,
   buttonClassName,
   disabled,
   showChips = true,
 }: MultiSelectComboboxProps<T, V>) {
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = useControllableArray({ value, defaultValue, onChange });
+  const [selected, setSelected] = useControllableArray({
+    value,
+    defaultValue,
+    onChange,
+  });
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const [buttonWidth, setButtonWidth] = React.useState<number>();
   const allOptions = options;
@@ -46,7 +61,9 @@ function MultiSelectCombobox<T, V extends string = string>({
 
   const toggle = React.useCallback(
     (v: V) => {
-      setSelected((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+      setSelected((prev) =>
+        prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
+      );
     },
     [setSelected],
   );
@@ -59,7 +76,10 @@ function MultiSelectCombobox<T, V extends string = string>({
     return map;
   }, [allOptions, getOptionLabel, getOptionValue]);
 
-  const selectedLabels = React.useMemo(() => selected.map((v) => valueToLabel.get(v) ?? v), [selected, valueToLabel]);
+  const selectedLabels = React.useMemo(
+    () => selected.map((v) => valueToLabel.get(v) ?? v),
+    [selected, valueToLabel],
+  );
 
   const buttonText = React.useMemo(() => {
     if (selected.length === 0) return placeholder;
@@ -68,7 +88,7 @@ function MultiSelectCombobox<T, V extends string = string>({
   }, [selected.length, selectedLabels, placeholder]);
 
   return (
-    <div className={cn('w-fit', className)}>
+    <div className={cn("w-fit", className)}>
       <Popover open={open} onOpenChange={setOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button
@@ -78,8 +98,8 @@ function MultiSelectCombobox<T, V extends string = string>({
             aria-expanded={open}
             disabled={disabled}
             className={cn(
-              'w-[200px] justify-between',
-              selected.length === 0 && 'text-muted-foreground',
+              "w-[200px] justify-between",
+              selected.length === 0 && "text-muted-foreground",
               buttonClassName,
             )}
           >
@@ -98,9 +118,18 @@ function MultiSelectCombobox<T, V extends string = string>({
                   const label = getOptionLabel(option);
                   const isActive = selected.includes(val);
                   return (
-                    <CommandItem key={val} value={label} onSelect={() => toggle(val)}>
+                    <CommandItem
+                      key={val}
+                      value={label}
+                      onSelect={() => toggle(val)}
+                    >
                       {label}
-                      <Check className={cn('ml-auto', isActive ? 'opacity-100' : 'opacity-0')} />
+                      <Check
+                        className={cn(
+                          "ml-auto",
+                          isActive ? "opacity-100" : "opacity-0",
+                        )}
+                      />
                     </CommandItem>
                   );
                 })}
@@ -113,7 +142,10 @@ function MultiSelectCombobox<T, V extends string = string>({
       {showChips && selected.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2 max-w-[360px]">
           {selected.map((v) => (
-            <span key={v} className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs">
+            <span
+              key={v}
+              className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+            >
               {valueToLabel.get(v) ?? v}
               <button
                 type="button"
@@ -135,14 +167,17 @@ function useControllableArray<T, V extends string>({
   value,
   defaultValue = [],
   onChange,
-}: Pick<MultiSelectComboboxProps<T, V>, 'value' | 'defaultValue' | 'onChange'>) {
+}: Pick<
+  MultiSelectComboboxProps<T, V>,
+  "value" | "defaultValue" | "onChange"
+>) {
   const [internal, setInternal] = React.useState<V[]>(defaultValue);
   const isControlled = value !== undefined;
   const current = isControlled ? value : internal;
 
   const set = React.useCallback(
     (next: V[] | ((prev: V[]) => V[])) => {
-      const resolved = typeof next === 'function' ? next(current) : next;
+      const resolved = typeof next === "function" ? next(current) : next;
       if (!isControlled) setInternal(resolved);
       onChange?.(resolved);
     },

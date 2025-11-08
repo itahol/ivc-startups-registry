@@ -1,8 +1,8 @@
-'use client';
-import { useState } from 'react';
-import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
-import { Badge } from '@/components/ui/badge';
-import { TechVertical } from '../../../../lib/model';
+"use client";
+import { useState } from "react";
+import { Item, ItemTitle, ItemContent } from "@/components/ui/item";
+import { Badge } from "@/components/ui/badge";
+import { TechVertical } from "../../../../lib/model";
 
 const TECH_PREVIEW = 8;
 
@@ -10,9 +10,13 @@ interface TechVerticalsSectionProps {
   techVerticals: TechVertical[];
 }
 
-export default function TechVerticalsSection({ techVerticals }: TechVerticalsSectionProps) {
+export default function TechVerticalsSection({
+  techVerticals,
+}: TechVerticalsSectionProps) {
   const [showAllTech, setShowAllTech] = useState(false);
-  const techToShow = showAllTech ? techVerticals : techVerticals.slice(0, TECH_PREVIEW);
+  const techToShow = showAllTech
+    ? techVerticals
+    : techVerticals.slice(0, TECH_PREVIEW);
 
   return (
     <Item className="flex-col items-start p-0">
@@ -22,7 +26,11 @@ export default function TechVerticalsSection({ techVerticals }: TechVerticalsSec
           <>
             <div className="flex flex-wrap gap-1.5">
               {techToShow.map((tv) => (
-                <Badge key={tv.tagID} variant="outline" className="text-[12px] py-1 px-2">
+                <Badge
+                  key={tv.tagID}
+                  variant="outline"
+                  className="text-[12px] py-1 px-2"
+                >
                   {tv.tagName}
                 </Badge>
               ))}
@@ -34,12 +42,16 @@ export default function TechVerticalsSection({ techVerticals }: TechVerticalsSec
                 className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-sm"
                 aria-expanded={showAllTech}
               >
-                {showAllTech ? 'Show less' : `Show all (${techVerticals.length})`}
+                {showAllTech
+                  ? "Show less"
+                  : `Show all (${techVerticals.length})`}
               </button>
             )}
           </>
         ) : (
-          <p className="text-muted-foreground text-sm">No tech verticals listed.</p>
+          <p className="text-muted-foreground text-sm">
+            No tech verticals listed.
+          </p>
         )}
       </ItemContent>
     </Item>

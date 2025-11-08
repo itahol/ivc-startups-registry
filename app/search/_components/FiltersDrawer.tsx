@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Suspense, use } from 'react';
+import * as React from "react";
+import { Suspense, use } from "react";
 import {
   Sheet,
   SheetContent,
@@ -10,15 +10,19 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
-import type { CompanyFilters } from '@/lib/companies/filtersUrl';
-import SearchInput from '@/components/SearchInput';
-import YearRangePicker from '@/components/YearRangePicker';
-import { SECTOR_VALUES, COMPANY_STAGE_VALUES, CompanyStageOption } from '@/lib/model';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
+import type { CompanyFilters } from "@/lib/companies/filtersUrl";
+import SearchInput from "@/components/SearchInput";
+import YearRangePicker from "@/components/YearRangePicker";
+import {
+  SECTOR_VALUES,
+  COMPANY_STAGE_VALUES,
+  CompanyStageOption,
+} from "@/lib/model";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FiltersDrawerProps {
   techVerticalsPromise: Promise<{ id: string; name: string }[]>;
@@ -26,7 +30,11 @@ interface FiltersDrawerProps {
   onApply: (next: CompanyFilters) => void;
 }
 
-export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersDrawerProps) {
+export function FiltersDrawer({
+  value,
+  onApply,
+  techVerticalsPromise,
+}: FiltersDrawerProps) {
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<CompanyFilters>(value);
 
@@ -34,7 +42,7 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
     if (open) setDraft(value);
   }, [open, value]);
 
-  function setVerticalOperator(op: 'AND' | 'OR') {
+  function setVerticalOperator(op: "AND" | "OR") {
     setDraft((prev) =>
       prev.techVerticals
         ? { ...prev, techVerticals: { ...prev.techVerticals, operator: op } }
@@ -42,8 +50,11 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
     );
   }
 
-  const verticalOperator = draft.techVerticals?.operator ?? 'OR';
-  const selectedVerticalIds = React.useMemo(() => draft.techVerticals?.ids ?? [], [draft.techVerticals]);
+  const verticalOperator = draft.techVerticals?.operator ?? "OR";
+  const selectedVerticalIds = React.useMemo(
+    () => draft.techVerticals?.ids ?? [],
+    [draft.techVerticals],
+  );
   const hasAnyFilters = !!(
     draft.techVerticals ||
     draft.sectors ||
@@ -55,8 +66,12 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" aria-haspopup="dialog" aria-label="Open filters panel">
-          Filters{hasAnyFilters ? ' *' : ''}
+        <Button
+          variant="outline"
+          aria-haspopup="dialog"
+          aria-label="Open filters panel"
+        >
+          Filters{hasAnyFilters ? " *" : ""}
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0">
@@ -73,8 +88,13 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
                 Keyword
               </legend>
               <SearchInput
-                value={draft.keyword ?? ''}
-                onChange={(value) => setDraft((prev) => ({ ...prev, keyword: value.trim() || undefined }))}
+                value={draft.keyword ?? ""}
+                onChange={(value) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    keyword: value.trim() || undefined,
+                  }))
+                }
                 placeholder="Search by keyword..."
                 hideSubmitButton={true}
                 hideLabel={true}
@@ -83,12 +103,17 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
 
             {/* Tech Verticals */}
             <fieldset className="mb-6" aria-labelledby="tech-verticals-label">
-              <legend id="tech-verticals-label" className="mb-2 text-sm font-medium">
+              <legend
+                id="tech-verticals-label"
+                className="mb-2 text-sm font-medium"
+              >
                 Tech Verticals
               </legend>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Suspense fallback={<Skeleton className="h-10 flex-1 rounded-md" />}>
+                  <Suspense
+                    fallback={<Skeleton className="h-10 flex-1 rounded-md" />}
+                  >
                     <TechVerticalsCombobox
                       techVerticalsPromise={techVerticalsPromise}
                       selectedVerticalIds={selectedVerticalIds}
@@ -121,7 +146,10 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
                     <ToggleGroup
                       type="single"
                       value={verticalOperator}
-                      onValueChange={(val) => (val === 'AND' || val === 'OR') && setVerticalOperator(val)}
+                      onValueChange={(val) =>
+                        (val === "AND" || val === "OR") &&
+                        setVerticalOperator(val)
+                      }
                       size="sm"
                       aria-label="Choose whether selected tech verticals should all match or any match"
                     >
@@ -191,7 +219,9 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
                   onChange={(vals) =>
                     setDraft((prev) => ({
                       ...prev,
-                      stages: vals.length ? (vals as CompanyStageOption[]) : undefined,
+                      stages: vals.length
+                        ? (vals as CompanyStageOption[])
+                        : undefined,
                     }))
                   }
                   placeholder="Any stage"
@@ -219,7 +249,10 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
 
             {/* Year Established */}
             <fieldset className="mb-8" aria-labelledby="year-established-label">
-              <legend id="year-established-label" className="mb-2 text-sm font-medium">
+              <legend
+                id="year-established-label"
+                className="mb-2 text-sm font-medium"
+              >
                 Year Established
               </legend>
               <YearRangePicker
@@ -227,19 +260,29 @@ export function FiltersDrawer({ value, onApply, techVerticalsPromise }: FiltersD
                 maxValue={new Date().getFullYear()}
                 initialValue={
                   draft.yearEstablished &&
-                  (draft.yearEstablished.min !== undefined || draft.yearEstablished.max !== undefined)
+                  (draft.yearEstablished.min !== undefined ||
+                    draft.yearEstablished.max !== undefined)
                     ? [
-                        draft.yearEstablished.min ?? draft.yearEstablished.max ?? 0,
-                        draft.yearEstablished.max ?? draft.yearEstablished.min ?? 0,
+                        draft.yearEstablished.min ??
+                          draft.yearEstablished.max ??
+                          0,
+                        draft.yearEstablished.max ??
+                          draft.yearEstablished.min ??
+                          0,
                       ]
                     : undefined
                 }
                 defaultValue={
                   value.yearEstablished &&
-                  (value.yearEstablished.min !== undefined || value.yearEstablished.max !== undefined)
+                  (value.yearEstablished.min !== undefined ||
+                    value.yearEstablished.max !== undefined)
                     ? [
-                        value.yearEstablished.min ?? value.yearEstablished.max ?? 0,
-                        value.yearEstablished.max ?? value.yearEstablished.min ?? 0,
+                        value.yearEstablished.min ??
+                          value.yearEstablished.max ??
+                          0,
+                        value.yearEstablished.max ??
+                          value.yearEstablished.min ??
+                          0,
                       ]
                     : undefined
                 }
@@ -318,7 +361,9 @@ function TechVerticalsCombobox({
       onChange={(ids) =>
         setDraft((prev) => ({
           ...prev,
-          techVerticals: ids.length ? { ids, operator: prev.techVerticals?.operator ?? 'OR' } : undefined,
+          techVerticals: ids.length
+            ? { ids, operator: prev.techVerticals?.operator ?? "OR" }
+            : undefined,
         }))
       }
       placeholder="Select verticals"

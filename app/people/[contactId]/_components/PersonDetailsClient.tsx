@@ -1,12 +1,13 @@
-'use client';
-import { use } from 'react';
-import { Person, PersonPosition } from '@/lib/model';
-import { notFound } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import CurrentPositionsSection from './CurrentPositionsSection';
-import PreviousPositionsSection from './PreviousPositionsSection';
-import BackgroundSection from './BackgroundSection';
+"use client";
+import { use } from "react";
+import { Person, PersonPosition } from "@/lib/model";
+import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import CurrentPositionsSection from "./CurrentPositionsSection";
+import PreviousPositionsSection from "./PreviousPositionsSection";
+import BackgroundSection from "./BackgroundSection";
+import Link from "next/link";
 
 interface PersonDetailsClientProps {
   personPromise: Promise<Person | undefined>;
@@ -44,7 +45,7 @@ function transformPositions(
       companyID: pos.companyID,
       companyName: pos.companyName,
       companyType: pos.companySubType,
-      companyStatus: pos.companyCeasedDate ? null : 'Active',
+      companyStatus: pos.companyCeasedDate ? null : "Active",
       title: pos.positionTitle,
       isCurrent: !pos.positionEndDate,
     };
@@ -59,7 +60,10 @@ function transformPositions(
   return { current, previous };
 }
 
-export default function PersonDetailsClient({ personPromise, positionsPromise }: PersonDetailsClientProps) {
+export default function PersonDetailsClient({
+  personPromise,
+  positionsPromise,
+}: PersonDetailsClientProps) {
   const person = use(personPromise);
   if (!person) {
     notFound();
@@ -77,7 +81,7 @@ export default function PersonDetailsClient({ personPromise, positionsPromise }:
             Key Executive
           </Badge>
           {person.linkedInProfile && (
-            <a
+            <Link
               href={person.linkedInProfile}
               target="_blank"
               rel="noopener noreferrer"
@@ -86,7 +90,7 @@ export default function PersonDetailsClient({ personPromise, positionsPromise }:
               <Badge variant="outline" className="text-xs">
                 LinkedIn
               </Badge>
-            </a>
+            </Link>
           )}
         </div>
       </header>

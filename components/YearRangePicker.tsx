@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useId, useState, useRef } from 'react';
-import { type UseSliderWithInputProps } from '@/hooks/use-slider-with-input';
-import { Slider } from '@/components/ui/slider';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { useCallback, useEffect, useId, useState, useRef } from "react";
+import { type UseSliderWithInputProps } from "@/hooks/use-slider-with-input";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 /**
  * Simple year range picker.
@@ -23,18 +23,28 @@ export default function YearRangePicker({
   maxValue = new Date().getFullYear(),
   initialValue,
   defaultValue,
-  label = 'Year Range',
+  label = "Year Range",
   onChange,
 }: YearRangePickerProps) {
   const id = useId();
 
-  const resolvedInitial: [number | null, number | null] = [initialValue?.[0] ?? null, initialValue?.[1] ?? null];
-  const resolvedDefault: [number | null, number | null] = [defaultValue?.[0] ?? null, defaultValue?.[1] ?? null];
+  const resolvedInitial: [number | null, number | null] = [
+    initialValue?.[0] ?? null,
+    initialValue?.[1] ?? null,
+  ];
+  const resolvedDefault: [number | null, number | null] = [
+    defaultValue?.[0] ?? null,
+    defaultValue?.[1] ?? null,
+  ];
 
   const [startYear, setStartYear] = useState<number | null>(resolvedInitial[0]);
   const [endYear, setEndYear] = useState<number | null>(resolvedInitial[1]);
-  const [startInput, setStartInput] = useState<string>(resolvedInitial[0]?.toString() ?? '');
-  const [endInput, setEndInput] = useState<string>(resolvedInitial[1]?.toString() ?? '');
+  const [startInput, setStartInput] = useState<string>(
+    resolvedInitial[0]?.toString() ?? "",
+  );
+  const [endInput, setEndInput] = useState<string>(
+    resolvedInitial[1]?.toString() ?? "",
+  );
 
   // Emit changes only when values actually change (avoid loop on parent re-renders)
   const onChangeRef = useRef(onChange);
@@ -63,54 +73,58 @@ export default function YearRangePicker({
   );
 
   // Slider value always needs concrete numbers; fallback to bounds
-  const sliderValue: [number, number] = [startYear ?? minValue, endYear ?? maxValue];
+  const sliderValue: [number, number] = [
+    startYear ?? minValue,
+    endYear ?? maxValue,
+  ];
 
   const handleSliderChange = (values: number[]) => {
     const [s, e] = normalizeRange(values[0]!, values[1]!);
     setStartYear(s);
     setEndYear(e);
-    setStartInput(s?.toString() ?? '');
-    setEndInput(e?.toString() ?? '');
+    setStartInput(s?.toString() ?? "");
+    setEndInput(e?.toString() ?? "");
   };
 
-  const handleInputCommit = (which: 'start' | 'end') => {
-    const raw = which === 'start' ? startInput.trim() : endInput.trim();
-    if (raw === '') {
-      if (which === 'start') setStartYear(null);
+  const handleInputCommit = (which: "start" | "end") => {
+    const raw = which === "start" ? startInput.trim() : endInput.trim();
+    if (raw === "") {
+      if (which === "start") setStartYear(null);
       else setEndYear(null);
       return;
     }
     const parsed = parseInt(raw, 10);
     if (isNaN(parsed)) return; // ignore invalid
-    if (which === 'start') {
+    if (which === "start") {
       const [s, e] = normalizeRange(parsed, endYear);
       setStartYear(s);
       setEndYear(e);
-      setStartInput(s?.toString() ?? '');
-      setEndInput(e?.toString() ?? '');
+      setStartInput(s?.toString() ?? "");
+      setEndInput(e?.toString() ?? "");
     } else {
       const [s, e] = normalizeRange(startYear, parsed);
       setStartYear(s);
       setEndYear(e);
-      setStartInput(s?.toString() ?? '');
-      setEndInput(e?.toString() ?? '');
+      setStartInput(s?.toString() ?? "");
+      setEndInput(e?.toString() ?? "");
     }
   };
 
-  const showReset = startYear !== resolvedDefault[0] || endYear !== resolvedDefault[1];
+  const showReset =
+    startYear !== resolvedDefault[0] || endYear !== resolvedDefault[1];
 
   const handleClear = () => {
     setStartYear(null);
     setEndYear(null);
-    setStartInput('');
-    setEndInput('');
+    setStartInput("");
+    setEndInput("");
   };
 
   const handleReset = () => {
     setStartYear(resolvedDefault[0]);
     setEndYear(resolvedDefault[1]);
-    setStartInput(resolvedDefault[0]?.toString() ?? '');
-    setEndInput(resolvedDefault[1]?.toString() ?? '');
+    setStartInput(resolvedDefault[0]?.toString() ?? "");
+    setEndInput(resolvedDefault[1]?.toString() ?? "");
   };
 
   return (
@@ -132,10 +146,12 @@ export default function YearRangePicker({
             inputMode="numeric"
             placeholder="(none)"
             value={startInput}
-            onChange={(e) => setStartInput(e.target.value.replace(/[^0-9]/g, ''))}
-            onBlur={() => handleInputCommit('start')}
+            onChange={(e) =>
+              setStartInput(e.target.value.replace(/[^0-9]/g, ""))
+            }
+            onBlur={() => handleInputCommit("start")}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleInputCommit('start');
+              if (e.key === "Enter") handleInputCommit("start");
             }}
             aria-label="Enter start year"
           />
@@ -148,27 +164,37 @@ export default function YearRangePicker({
             inputMode="numeric"
             placeholder="(none)"
             value={endInput}
-            onChange={(e) => setEndInput(e.target.value.replace(/[^0-9]/g, ''))}
-            onBlur={() => handleInputCommit('end')}
+            onChange={(e) => setEndInput(e.target.value.replace(/[^0-9]/g, ""))}
+            onBlur={() => handleInputCommit("end")}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleInputCommit('end');
+              if (e.key === "Enter") handleInputCommit("end");
             }}
             aria-label="Enter end year"
           />
         </div>
       </div>
       <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1" onClick={handleClear}>
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1"
+          onClick={handleClear}
+        >
           Clear
         </Button>
         {showReset && (
-          <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={handleReset}
+          >
             Reset
           </Button>
         )}
       </div>
       <p className="text-muted-foreground text-sm">
-        {startYear === null && endYear === null && 'No years selected'}
+        {startYear === null && endYear === null && "No years selected"}
         {startYear !== null && endYear === null && `From ${startYear} onwards`}
         {startYear === null && endYear !== null && `Up to ${endYear}`}
         {startYear !== null && endYear !== null && `${startYear} – ${endYear}`}
