@@ -6,6 +6,7 @@ import { CompaniesSkeleton } from './_components/CompaniesSkeleton';
 import { CompaniesResults } from './_components/CompaniesResults';
 import { SearchControls } from './_components/SearchControls';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
+import { Filter, Search, Building2 } from 'lucide-react';
 
 export const experimental_ppr = true;
 
@@ -60,7 +61,9 @@ export default function CompaniesPage({
 async function ResultsSection({
   searchParamsPromise,
 }: {
-  searchParamsPromise: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+  searchParamsPromise:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
 }) {
   const usp = await normalizeSearchParams(searchParamsPromise);
   const filters = readCompanyFilters(usp);
@@ -112,15 +115,43 @@ async function ResultsSection({
 
 function NoFiltersCallout() {
   return (
-    <Empty className="border border-dashed">
+    <Empty className="border border-dashed bg-gradient-to-br from-muted/30 via-background to-muted/20">
       <EmptyHeader>
-        <EmptyTitle>Add filters to explore companies</EmptyTitle>
-        <EmptyDescription>Use the search box and filters above to narrow down the dataset before fetching results.</EmptyDescription>
+        <EmptyTitle className="text-xl">Start exploring companies</EmptyTitle>
+        <EmptyDescription className="text-base">
+          Use the filters above to discover companies that match your criteria
+        </EmptyDescription>
       </EmptyHeader>
-      <EmptyContent>
-        <p className="text-sm text-muted-foreground">
-          Try selecting a tech vertical, sector, stage, or keyword to see matching companies.
-        </p>
+      <EmptyContent className="max-w-3xl">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 w-full mt-2">
+          <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-6 text-center">
+            <div className="rounded-md bg-primary/10 p-2.5 text-primary">
+              <Filter className="size-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Filter by attributes</p>
+              <p className="text-xs text-muted-foreground">Select tech verticals, stages, and more</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-6 text-center">
+            <div className="rounded-md bg-primary/10 p-2.5 text-primary">
+              <Search className="size-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Search by keyword</p>
+              <p className="text-xs text-muted-foreground">Find companies by their name, description, and more</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-6 text-center">
+            <div className="rounded-md bg-primary/10 p-2.5 text-primary">
+              <Building2 className="size-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">View results</p>
+              <p className="text-xs text-muted-foreground">Browse matching companies</p>
+            </div>
+          </div>
+        </div>
       </EmptyContent>
     </Empty>
   );
