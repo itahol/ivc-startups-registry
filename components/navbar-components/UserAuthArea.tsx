@@ -1,10 +1,10 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Authenticated, Unauthenticated } from 'convex/react';
 import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import { UserMenu } from '@/components/UserMenu';
 import Link from 'next/link';
+import { Authenticated, Unauthenticated } from '../auth-helpers';
 
 /**
  * Isolated client-only auth area so the surrounding Navbar can be a Server Component.
