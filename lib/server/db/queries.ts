@@ -14,18 +14,10 @@ import {
   Person,
   TechVertical,
 } from '@/lib/model';
-import {
-  Expression,
-  ExpressionBuilder,
-  expressionBuilder,
-  NotNull,
-  SelectQueryBuilder,
-  Simplify,
-  sql,
-  SqlBool,
-} from 'kysely';
+import { Expression, ExpressionBuilder, expressionBuilder, NotNull, SelectQueryBuilder, sql, SqlBool } from 'kysely';
 import { DB } from 'kysely-codegen';
 import { db } from './index';
+import { jsonArrayFrom } from './json-utils';
 import { getPage, paginateQuery } from './pagination-utils';
 
 export const COMPANY_STAGE = {
@@ -540,8 +532,4 @@ function hasTechVerticals({
   }
 
   return undefined;
-}
-
-function jsonArrayFrom<O>(expr: Expression<O>) {
-  return sql<Simplify<O>[]>`(select coalesce((select * from ${expr} as agg for json path), '[]'))`;
 }
