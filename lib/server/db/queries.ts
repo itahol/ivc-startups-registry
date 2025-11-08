@@ -13,14 +13,22 @@ import {
   ExecutiveCompanyRelation,
   Person,
   TechVertical,
-} from '@/lib/model';
-import { Expression, ExpressionBuilder, expressionBuilder, NotNull, SelectQueryBuilder, sql, SqlBool } from 'kysely';
-import { DB } from 'kysely-codegen';
-import { db } from './index';
-import { jsonArrayFrom } from './json-utils';
-import { getPage, paginateQuery } from './pagination-utils';
+} from "@/lib/model";
+import {
+  Expression,
+  ExpressionBuilder,
+  expressionBuilder,
+  NotNull,
+  SelectQueryBuilder,
+  sql,
+  SqlBool,
+} from "kysely";
+import { DB } from "kysely-codegen";
+import { db } from "./index";
+import { jsonArrayFrom } from "./json-utils";
+import { getPage, paginateQuery } from "./pagination-utils";
 
-export type FilterOperator = 'AND' | 'OR';
+export type FilterOperator = "AND" | "OR";
 
 export type ManyFilter<T> = {
   ids: T[];
@@ -43,22 +51,22 @@ export interface CompaniesQueryOptions {
   };
 }
 
-const personQueryBuilder: SelectQueryBuilder<DB, 'Contacts', Person> = db
-  .selectFrom('Contacts')
+const personQueryBuilder: SelectQueryBuilder<DB, "Contacts", Person> = db
+  .selectFrom("Contacts")
   .select([
-    'Contact_ID as contactID',
-    'Contact_Name as name',
-    'Email as email',
-    'Phone as phone',
-    'CV as cv',
-    'Social_Network as linkedInProfile',
+    "Contact_ID as contactID",
+    "Contact_Name as name",
+    "Email as email",
+    "Phone as phone",
+    "CV as cv",
+    "Social_Network as linkedInProfile",
   ])
-  .where('Publish_in_Web', '=', 'Yes')
+  .where("Publish_in_Web", "=", "Yes")
   .$narrowType<{ contactID: NotNull }>();
 
 const personPositionsQueryBuilder: SelectQueryBuilder<
   DB,
-  'Management' | 'Profiles',
+  "Management" | "Profiles",
   {
     companyID: string;
     positionTitle: string | null;
@@ -70,89 +78,109 @@ const personPositionsQueryBuilder: SelectQueryBuilder<
     companyType2: string | null;
   }
 > = db
-  .selectFrom('Management')
-  .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
-  .where('Management.Hide_Position', '=', 'No')
-  .where('Profiles.Published_Profile', '=', 'Yes')
+  .selectFrom("Management")
+  .innerJoin("Profiles", "Profiles.Company_ID", "Management.Company_ID")
+  .where("Management.Hide_Position", "=", "No")
+  .where("Profiles.Published_Profile", "=", "Yes")
   .select([
-    'Management.Position_Title as positionTitle',
-    'Management.Position_End_Date as positionEndDate',
-    'Profiles.Company_ID as companyID',
-    'Profiles.Company_Name as companyName',
-    'Profiles.Ceased_Date as companyCeasedDate',
-    'Profiles.Company_Type as companyType',
-    'Profiles.Company_SubType as companySubType',
-    'Profiles.Company_Type2 as companyType2',
+    "Management.Position_Title as positionTitle",
+    "Management.Position_End_Date as positionEndDate",
+    "Profiles.Company_ID as companyID",
+    "Profiles.Company_Name as companyName",
+    "Profiles.Ceased_Date as companyCeasedDate",
+    "Profiles.Company_Type as companyType",
+    "Profiles.Company_SubType as companySubType",
+    "Profiles.Company_Type2 as companyType2",
   ])
   .$narrowType<{ companyID: NotNull }>();
 
-const companiesQueryBuilder: SelectQueryBuilder<DB, 'Profiles', CompanyDetails> = db
-  .selectFrom('Profiles')
+const companiesQueryBuilder: SelectQueryBuilder<
+  DB,
+  "Profiles",
+  CompanyDetails
+> = db
+  .selectFrom("Profiles")
   .select([
-    'Profiles.Company_ID as companyID',
-    'Company_Name as companyName',
-    'Short_Name as shortName',
-    'Website as website',
-    'Sector as sector',
-    'Stage as stage',
-    'Company_Description as companyDescription',
-    'Technology as technology',
-    'Employees as employees',
-    'Israeli_Employees as israeliEmployees',
-    'Reg_Number as regNumber',
-    'Established_Year as establishedYear',
-    'Tech_Verticals as techVerticalsNames',
+    "Profiles.Company_ID as companyID",
+    "Company_Name as companyName",
+    "Short_Name as shortName",
+    "Website as website",
+    "Sector as sector",
+    "Stage as stage",
+    "Company_Description as companyDescription",
+    "Technology as technology",
+    "Employees as employees",
+    "Israeli_Employees as israeliEmployees",
+    "Reg_Number as regNumber",
+    "Established_Year as establishedYear",
+    "Tech_Verticals as techVerticalsNames",
   ])
-  .where('Company_Type2', '=', 'HT');
+  .where("Company_Type2", "=", "HT");
 
-const companyDetailsQueryBuilder: SelectQueryBuilder<DB, 'Profiles', CompanyFullDetails> = db
-  .selectFrom('Profiles')
+const companyDetailsQueryBuilder: SelectQueryBuilder<
+  DB,
+  "Profiles",
+  CompanyFullDetails
+> = db
+  .selectFrom("Profiles")
   .select([
-    'Profiles.Company_ID as companyID',
-    'Company_Name as companyName',
-    'Short_Name as shortName',
-    'Website as website',
-    'Sector as sector',
-    'Stage as stage',
-    'Company_Description as companyDescription',
-    'Technology as technology',
-    'Employees as employees',
-    'Israeli_Employees as israeliEmployees',
-    'Reg_Number as regNumber',
-    'Established_Year as establishedYear',
+    "Profiles.Company_ID as companyID",
+    "Company_Name as companyName",
+    "Short_Name as shortName",
+    "Website as website",
+    "Sector as sector",
+    "Stage as stage",
+    "Company_Description as companyDescription",
+    "Technology as technology",
+    "Employees as employees",
+    "Israeli_Employees as israeliEmployees",
+    "Reg_Number as regNumber",
+    "Established_Year as establishedYear",
   ]);
 
 export const QUERIES = {
-  paginatePeople: function (maxPageSize: number = 100): AsyncIterable<Person[]> {
+  paginatePeople: function (
+    maxPageSize: number = 100,
+  ): AsyncIterable<Person[]> {
     return paginateQuery({
-      queryBuilder: personQueryBuilder.orderBy('Contact_ID').$narrowType<{ contactID: NotNull }>(),
+      queryBuilder: personQueryBuilder
+        .orderBy("Contact_ID")
+        .$narrowType<{ contactID: NotNull }>(),
       paginationOptions: { maxPageSize },
     });
   },
 
-  paginateExecutives: function (maxPageSize: number = 100): AsyncIterable<ExecutiveCompanyRelation[]> {
+  paginateExecutives: function (
+    maxPageSize: number = 100,
+  ): AsyncIterable<ExecutiveCompanyRelation[]> {
     return (async function* () {
       const pagesIterator = paginateQuery({
         queryBuilder: db
-          .selectFrom('Management')
-          .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
-          .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
+          .selectFrom("Management")
+          .innerJoin("Profiles", "Profiles.Company_ID", "Management.Company_ID")
+          .innerJoin("Contacts", "Contacts.Contact_ID", "Management.Contact_ID")
           .select([
-            'Management.Company_ID as companyID',
-            'Profiles.Company_Name as companyName',
-            'Management.Contact_ID as contactID',
-            'Contacts.Contact_Name as contactName',
-            'Management.Position_Title as positionTitle',
+            "Management.Company_ID as companyID",
+            "Profiles.Company_Name as companyName",
+            "Management.Contact_ID as contactID",
+            "Contacts.Contact_Name as contactName",
+            "Management.Position_Title as positionTitle",
           ])
           .select(({ eb }) =>
-            eb.case().when('Management.Past_Position', '=', 'No').then(eb.val(1)).else(eb.val(0)).end().as('isCurrent'),
+            eb
+              .case()
+              .when("Management.Past_Position", "=", "No")
+              .then(eb.val(1))
+              .else(eb.val(0))
+              .end()
+              .as("isCurrent"),
           )
-          .where('Profiles.Company_Type2', '=', 'HT')
-          .where('Profiles.Published_Profile', '=', 'Yes')
-          .where('Contacts.Publish_in_Web', '=', 'Yes')
-          .where('Management.Hide_Position', '=', 'No')
-          .orderBy('Management.Company_ID')
-          .orderBy('Management.Contact_ID')
+          .where("Profiles.Company_Type2", "=", "HT")
+          .where("Profiles.Published_Profile", "=", "Yes")
+          .where("Contacts.Publish_in_Web", "=", "Yes")
+          .where("Management.Hide_Position", "=", "No")
+          .orderBy("Management.Company_ID")
+          .orderBy("Management.Contact_ID")
           .$narrowType<{ companyID: NotNull; contactID: NotNull }>(),
         paginationOptions: { maxPageSize },
       });
@@ -165,33 +193,41 @@ export const QUERIES = {
     })();
   },
 
-  paginateBoardMembers: function (maxPageSize: number = 100): AsyncIterable<BoardMemberCompanyRelation[]> {
+  paginateBoardMembers: function (
+    maxPageSize: number = 100,
+  ): AsyncIterable<BoardMemberCompanyRelation[]> {
     return paginateQuery({
       queryBuilder: db
-        .selectFrom('Board')
-        .innerJoin('Profiles', 'Profiles.Company_ID', 'Board.Company_ID')
-        .innerJoin('Contacts', 'Contacts.Contact_ID', 'Board.Contact_ID')
+        .selectFrom("Board")
+        .innerJoin("Profiles", "Profiles.Company_ID", "Board.Company_ID")
+        .innerJoin("Contacts", "Contacts.Contact_ID", "Board.Contact_ID")
         .select([
-          'Board.Company_ID as companyID',
-          'Profiles.Company_Name as companyName',
-          'Board.Contact_ID as contactID',
-          'Contacts.Contact_Name as contactName',
-          'Board.Board_Name as boardName',
-          'Board.Board_Position as boardPosition',
-          'Board.Other_Positions as otherPositions',
+          "Board.Company_ID as companyID",
+          "Profiles.Company_Name as companyName",
+          "Board.Contact_ID as contactID",
+          "Contacts.Contact_Name as contactName",
+          "Board.Board_Name as boardName",
+          "Board.Board_Position as boardPosition",
+          "Board.Other_Positions as otherPositions",
         ])
-        .where('Profiles.Company_Type2', '=', 'HT')
-        .where('Profiles.Published_Profile', '=', 'Yes')
-        .where('Contacts.Publish_in_Web', '=', 'Yes')
-        .orderBy('Board.Company_ID')
-        .orderBy('Board.Contact_ID')
+        .where("Profiles.Company_Type2", "=", "HT")
+        .where("Profiles.Published_Profile", "=", "Yes")
+        .where("Contacts.Publish_in_Web", "=", "Yes")
+        .orderBy("Board.Company_ID")
+        .orderBy("Board.Contact_ID")
         .$narrowType<{ companyID: NotNull; contactID: NotNull }>(),
       paginationOptions: { maxPageSize },
     });
   },
 
-  getPersonDetails: function ({ contactId }: { contactId: string }): Promise<Person | undefined> {
-    return personQueryBuilder.where('Contact_ID', '=', contactId).executeTakeFirst();
+  getPersonDetails: function ({
+    contactId,
+  }: {
+    contactId: string;
+  }): Promise<Person | undefined> {
+    return personQueryBuilder
+      .where("Contact_ID", "=", contactId)
+      .executeTakeFirst();
   },
 
   getPersonPositions: function ({ contactId }: { contactId: string }): Promise<
@@ -206,108 +242,150 @@ export const QUERIES = {
       companyType2: string | null;
     }[]
   > {
-    return personPositionsQueryBuilder.where('Management.Contact_ID', '=', contactId).execute();
+    return personPositionsQueryBuilder
+      .where("Management.Contact_ID", "=", contactId)
+      .execute();
   },
 
   getTechVerticals: function () {
     return db
       .selectFrom(
         db
-          .selectFrom('Tags')
+          .selectFrom("Tags")
           .select([
-            'Tags.Tags_ID as id',
-            'Tags.Tags_Name as name',
-            sql`ROW_NUMBER() OVER (PARTITION BY Tags.Tags_ID ORDER BY Tags.Tags_Name)`.as('rn'),
+            "Tags.Tags_ID as id",
+            "Tags.Tags_Name as name",
+            sql`ROW_NUMBER() OVER (PARTITION BY Tags.Tags_ID ORDER BY Tags.Tags_Name)`.as(
+              "rn",
+            ),
           ])
-          .where('Web_Published_Tag', '=', 'Yes')
-          .as('t'),
+          .where("Web_Published_Tag", "=", "Yes")
+          .as("t"),
       )
-      .select(['t.id', 't.name'])
-      .where('t.rn', '=', 1)
+      .select(["t.id", "t.name"])
+      .where("t.rn", "=", 1)
       .execute();
   },
 
-  getCompanies: function (options: CompaniesQueryOptions & PaginationOptions = {}): Promise<CompanyDetails[]> {
+  getCompanies: function (
+    options: CompaniesQueryOptions & PaginationOptions = {},
+  ): Promise<CompanyDetails[]> {
     return getPage({
       queryBuilder: companiesQueryBuilder
         .where((eb) => matchesCompanyFilters(eb, options))
-        .orderBy('Profiles.Company_ID'),
+        .orderBy("Profiles.Company_ID"),
       paginationOptions: options,
     });
   },
 
-  getCompaniesCount: async function (options: CompaniesQueryOptions = {}): Promise<number> {
+  getCompaniesCount: async function (
+    options: CompaniesQueryOptions = {},
+  ): Promise<number> {
     return db
-      .selectFrom('Profiles')
-      .select(({ fn }) => [fn.count<number>('Profiles.Company_ID').as('count')])
-      .where('Company_Type2', '=', 'HT')
+      .selectFrom("Profiles")
+      .select(({ fn }) => [fn.count<number>("Profiles.Company_ID").as("count")])
+      .where("Company_Type2", "=", "HT")
       .where((eb) => matchesCompanyFilters(eb, options))
       .executeTakeFirst()
       ?.then((result) => result?.count ?? 0);
   },
 
-  getCompanyManagement: async function ({ companyId }: { companyId: string }): Promise<CompanyExecutive[]> {
+  getCompanyManagement: async function ({
+    companyId,
+  }: {
+    companyId: string;
+  }): Promise<CompanyExecutive[]> {
     const rows = await getCompanyManagementQuery({ companyId }).execute();
-    return rows.map((row) => ({ ...row, isPersonPublished: Boolean(row.isPersonPublished) }));
+    return rows.map((row) => ({
+      ...row,
+      isPersonPublished: Boolean(row.isPersonPublished),
+    }));
   },
 
-  getCompanyBoard: async function ({ companyId }: { companyId: CompanyID }): Promise<CompanyBoardMember[]> {
+  getCompanyBoard: async function ({
+    companyId,
+  }: {
+    companyId: CompanyID;
+  }): Promise<CompanyBoardMember[]> {
     const rows = await getCompanyBoardQuery({ companyId }).execute();
-    return rows.map((row) => ({ ...row, isPersonPublished: Boolean(row.isPersonPublished) }));
+    return rows.map((row) => ({
+      ...row,
+      isPersonPublished: Boolean(row.isPersonPublished),
+    }));
   },
 
-  getCompanyDeals: function ({ companyId }: { companyId: CompanyID }): Promise<CompanyFundingDeal[]> {
+  getCompanyDeals: function ({
+    companyId,
+  }: {
+    companyId: CompanyID;
+  }): Promise<CompanyFundingDeal[]> {
     return getCompanyDeals({ companyId }).execute();
   },
 
-  getCompanyTechVerticals: function ({ companyId }: { companyId: CompanyID }): Promise<TechVertical[]> {
+  getCompanyTechVerticals: function ({
+    companyId,
+  }: {
+    companyId: CompanyID;
+  }): Promise<TechVertical[]> {
     return getCompanyTechVerticals({ companyId }).execute();
   },
 
-  getCompanyDetails: function ({ companyId }: { companyId: CompanyID }): Promise<CompanyFullDetails | undefined> {
-    return companyDetailsQueryBuilder.where('Profiles.Company_ID', '=', companyId).executeTakeFirst();
+  getCompanyDetails: function ({
+    companyId,
+  }: {
+    companyId: CompanyID;
+  }): Promise<CompanyFullDetails | undefined> {
+    return companyDetailsQueryBuilder
+      .where("Profiles.Company_ID", "=", companyId)
+      .executeTakeFirst();
   },
 
   getCompanyContactInfo: async function ({
     companyId,
   }: {
     companyId: CompanyID;
-  }): Promise<{ primaryContactInfo?: CompanyPrimaryContactInfo; branchesContactInfo: CompanyContactInfo[] }> {
+  }): Promise<{
+    primaryContactInfo?: CompanyPrimaryContactInfo;
+    branchesContactInfo: CompanyContactInfo[];
+  }> {
     const primaryContactPromise = db
-      .selectFrom('PrimaryContacts')
-      .leftJoin('Contacts', 'Contacts.Contact_ID', 'PrimaryContacts.Contact_ID')
-      .where('Company_ID', '=', companyId)
+      .selectFrom("PrimaryContacts")
+      .leftJoin("Contacts", "Contacts.Contact_ID", "PrimaryContacts.Contact_ID")
+      .where("Company_ID", "=", companyId)
       .select([
-        'PrimaryContacts.Contact_ID as contactID',
-        'PrimaryContacts.Contact_Name as contactName',
-        'PrimaryContacts.Email as contactEmail',
-        'PrimaryContacts.Position as contactPosition',
+        "PrimaryContacts.Contact_ID as contactID",
+        "PrimaryContacts.Contact_Name as contactName",
+        "PrimaryContacts.Email as contactEmail",
+        "PrimaryContacts.Position as contactPosition",
       ])
       .select(({ eb }) =>
         eb
           .case()
-          .when('Contacts.Publish_in_Web', '=', 'Yes')
+          .when("Contacts.Publish_in_Web", "=", "Yes")
           .then(eb.val(1))
           .else(eb.val(0))
           .end()
-          .as('isPersonPublished'),
+          .as("isPersonPublished"),
       )
       .executeTakeFirst();
 
     const branchesPromise = db
-      .selectFrom('Main_Branch_Addresses')
-      .where('Company_ID', '=', companyId)
+      .selectFrom("Main_Branch_Addresses")
+      .where("Company_ID", "=", companyId)
       .select([
-        'Address_Type as type',
-        'Country as country',
-        'City as city',
-        'State as state',
-        'Address as address',
-        'ZIP_Code as zipCode',
+        "Address_Type as type",
+        "Country as country",
+        "City as city",
+        "State as state",
+        "Address as address",
+        "ZIP_Code as zipCode",
       ])
       .execute();
 
-    const [primaryContactRaw, branchesContactInfo] = await Promise.all([primaryContactPromise, branchesPromise]);
+    const [primaryContactRaw, branchesContactInfo] = await Promise.all([
+      primaryContactPromise,
+      branchesPromise,
+    ]);
 
     const primaryContactInfo = primaryContactRaw
       ? {
@@ -329,34 +407,42 @@ function getCompanyManagementQuery({
   companyId: Expression<CompanyID> | CompanyID;
 }): SelectQueryBuilder<
   DB,
-  'Management' | 'Contacts',
-  { contactID: string | null; contactName: string | null; positionTitle: string | null } & { isPersonPublished: number }
+  "Management" | "Contacts",
+  {
+    contactID: string | null;
+    contactName: string | null;
+    positionTitle: string | null;
+  } & { isPersonPublished: number }
 > {
   return db
-    .selectFrom('Management')
-    .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
-    .where('Management.Company_ID', '=', companyId)
-    .where('Hide_Position', '=', 'No')
-    .where('Past_Position', '=', 'No')
+    .selectFrom("Management")
+    .innerJoin("Contacts", "Contacts.Contact_ID", "Management.Contact_ID")
+    .where("Management.Company_ID", "=", companyId)
+    .where("Hide_Position", "=", "No")
+    .where("Past_Position", "=", "No")
     .select([
-      'Management.Contact_ID as contactID',
-      'Management.Contact_Name as contactName',
-      'Management.Position_Title as positionTitle',
+      "Management.Contact_ID as contactID",
+      "Management.Contact_Name as contactName",
+      "Management.Position_Title as positionTitle",
     ])
     .select(({ eb }) =>
       eb
         .case()
-        .when('Contacts.Publish_in_Web', '=', 'Yes')
+        .when("Contacts.Publish_in_Web", "=", "Yes")
         .then(eb.val(1))
         .else(eb.val(0))
         .end()
-        .as('isPersonPublished'),
+        .as("isPersonPublished"),
     );
 }
 
-function getCompanyBoardQuery({ companyId }: { companyId: Expression<CompanyID> | CompanyID }): SelectQueryBuilder<
+function getCompanyBoardQuery({
+  companyId,
+}: {
+  companyId: Expression<CompanyID> | CompanyID;
+}): SelectQueryBuilder<
   DB,
-  'Board' | 'Contacts',
+  "Board" | "Contacts",
   {
     contactID: string | null;
     boardName: string | null;
@@ -365,23 +451,23 @@ function getCompanyBoardQuery({ companyId }: { companyId: Expression<CompanyID> 
   } & { isPersonPublished: number }
 > {
   return db
-    .selectFrom('Board')
-    .innerJoin('Contacts', 'Contacts.Contact_ID', 'Board.Contact_ID')
-    .where('Board.Company_ID', '=', companyId)
+    .selectFrom("Board")
+    .innerJoin("Contacts", "Contacts.Contact_ID", "Board.Contact_ID")
+    .where("Board.Company_ID", "=", companyId)
     .select([
-      'Board.Contact_ID as contactID',
-      'Board.Board_Name as boardName',
-      'Board.Board_Position as boardPosition',
-      'Board.Other_Positions as otherPositions',
+      "Board.Contact_ID as contactID",
+      "Board.Board_Name as boardName",
+      "Board.Board_Position as boardPosition",
+      "Board.Other_Positions as otherPositions",
     ])
     .select(({ eb }) =>
       eb
         .case()
-        .when('Contacts.Publish_in_Web', '=', 'Yes')
+        .when("Contacts.Publish_in_Web", "=", "Yes")
         .then(eb.val(1))
         .else(eb.val(0))
         .end()
-        .as('isPersonPublished'),
+        .as("isPersonPublished"),
     );
 }
 
@@ -389,94 +475,137 @@ function getCompanyTechVerticals({
   companyId,
 }: {
   companyId: Expression<CompanyID> | CompanyID;
-}): SelectQueryBuilder<DB, 'Tags', TechVertical> {
+}): SelectQueryBuilder<DB, "Tags", TechVertical> {
   return db
-    .selectFrom('Tags')
-    .where('Tags.Company_ID', '=', companyId)
-    .where('Tags.Web_Published_Tag', '=', 'Yes')
-    .select(['Tags_ID as tagID', 'Tags_Name as tagName']);
+    .selectFrom("Tags")
+    .where("Tags.Company_ID", "=", companyId)
+    .where("Tags.Web_Published_Tag", "=", "Yes")
+    .select(["Tags_ID as tagID", "Tags_Name as tagName"]);
 }
 
 function getCompanyDeals({
   companyId,
 }: {
   companyId: Expression<CompanyID> | CompanyID;
-}): SelectQueryBuilder<DB, 'Deals', CompanyFundingDeal> {
+}): SelectQueryBuilder<DB, "Deals", CompanyFundingDeal> {
   return db
-    .selectFrom('Deals')
-    .where('Deals.Company_ID', '=', companyId)
+    .selectFrom("Deals")
+    .where("Deals.Company_ID", "=", companyId)
     .select([
-      'Deals.Deal_ID as dealID',
-      'Deals.Deal_Date as dealDate',
-      'Deals.Deal_Type as dealType',
-      'Deals.Deal_Stage as dealStage',
-      'Deals.Deal_Amount as dealAmount',
-      'Deals.Company_Post_Valuation as companyPostValuation',
+      "Deals.Deal_ID as dealID",
+      "Deals.Deal_Date as dealDate",
+      "Deals.Deal_Type as dealType",
+      "Deals.Deal_Stage as dealStage",
+      "Deals.Deal_Amount as dealAmount",
+      "Deals.Company_Post_Valuation as companyPostValuation",
     ])
-    .select(({ eb }) => jsonArrayFrom(getDealInvestors({ dealId: eb.ref('Deals.Deal_ID') })).as('investors'));
+    .select(({ eb }) =>
+      jsonArrayFrom(getDealInvestors({ dealId: eb.ref("Deals.Deal_ID") })).as(
+        "investors",
+      ),
+    );
 }
 
 function getDealInvestors({
   dealId,
 }: {
   dealId: Expression<DealID>;
-}): SelectQueryBuilder<DB, 'Investors', CompanyDealInvestor> {
-  const eb = expressionBuilder<Pick<DB, 'Investors' | 'Profiles' | 'Contacts'>, never>();
+}): SelectQueryBuilder<DB, "Investors", CompanyDealInvestor> {
+  const eb = expressionBuilder<
+    Pick<DB, "Investors" | "Profiles" | "Contacts">,
+    never
+  >();
   return eb
-    .selectFrom('Investors')
-    .leftJoin('Profiles', 'Investors.Company_Investor_ID', 'Profiles.Company_ID')
-    .leftJoin('Contacts', 'Investors.Private_Investor_ID', 'Contacts.Contact_ID')
-    .where('Investors.Deal_ID', '=', dealId)
+    .selectFrom("Investors")
+    .leftJoin(
+      "Profiles",
+      "Investors.Company_Investor_ID",
+      "Profiles.Company_ID",
+    )
+    .leftJoin(
+      "Contacts",
+      "Investors.Private_Investor_ID",
+      "Contacts.Contact_ID",
+    )
+    .where("Investors.Deal_ID", "=", dealId)
     .select([
-      'Investors.Investment_Amount as investmentAmount',
-      'Investors.Company_Investor_ID as companyInvestorID',
-      'Investors.Private_Investor_ID as privateInvestorID',
-      'Investors.Investment_Remarks as investmentRemarks',
-      'Profiles.Company_SubType as investorCompanyType',
+      "Investors.Investment_Amount as investmentAmount",
+      "Investors.Company_Investor_ID as companyInvestorID",
+      "Investors.Private_Investor_ID as privateInvestorID",
+      "Investors.Investment_Remarks as investmentRemarks",
+      "Profiles.Company_SubType as investorCompanyType",
     ])
-    .select((eb) => eb.fn.coalesce(eb.ref('Profiles.Company_Name'), eb.ref('Contacts.Contact_Name')).as('investorName'))
+    .select((eb) =>
+      eb.fn
+        .coalesce(
+          eb.ref("Profiles.Company_Name"),
+          eb.ref("Contacts.Contact_Name"),
+        )
+        .as("investorName"),
+    )
     .select((eb) =>
       eb
         .case()
-        .when('Contacts.Publish_in_Web', '=', 'Yes')
+        .when("Contacts.Publish_in_Web", "=", "Yes")
         .then(eb.val(1))
         .else(eb.val(0))
         .end()
         .$castTo<boolean>()
-        .as('isPrivateInvestorPublished'),
+        .as("isPrivateInvestorPublished"),
     );
 }
 
-const matchesCompanyFilters = (eb: ExpressionBuilder<DB, 'Profiles'>, options: CompaniesQueryOptions) => {
+const matchesCompanyFilters = (
+  eb: ExpressionBuilder<DB, "Profiles">,
+  options: CompaniesQueryOptions,
+) => {
   const filters: (Expression<SqlBool> | undefined)[] = [];
-  const { keyword, techVerticalsFilter, sectors, stages, yearEstablished } = options;
+  const { keyword, techVerticalsFilter, sectors, stages, yearEstablished } =
+    options;
 
   if (keyword) {
     const likeKeyword = `%${keyword}%`;
     filters.push(
       eb.or([
-        eb('Profiles.Company_Name', 'like', likeKeyword),
-        eb('Profiles.Short_Name', 'like', likeKeyword),
-        eb('Profiles.Company_Description', 'like', likeKeyword),
+        eb("Profiles.Company_Name", "like", likeKeyword),
+        eb("Profiles.Short_Name", "like", likeKeyword),
+        eb("Profiles.Company_Description", "like", likeKeyword),
       ]),
     );
   }
   if (techVerticalsFilter) {
-    filters.push(hasTechVerticals({ companyId: eb.ref('Profiles.Company_ID'), techVerticalsFilter }));
+    filters.push(
+      hasTechVerticals({
+        companyId: eb.ref("Profiles.Company_ID"),
+        techVerticalsFilter,
+      }),
+    );
   }
   if (sectors && sectors.length > 0) {
-    filters.push(eb('Profiles.Sector', 'in', sectors));
+    filters.push(eb("Profiles.Sector", "in", sectors));
   }
   if (stages && stages.length > 0) {
-    filters.push(eb('Profiles.Stage', 'in', stages));
+    filters.push(eb("Profiles.Stage", "in", stages));
   }
-  if (yearEstablished && (yearEstablished.min !== undefined || yearEstablished.max !== undefined)) {
-    if (yearEstablished.min !== undefined && yearEstablished.max !== undefined) {
-      filters.push(eb.between('Profiles.Established_Year', yearEstablished.min, yearEstablished.max));
+  if (
+    yearEstablished &&
+    (yearEstablished.min !== undefined || yearEstablished.max !== undefined)
+  ) {
+    if (
+      yearEstablished.min !== undefined &&
+      yearEstablished.max !== undefined
+    ) {
+      filters.push(
+        eb.between(
+          "Profiles.Established_Year",
+          yearEstablished.min,
+          yearEstablished.max,
+        ),
+      );
     } else if (yearEstablished.min !== undefined) {
-      filters.push(eb('Profiles.Established_Year', '>=', yearEstablished.min));
+      filters.push(eb("Profiles.Established_Year", ">=", yearEstablished.min));
     } else if (yearEstablished.max !== undefined) {
-      filters.push(eb('Profiles.Established_Year', '<=', yearEstablished.max));
+      filters.push(eb("Profiles.Established_Year", "<=", yearEstablished.max));
     }
   }
   const realFilters = filters.filter((f) => f !== undefined);
@@ -496,25 +625,29 @@ function hasTechVerticals({
   }
   const eb = expressionBuilder<DB>();
 
-  if (operator === 'OR') {
+  if (operator === "OR") {
     return eb.exists(
       eb
-        .selectFrom('Tags')
-        .select('Tags.Tags_ID')
-        .where('Tags.Company_ID', '=', companyId)
-        .where('Tags.Tags_ID', 'in', tagIds),
+        .selectFrom("Tags")
+        .select("Tags.Tags_ID")
+        .where("Tags.Company_ID", "=", companyId)
+        .where("Tags.Tags_ID", "in", tagIds),
     );
   }
 
-  if (operator === 'AND') {
+  if (operator === "AND") {
     return eb.exists(
       eb
-        .selectFrom('Tags')
-        .select('Tags.Company_ID')
-        .where('Tags.Tags_ID', 'in', tagIds)
-        .groupBy('Tags.Company_ID')
-        .having('Tags.Company_ID', '=', companyId)
-        .having(sql<number>`count(distinct "Tags"."Tags_ID")`, '=', tagIds.length),
+        .selectFrom("Tags")
+        .select("Tags.Company_ID")
+        .where("Tags.Tags_ID", "in", tagIds)
+        .groupBy("Tags.Company_ID")
+        .having("Tags.Company_ID", "=", companyId)
+        .having(
+          sql<number>`count(distinct "Tags"."Tags_ID")`,
+          "=",
+          tagIds.length,
+        ),
     );
   }
 

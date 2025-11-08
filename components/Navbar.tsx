@@ -1,16 +1,24 @@
-import Logo from '@/components/navbar-components/logo';
-import { Button } from '@/components/ui/button';
-import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Logo from "@/components/navbar-components/logo";
+import { Button } from "@/components/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuList,
+} from "@/components/ui/navigation-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-import UserAuthArea from '@/components/navbar-components/UserAuthArea';
-import Link from 'next/link';
-import ClientNavigationMenuLink from './navbar-components/client-navigation-menu-link';
-import { cn } from '../lib/utils';
+import UserAuthArea from "@/components/navbar-components/UserAuthArea";
+import Link from "next/link";
+import ClientNavigationMenuLink from "./navbar-components/client-navigation-menu-link";
+import { cn } from "../lib/utils";
 
 const NAV_LINKS: { href: string; label: string; exact?: boolean }[] = [
-  { href: '/', label: 'Home', exact: true },
-  { href: '/search', label: 'Search', exact: true },
+  { href: "/", label: "Home", exact: true },
+  { href: "/search", label: "Search", exact: true },
 ];
 
 export default function Navbar() {
@@ -70,7 +78,11 @@ export default function Navbar() {
           </div>
           {/* Main nav */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-primary hover:text-primary/90" aria-label="Home">
+            <Link
+              href="/"
+              className="text-primary hover:text-primary/90"
+              aria-label="Home"
+            >
               <Logo />
             </Link>
             {/* Navigation menu */}
@@ -82,8 +94,8 @@ export default function Navbar() {
                       href={link.href}
                       label={link.label}
                       className={cn(
-                        'group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer relative',
-                        'before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-primary before:scale-x-0 before:transition-transform before:duration-300 hover:before:scale-x-100',
+                        "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer relative",
+                        "before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-primary before:scale-x-0 before:transition-transform before:duration-300 hover:before:scale-x-100",
                       )}
                     />
                   </NavigationMenuItem>

@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function HeroClient() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleTryItNow = (e: React.FormEvent) => {
     e.preventDefault();
     // Navigate to search page with the search query
     const params = new URLSearchParams();
     if (searchQuery.trim()) {
-      params.set('q', searchQuery.trim());
+      params.set("q", searchQuery.trim());
     }
     const queryString = params.toString();
-    router.push(`/search${queryString ? `?${queryString}` : ''}`);
+    router.push(`/search${queryString ? `?${queryString}` : ""}`);
   };
 
   const handleAdvancedSearch = (e: React.MouseEvent) => {
@@ -24,26 +24,42 @@ export function HeroClient() {
     // Navigate to search page with the search query if there is one
     const params = new URLSearchParams();
     if (searchQuery.trim()) {
-      params.set('q', searchQuery.trim());
+      params.set("q", searchQuery.trim());
     }
     const queryString = params.toString();
-    router.push(`/search${queryString ? `?${queryString}` : ''}`);
+    router.push(`/search${queryString ? `?${queryString}` : ""}`);
   };
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 md:px-8 py-16 md:py-24" aria-labelledby="hero-heading">
+    <section
+      className="mx-auto w-full max-w-7xl px-4 md:px-8 py-16 md:py-24"
+      aria-labelledby="hero-heading"
+    >
       <div className="flex flex-col items-start gap-6 max-w-3xl">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             NEW
           </span>
-          <span className="text-xs font-medium text-muted-foreground">AI-based Search (Beta)</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            AI-based Search (Beta)
+          </span>
         </div>
-        <h1 id="hero-heading" className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight">
+        <h1
+          id="hero-heading"
+          className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight"
+        >
           Tap into the Digital Ecosystem of the Israeli High‑Tech
         </h1>
-        <p className="text-lg text-muted-foreground">Data. Insights. Reports.</p>
-        <form className="w-full" role="search" aria-label="Site search" onSubmit={handleTryItNow} noValidate>
+        <p className="text-lg text-muted-foreground">
+          Data. Insights. Reports.
+        </p>
+        <form
+          className="w-full"
+          role="search"
+          aria-label="Site search"
+          onSubmit={handleTryItNow}
+          noValidate
+        >
           <label htmlFor="hero-search" className="sr-only">
             Search companies
           </label>

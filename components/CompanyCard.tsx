@@ -1,12 +1,18 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { Separator } from './ui/separator';
-import { CompanyDetails } from '../lib/model';
+import * as React from "react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Separator } from "./ui/separator";
+import { CompanyDetails } from "../lib/model";
 
 export interface CompanyCardProps {
   company: CompanyDetails;
@@ -22,12 +28,15 @@ export function CompanyCard({ company }: CompanyCardProps) {
   } = company;
   const websiteUrl = company.website
     ? new URL(
-        company.website.startsWith('http://') || company.website.startsWith('https://')
+        company.website.startsWith("http://") ||
+        company.website.startsWith("https://")
           ? company.website
           : `https://${company.website}`,
       )
     : undefined;
-  const techVerticals = company.techVerticalsNames ? company.techVerticalsNames.split(',') : [];
+  const techVerticals = company.techVerticalsNames
+    ? company.techVerticalsNames.split(",")
+    : [];
   const tags = techVerticals.map((tv: string) => (
     <Badge variant="outline" key={tv} className="whitespace-nowrap">
       {tv}
@@ -53,7 +62,8 @@ export function CompanyCard({ company }: CompanyCardProps) {
     }
   }, [techVerticals, description]);
 
-  const showToggle = (tagsOverflow || descOverflow) && (description || techVerticals.length > 0);
+  const showToggle =
+    (tagsOverflow || descOverflow) && (description || techVerticals.length > 0);
 
   const toggle = () => setExpanded((e) => !e);
 
@@ -62,14 +72,17 @@ export function CompanyCard({ company }: CompanyCardProps) {
       key={id}
       tabIndex={-1}
       className={cn(
-        'relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-        'gap-4 py-4',
+        "relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        "gap-4 py-4",
       )}
       aria-describedby={`company-${id}-desc`}
     >
       <CardHeader className="pb-0 gap-1">
         <CardTitle className="text-base font-semibold leading-snug tracking-tight">
-          <Link href={`/companies/${id}`} className="hover:underline focus-visible:underline">
+          <Link
+            href={`/companies/${id}`}
+            className="hover:underline focus-visible:underline"
+          >
             {name}
           </Link>
         </CardTitle>
@@ -81,7 +94,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
               rel="noopener noreferrer"
               className="hover:underline focus-visible:underline"
             >
-              {websiteUrl.hostname.replace(/^www\./, '')}
+              {websiteUrl.hostname.replace(/^www\./, "")}
             </a>
           </CardDescription>
         ) : null}
@@ -90,11 +103,13 @@ export function CompanyCard({ company }: CompanyCardProps) {
         <Separator className="my-4" />
         <dl className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1 text-sm">
           <dt className="font-medium">Stage</dt>
-          <dd className="text-muted-foreground">{stageName ?? '—'}</dd>
+          <dd className="text-muted-foreground">{stageName ?? "—"}</dd>
           <dt className="font-medium">Year</dt>
-          <dd className="text-muted-foreground">{company.establishedYear ?? '—'}</dd>
+          <dd className="text-muted-foreground">
+            {company.establishedYear ?? "—"}
+          </dd>
           <dt className="font-medium">Sector</dt>
-          <dd className="text-muted-foreground">{sectorName ?? '—'}</dd>
+          <dd className="text-muted-foreground">{sectorName ?? "—"}</dd>
           {techVerticals.length > 0 && (
             <>
               <dt className="font-medium">Tech</dt>
@@ -102,8 +117,8 @@ export function CompanyCard({ company }: CompanyCardProps) {
                 <div
                   ref={tagsRef}
                   className={cn(
-                    'flex flex-wrap gap-1.5 pr-1 transition-[max-height] duration-300',
-                    !expanded && 'max-h-14 overflow-hidden',
+                    "flex flex-wrap gap-1.5 pr-1 transition-[max-height] duration-300",
+                    !expanded && "max-h-14 overflow-hidden",
                   )}
                 >
                   {tags}
@@ -121,7 +136,11 @@ export function CompanyCard({ company }: CompanyCardProps) {
         <Separator className="my-4" />
         {description ? (
           <div className="mt-3 text-sm leading-snug">
-            <p id={`company-${id}-desc`} ref={descRef} className={cn('transition-colors', !expanded && 'line-clamp-3')}>
+            <p
+              id={`company-${id}-desc`}
+              ref={descRef}
+              className={cn("transition-colors", !expanded && "line-clamp-3")}
+            >
               {description}
             </p>
             {!expanded && descOverflow && (
@@ -139,17 +158,17 @@ export function CompanyCard({ company }: CompanyCardProps) {
               type="button"
               onClick={toggle}
               className={cn(
-                'inline-flex items-center gap-1 text-xs font-medium rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-                'text-muted-foreground hover:text-foreground hover:underline transition-colors',
+                "inline-flex items-center gap-1 text-xs font-medium rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                "text-muted-foreground hover:text-foreground hover:underline transition-colors",
               )}
               aria-expanded={expanded}
             >
-              <span>{expanded ? 'Show less' : 'Show more'}</span>
+              <span>{expanded ? "Show less" : "Show more"}</span>
               <span
                 aria-hidden="true"
                 className={cn(
-                  'transition-transform text-[0.65rem] translate-y-px text-muted-foreground',
-                  expanded && 'rotate-180',
+                  "transition-transform text-[0.65rem] translate-y-px text-muted-foreground",
+                  expanded && "rotate-180",
                 )}
               >
                 ▾

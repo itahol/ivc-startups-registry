@@ -15,7 +15,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "npx oxlint && next lint",
-    "format": "prettier --write .",
+    "format": "npx oxfmt",
     "test": "playwright test"
   },
   "dependencies": {

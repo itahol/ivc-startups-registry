@@ -1,12 +1,12 @@
-'use client';
-import { use } from 'react';
-import { Person, PersonPosition } from '@/lib/model';
-import { notFound } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import CurrentPositionsSection from './CurrentPositionsSection';
-import PreviousPositionsSection from './PreviousPositionsSection';
-import BackgroundSection from './BackgroundSection';
+"use client";
+import { use } from "react";
+import { Person, PersonPosition } from "@/lib/model";
+import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import CurrentPositionsSection from "./CurrentPositionsSection";
+import PreviousPositionsSection from "./PreviousPositionsSection";
+import BackgroundSection from "./BackgroundSection";
 
 interface PersonDetailsClientProps {
   personPromise: Promise<Person | undefined>;
@@ -44,7 +44,7 @@ function transformPositions(
       companyID: pos.companyID,
       companyName: pos.companyName,
       companyType: pos.companySubType,
-      companyStatus: pos.companyCeasedDate ? null : 'Active',
+      companyStatus: pos.companyCeasedDate ? null : "Active",
       title: pos.positionTitle,
       isCurrent: !pos.positionEndDate,
     };
@@ -59,7 +59,10 @@ function transformPositions(
   return { current, previous };
 }
 
-export default function PersonDetailsClient({ personPromise, positionsPromise }: PersonDetailsClientProps) {
+export default function PersonDetailsClient({
+  personPromise,
+  positionsPromise,
+}: PersonDetailsClientProps) {
   const person = use(personPromise);
   if (!person) {
     notFound();

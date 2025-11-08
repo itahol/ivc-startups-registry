@@ -1,7 +1,7 @@
-import { Kysely, MssqlDialect, ParseJSONResultsPlugin } from 'kysely';
-import type { DB } from 'kysely-codegen';
-import * as tarn from 'tarn';
-import * as tedious from 'tedious';
+import { Kysely, MssqlDialect, ParseJSONResultsPlugin } from "kysely";
+import type { DB } from "kysely-codegen";
+import * as tarn from "tarn";
+import * as tedious from "tedious";
 
 const dialect = new MssqlDialect({
   tarn: {
@@ -21,7 +21,7 @@ const dialect = new MssqlDialect({
             password: process.env.DB_PASSWORD,
             userName: process.env.DB_USER,
           },
-          type: 'default',
+          type: "default",
         },
         options: {
           database: process.env.DB_NAME,

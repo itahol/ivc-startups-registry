@@ -1,10 +1,17 @@
-'use client';
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
-import { CompanyDealInvestor, CompanyFundingDeal } from '@/lib/model';
-import { Item, ItemTitle, ItemContent } from '@/components/ui/item';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+"use client";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { CompanyDealInvestor, CompanyFundingDeal } from "@/lib/model";
+import { Item, ItemTitle, ItemContent } from "@/components/ui/item";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface CompanyFundingRoundsProps {
   deals: CompanyFundingDeal[];
@@ -30,7 +37,8 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
     });
   };
 
-  const allOpen = orderedDeals.length > 0 && openIds.size === orderedDeals.length;
+  const allOpen =
+    orderedDeals.length > 0 && openIds.size === orderedDeals.length;
   const hasAnyOpen = openIds.size > 0;
 
   const toggleAll = () => {
@@ -42,11 +50,18 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
   };
 
   const { totalRaised, investorCount } = useMemo(() => {
-    const totalRaised = orderedDeals.reduce((sum, d) => sum + (d.dealAmount ?? 0), 0);
+    const totalRaised = orderedDeals.reduce(
+      (sum, d) => sum + (d.dealAmount ?? 0),
+      0,
+    );
     const investorKeys = new Set<string>();
     orderedDeals.forEach((d) => {
       d.investors.forEach((i) => {
-        const key = i.companyInvestorID || i.privateInvestorID || i.investorName || Math.random().toString();
+        const key =
+          i.companyInvestorID ||
+          i.privateInvestorID ||
+          i.investorName ||
+          Math.random().toString();
         investorKeys.add(key);
       });
     });
@@ -56,8 +71,12 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
   if (!orderedDeals || orderedDeals.length === 0) {
     return (
       <Item className="flex-col items-start p-0">
-        <ItemTitle className="text-sm font-semibold">Financial Rounds</ItemTitle>
-        <ItemContent className="mt-3 text-sm text-muted-foreground">No financial rounds recorded.</ItemContent>
+        <ItemTitle className="text-sm font-semibold">
+          Financial Rounds
+        </ItemTitle>
+        <ItemContent className="mt-3 text-sm text-muted-foreground">
+          No financial rounds recorded.
+        </ItemContent>
       </Item>
     );
   }
@@ -68,9 +87,18 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
       <ItemContent className="mt-3 w-full space-y-4">
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-          <SummaryStat label="Total Capital Raised" value={formatMoney(totalRaised)} />
-          <SummaryStat label="Financial Rounds" value={orderedDeals.length.toString()} />
-          <SummaryStat label="Number of Investors" value={investorCount.toString()} />
+          <SummaryStat
+            label="Total Capital Raised"
+            value={formatMoney(totalRaised)}
+          />
+          <SummaryStat
+            label="Financial Rounds"
+            value={orderedDeals.length.toString()}
+          />
+          <SummaryStat
+            label="Number of Investors"
+            value={investorCount.toString()}
+          />
         </div>
         <div className="flex items-center justify-end">
           <button
@@ -79,7 +107,11 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
             className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-sm"
             aria-pressed={allOpen}
           >
-            {allOpen ? 'Collapse All' : hasAnyOpen ? 'Expand All' : 'Expand All'}
+            {allOpen
+              ? "Collapse All"
+              : hasAnyOpen
+                ? "Expand All"
+                : "Expand All"}
           </button>
         </div>
 
@@ -88,7 +120,9 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
             {/* Column headers using grid to align with rows */}
             <div
               className="hidden md:grid grid-cols-7 items-center gap-4 px-3 text-[11px] uppercase tracking-wide text-muted-foreground font-medium"
-              style={{ gridTemplateColumns: '24px 1fr 1fr 120px 1fr 96px 112px' }}
+              style={{
+                gridTemplateColumns: "24px 1fr 1fr 120px 1fr 96px 112px",
+              }}
             >
               <div className="col-span-1" aria-hidden></div>
               <div className="col-span-2 min-w-0">Round</div>
@@ -99,7 +133,7 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
             </div>
             {orderedDeals.map((deal) => {
               const isOpen = openIds.has(deal.dealID);
-              const dealDate = deal.dealDate ? formatDate(deal.dealDate) : '—';
+              const dealDate = deal.dealDate ? formatDate(deal.dealDate) : "—";
               return (
                 <div key={deal.dealID} className="border rounded-md">
                   <button
@@ -107,31 +141,44 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                     onClick={() => toggleId(deal.dealID)}
                     aria-expanded={isOpen}
                     className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2 text-left text-[13px] font-medium hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-t-md',
-                      !isOpen && 'rounded-b-md',
+                      "w-full flex items-center gap-3 px-3 py-2 text-left text-[13px] font-medium hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-t-md",
+                      !isOpen && "rounded-b-md",
                     )}
                   >
                     <div
                       className="grid items-center gap-4 w-full"
-                      style={{ gridTemplateColumns: '24px 1fr 1fr 120px 1fr 96px 112px' }}
+                      style={{
+                        gridTemplateColumns:
+                          "24px 1fr 1fr 120px 1fr 96px 112px",
+                      }}
                     >
                       <span
                         className={cn(
-                          'inline-block w-4 text-center transform transition-transform select-none shrink-0',
-                          isOpen ? 'rotate-90' : '',
+                          "inline-block w-4 text-center transform transition-transform select-none shrink-0",
+                          isOpen ? "rotate-90" : "",
                         )}
                         aria-hidden
                       >
                         ▶
                       </span>
-                      <div className="col-span-2 min-w-0 font-medium truncate">{deal.dealType || '—'}</div>
-                      <div className="col-span-1 w-32 shrink-0 text-muted-foreground tabular-nums">{dealDate}</div>
-                      <div className="col-span-1 min-w-0 text-muted-foreground truncate">{deal.dealStage || '—'}</div>
+                      <div className="col-span-2 min-w-0 font-medium truncate">
+                        {deal.dealType || "—"}
+                      </div>
+                      <div className="col-span-1 w-32 shrink-0 text-muted-foreground tabular-nums">
+                        {dealDate}
+                      </div>
+                      <div className="col-span-1 min-w-0 text-muted-foreground truncate">
+                        {deal.dealStage || "—"}
+                      </div>
                       <div className="col-span-1 w-24 shrink-0 text-right text-muted-foreground tabular-nums whitespace-nowrap">
-                        {deal.dealAmount != null ? formatMoney(deal.dealAmount) : '—'}
+                        {deal.dealAmount != null
+                          ? formatMoney(deal.dealAmount)
+                          : "—"}
                       </div>
                       <div className="col-span-1 w-28 shrink-0 text-right text-muted-foreground tabular-nums whitespace-nowrap">
-                        {deal.companyPostValuation != null ? formatMoney(deal.companyPostValuation) : '—'}
+                        {deal.companyPostValuation != null
+                          ? formatMoney(deal.companyPostValuation)
+                          : "—"}
                       </div>
                     </div>
                   </button>
@@ -140,7 +187,9 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                       {/* Deal meta incl. post valuation */}
                       {deal.companyPostValuation != null && (
                         <div className="mb-2 text-[12px] text-muted-foreground">
-                          <span className="font-medium text-foreground">Post Valuation: </span>
+                          <span className="font-medium text-foreground">
+                            Post Valuation:{" "}
+                          </span>
                           {formatMoney(deal.companyPostValuation)}
                         </div>
                       )}
@@ -148,10 +197,18 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead className="w-1/3 text-xs uppercase tracking-wide">Investor</TableHead>
-                              <TableHead className="text-xs uppercase tracking-wide">Type</TableHead>
-                              <TableHead className="text-xs uppercase tracking-wide">Amount</TableHead>
-                              <TableHead className="text-xs uppercase tracking-wide">Remarks</TableHead>
+                              <TableHead className="w-1/3 text-xs uppercase tracking-wide">
+                                Investor
+                              </TableHead>
+                              <TableHead className="text-xs uppercase tracking-wide">
+                                Type
+                              </TableHead>
+                              <TableHead className="text-xs uppercase tracking-wide">
+                                Amount
+                              </TableHead>
+                              <TableHead className="text-xs uppercase tracking-wide">
+                                Remarks
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -168,18 +225,28 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                                     return -1;
                                   }
 
-                                  if (typeA === 'Private' && typeB !== 'Private') {
+                                  if (
+                                    typeA === "Private" &&
+                                    typeB !== "Private"
+                                  ) {
                                     return 1;
                                   }
-                                  if (typeA !== 'Private' && typeB === 'Private') {
+                                  if (
+                                    typeA !== "Private" &&
+                                    typeB === "Private"
+                                  ) {
                                     return -1;
                                   }
 
-                                  const typeComparison = (typeB || '').localeCompare(typeA || '');
+                                  const typeComparison = (
+                                    typeB || ""
+                                  ).localeCompare(typeA || "");
                                   if (typeComparison !== 0) {
                                     return typeComparison;
                                   }
-                                  return (a.investorName || '').localeCompare(b.investorName || '');
+                                  return (a.investorName || "").localeCompare(
+                                    b.investorName || "",
+                                  );
                                 })
                                 .map((inv, idx) => (
                                   <TableRow key={idx} className="text-[13px]">
@@ -189,34 +256,44 @@ export function CompanyFundingRounds({ deals }: CompanyFundingRoundsProps) {
                                           href={`/companies/${inv.companyInvestorID}`}
                                           className="inline-flex items-center text-primary hover:text-primary/80 hover:underline"
                                         >
-                                          {inv.investorName || '—'}
-                                          <span className="ml-1 text-[10px] opacity-60">↗</span>
+                                          {inv.investorName || "—"}
+                                          <span className="ml-1 text-[10px] opacity-60">
+                                            ↗
+                                          </span>
                                         </Link>
-                                      ) : inv.privateInvestorID && inv.isPrivateInvestorPublished ? (
+                                      ) : inv.privateInvestorID &&
+                                        inv.isPrivateInvestorPublished ? (
                                         <Link
                                           href={`/people/${inv.privateInvestorID}`}
                                           className="text-primary hover:text-primary/80 hover:underline"
                                         >
-                                          {inv.investorName || '—'}
+                                          {inv.investorName || "—"}
                                         </Link>
                                       ) : (
-                                        <span className="text-foreground">{inv.investorName || '—'}</span>
+                                        <span className="text-foreground">
+                                          {inv.investorName || "—"}
+                                        </span>
                                       )}
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
-                                      {deriveInvestorType(inv) || '-'}
+                                      {deriveInvestorType(inv) || "-"}
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
-                                      {inv.investmentAmount != null ? formatMoney(inv.investmentAmount) : '—'}
+                                      {inv.investmentAmount != null
+                                        ? formatMoney(inv.investmentAmount)
+                                        : "—"}
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
-                                      {inv.investmentRemarks || '—'}
+                                      {inv.investmentRemarks || "—"}
                                     </TableCell>
                                   </TableRow>
                                 ))
                             ) : (
                               <TableRow>
-                                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                <TableCell
+                                  colSpan={4}
+                                  className="text-center text-muted-foreground"
+                                >
                                   No investors listed.
                                 </TableCell>
                               </TableRow>
@@ -252,7 +329,7 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
 function formatMoney(rawMillions: number) {
   // Raw numbers are already in millions of USD.
   // So rawMillions = 1.5 means $1.5m; 1500 means $1.5b.
-  if (rawMillions === 0) return '$0M';
+  if (rawMillions === 0) return "$0M";
   const abs = Math.abs(rawMillions);
   // If ≥ 1000 millions => billions
   if (abs >= 1000) {
@@ -266,16 +343,20 @@ function formatMoney(rawMillions: number) {
 function formatDate(date: Date | string) {
   try {
     const d = new Date(date);
-    if (Number.isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' });
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString(undefined, {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
   } catch {
-    return '—';
+    return "—";
   }
 }
 
 function deriveInvestorType(inv: CompanyDealInvestor): string | null {
   if (inv.investorCompanyType) return inv.investorCompanyType;
-  if (inv.privateInvestorID) return 'Private';
+  if (inv.privateInvestorID) return "Private";
   return null;
 }
 

@@ -1,6 +1,6 @@
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 // Skeleton shown while the companies grid streams in via Suspense.
 export function CompaniesSkeleton() {
@@ -32,7 +32,10 @@ export function CompaniesSkeleton() {
         ))}
       </div>
 
-      <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-2">
+      <nav
+        aria-label="Pagination"
+        className="mt-12 flex items-center justify-center gap-2"
+      >
         <Button disabled variant="outline">
           Previous
         </Button>

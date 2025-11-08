@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@workos-inc/authkit-nextjs/components';
-import { UserMenu } from '@/components/UserMenu';
-import Link from 'next/link';
-import { Authenticated, Unauthenticated } from '../auth-helpers';
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
+import { UserMenu } from "@/components/UserMenu";
+import Link from "next/link";
+import { Authenticated, Unauthenticated } from "../auth-helpers";
 
 /**
  * Isolated client-only auth area so the surrounding Navbar can be a Server Component.
@@ -20,7 +20,7 @@ export function UserAuthArea() {
           userEmail={user?.email}
           userAvatar={user?.profilePictureUrl ?? undefined}
           onItemClick={(item) => {
-            if (item === 'logout') {
+            if (item === "logout") {
               signOut();
             }
           }}
