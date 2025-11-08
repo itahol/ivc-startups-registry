@@ -11,5 +11,16 @@
         }
       }
     }
+  },
+  "languages": {
+    "TypeScript": {
+      "language_servers": ["vtsls", "oxc"]
+    },
+    "TSX": {
+      "language_servers": ["vtsls", "oxc"]
+    },
+    "JavaScript": {
+      "language_servers": ["vtsls", "oxc"]
+    }
   }
 }
