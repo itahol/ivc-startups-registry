@@ -58,7 +58,7 @@ export type ManyFilter<T> = {
 };
 
 export interface PaginationOptions {
-  limit?: number;
+  maxPageSize?: number;
   offset?: number;
 }
 
@@ -75,11 +75,8 @@ export interface CompaniesQueryOptions {
 
 export const QUERIES = {
   paginatePeople: async function* (maxPageSize: number = 100): AsyncIterable<Person[]> {
-    let offset = 0;
-    let people: Person[] = [];
-
-    do {
-      people = await db
+    return paginateQuery({
+      queryBuilder: db
         .selectFrom('Contacts')
         .select([
           'Contact_ID as contactID',
@@ -91,21 +88,14 @@ export const QUERIES = {
         ])
         .where('Publish_in_Web', '=', 'Yes')
         .orderBy('Contact_ID')
-        .offset(offset)
-        .fetch(maxPageSize)
-        .$narrowType<{ contactID: NotNull }>()
-        .execute();
-      if (people.length === 0) break;
-      yield people;
-      offset += people.length;
-    } while (people.length > 0);
+        .$narrowType<{ contactID: NotNull }>(),
+      paginationOptions: { maxPageSize },
+    });
   },
 
   paginateExecutives: async function* (maxPageSize: number = 100): AsyncIterable<ExecutiveCompanyRelation[]> {
-    let offset = 0;
-
-    for (;;) {
-      const executives = await db
+    return paginateQuery({
+      queryBuilder: db
         .selectFrom('Management')
         .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
         .innerJoin('Contacts', 'Contacts.Contact_ID', 'Management.Contact_ID')
@@ -125,26 +115,14 @@ export const QUERIES = {
         .where('Management.Hide_Position', '=', 'No')
         .orderBy('Management.Company_ID')
         .orderBy('Management.Contact_ID')
-        .offset(offset)
-        .fetch(maxPageSize)
-        .$narrowType<{ companyID: NotNull; contactID: NotNull; isCurrent: SqlBool }>()
-        .execute();
-
-      if (executives.length === 0) break;
-
-      yield executives.map((executive) => ({
-        ...executive,
-        isCurrent: Boolean(executive.isCurrent),
-      }));
-      offset += executives.length;
-    }
+        .$narrowType<{ companyID: NotNull; contactID: NotNull; isCurrent: SqlBool }>(),
+      paginationOptions: { maxPageSize },
+    });
   },
 
   paginateBoardMembers: async function* (maxPageSize: number = 100): AsyncIterable<BoardMemberCompanyRelation[]> {
-    let offset = 0;
-
-    for (;;) {
-      const members = await db
+    return paginateQuery({
+      queryBuilder: db
         .selectFrom('Board')
         .innerJoin('Profiles', 'Profiles.Company_ID', 'Board.Company_ID')
         .innerJoin('Contacts', 'Contacts.Contact_ID', 'Board.Contact_ID')
@@ -162,15 +140,9 @@ export const QUERIES = {
         .where('Contacts.Publish_in_Web', '=', 'Yes')
         .orderBy('Board.Company_ID')
         .orderBy('Board.Contact_ID')
-        .offset(offset)
-        .fetch(maxPageSize)
-        .$narrowType<{ companyID: NotNull; contactID: NotNull }>()
-        .execute();
-
-      if (members.length === 0) break;
-      yield members;
-      offset += members.length;
-    }
+        .$narrowType<{ companyID: NotNull; contactID: NotNull }>(),
+      paginationOptions: { maxPageSize },
+    });
   },
 
   getPersonDetails: function ({ contactId }: { contactId: string }): Promise<Person | undefined> {
@@ -241,31 +213,29 @@ export const QUERIES = {
   },
 
   getCompanies: function (options: CompaniesQueryOptions & PaginationOptions = {}): Promise<CompanyDetails[]> {
-    const { limit = 100, offset = 0 } = options;
-
-    return db
-      .selectFrom('Profiles')
-      .select([
-        'Profiles.Company_ID as companyID',
-        'Company_Name as companyName',
-        'Short_Name as shortName',
-        'Website as website',
-        'Sector as sector',
-        'Stage as stage',
-        'Company_Description as companyDescription',
-        'Technology as technology',
-        'Employees as employees',
-        'Israeli_Employees as israeliEmployees',
-        'Reg_Number as regNumber',
-        'Established_Year as establishedYear',
-        'Tech_Verticals as techVerticalsNames',
-      ])
-      .where('Company_Type2', '=', 'HT')
-      .where((eb) => matchesCompanyFilters(eb, options))
-      .orderBy('Profiles.Company_ID')
-      .offset(offset)
-      .fetch(limit)
-      .execute();
+    return getPage({
+      queryBuilder: db
+        .selectFrom('Profiles')
+        .select([
+          'Profiles.Company_ID as companyID',
+          'Company_Name as companyName',
+          'Short_Name as shortName',
+          'Website as website',
+          'Sector as sector',
+          'Stage as stage',
+          'Company_Description as companyDescription',
+          'Technology as technology',
+          'Employees as employees',
+          'Israeli_Employees as israeliEmployees',
+          'Reg_Number as regNumber',
+          'Established_Year as establishedYear',
+          'Tech_Verticals as techVerticalsNames',
+        ])
+        .where('Company_Type2', '=', 'HT')
+        .where((eb) => matchesCompanyFilters(eb, options))
+        .orderBy('Profiles.Company_ID'),
+      paginationOptions: options,
+    });
   },
 
   getCompaniesCount: async function (options: CompaniesQueryOptions = {}): Promise<number> {
@@ -572,4 +542,33 @@ function hasTechVerticals({
 
 function jsonArrayFrom<O>(expr: Expression<O>) {
   return sql<Simplify<O>[]>`(select coalesce((select * from ${expr} as agg for json path), '[]'))`;
+}
+
+async function getPage<DB, TB extends keyof DB, O>({
+  queryBuilder,
+  paginationOptions,
+}: {
+  queryBuilder: SelectQueryBuilder<DB, TB, O>;
+  paginationOptions: PaginationOptions;
+}): Promise<O[]> {
+  const { offset = 0, maxPageSize = 100 } = paginationOptions;
+  return await queryBuilder.offset(offset).fetch(maxPageSize).execute();
+}
+
+async function* paginateQuery<DB, TB extends keyof DB, O>({
+  queryBuilder,
+  paginationOptions,
+}: {
+  queryBuilder: SelectQueryBuilder<DB, TB, O>;
+  paginationOptions: PaginationOptions;
+}): AsyncIterable<O[]> {
+  const maxPageSize = paginationOptions.maxPageSize ?? 100;
+  let offset = paginationOptions.offset ?? 0;
+  let page: O[] = [];
+
+  do {
+    page = await getPage({ queryBuilder, paginationOptions: { offset, maxPageSize } });
+    yield page;
+    offset += page.length;
+  } while (page.length >= maxPageSize);
 }

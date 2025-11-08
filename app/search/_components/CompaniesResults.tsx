@@ -30,7 +30,7 @@ export async function CompaniesResults({
   const offset = (page - 1) * pageSize;
   const [companies, total] = await Promise.all([
     QUERIES.getCompanies({
-      limit: pageSize,
+      maxPageSize: pageSize,
       offset,
       keyword: filters.keyword,
       techVerticalsFilter: filters.techVerticals,
