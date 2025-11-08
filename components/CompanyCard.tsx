@@ -1,28 +1,36 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { Doc } from '@/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
+import { Separator } from './ui/separator';
+import { CompanyDetails } from '../lib/model';
 
-/* -------------------------------------------------------------------------- */
-/*                                 Types                                      */
-/* -------------------------------------------------------------------------- */
-export interface CompanyWithRelations extends Doc<'companies'> {
-  techVerticals: Doc<'techVerticals'>[];
-}
-
-interface CompanyCardProps {
-  company: CompanyWithRelations;
+export interface CompanyCardProps {
+  company: CompanyDetails;
 }
 
 export function CompanyCard({ company }: CompanyCardProps) {
-  const { name, description, techVerticals } = company;
-  const websiteUrl = company.websiteUrl ? new URL(company.websiteUrl) : undefined;
-  const tags = techVerticals.map((tv) => (
-    <Badge variant="outline" key={tv._id} className="whitespace-nowrap">
-      {tv.name}
+  const {
+    companyID: id,
+    companyName: name,
+    companyDescription: description,
+    stage: stageName,
+    sector: sectorName,
+  } = company;
+  const websiteUrl = company.website
+    ? new URL(
+        company.website.startsWith('http://') || company.website.startsWith('https://')
+          ? company.website
+          : `https://${company.website}`,
+      )
+    : undefined;
+  const techVerticals = company.techVerticalsNames ? company.techVerticalsNames.split(',') : [];
+  const tags = techVerticals.map((tv: string) => (
+    <Badge variant="outline" key={tv} className="whitespace-nowrap">
+      {tv}
     </Badge>
   ));
 
@@ -47,23 +55,24 @@ export function CompanyCard({ company }: CompanyCardProps) {
 
   const showToggle = (tagsOverflow || descOverflow) && (description || techVerticals.length > 0);
 
-  const stageName = company.stage;
-  const sectorName = company.sector;
-
   const toggle = () => setExpanded((e) => !e);
 
   return (
     <Card
-      key={company._id}
+      key={id}
       tabIndex={-1}
       className={cn(
         'relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         'gap-4 py-4',
       )}
-      aria-describedby={`company-${company._id}-desc`}
+      aria-describedby={`company-${id}-desc`}
     >
       <CardHeader className="pb-0 gap-1">
-        <CardTitle className="text-base font-semibold leading-snug tracking-tight">{name}</CardTitle>
+        <CardTitle className="text-base font-semibold leading-snug tracking-tight">
+          <Link href={`/companies/${id}`} className="hover:underline focus-visible:underline">
+            {name}
+          </Link>
+        </CardTitle>
         {websiteUrl ? (
           <CardDescription className="truncate">
             <a
@@ -78,11 +87,12 @@ export function CompanyCard({ company }: CompanyCardProps) {
         ) : null}
       </CardHeader>
       <CardContent className="pt-3 px-6 pb-2">
+        <Separator className="my-4" />
         <dl className="grid grid-cols-[auto_1fr] items-start gap-x-2 gap-y-1 text-sm">
           <dt className="font-medium">Stage</dt>
           <dd className="text-muted-foreground">{stageName ?? '—'}</dd>
           <dt className="font-medium">Year</dt>
-          <dd className="text-muted-foreground">{company.yearEstablished ?? '—'}</dd>
+          <dd className="text-muted-foreground">{company.establishedYear ?? '—'}</dd>
           <dt className="font-medium">Sector</dt>
           <dd className="text-muted-foreground">{sectorName ?? '—'}</dd>
           {techVerticals.length > 0 && (
@@ -108,14 +118,10 @@ export function CompanyCard({ company }: CompanyCardProps) {
             </>
           )}
         </dl>
-
+        <Separator className="my-4" />
         {description ? (
           <div className="mt-3 text-sm leading-snug">
-            <p
-              id={`company-${company._id}-desc`}
-              ref={descRef}
-              className={cn('transition-colors', !expanded && 'line-clamp-3')}
-            >
+            <p id={`company-${id}-desc`} ref={descRef} className={cn('transition-colors', !expanded && 'line-clamp-3')}>
               {description}
             </p>
             {!expanded && descOverflow && (

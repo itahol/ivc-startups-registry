@@ -36,6 +36,7 @@ function MultiSelectCombobox<T, V extends string = string>({
   const [selected, setSelected] = useControllableArray({ value, defaultValue, onChange });
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const [buttonWidth, setButtonWidth] = React.useState<number>();
+  const allOptions = options;
 
   React.useEffect(() => {
     if (buttonRef.current) {
@@ -52,11 +53,11 @@ function MultiSelectCombobox<T, V extends string = string>({
 
   const valueToLabel = React.useMemo(() => {
     const map = new Map<V, string>();
-    for (const o of options) {
+    for (const o of allOptions) {
       map.set(getOptionValue(o), getOptionLabel(o));
     }
     return map;
-  }, [options, getOptionLabel, getOptionValue]);
+  }, [allOptions, getOptionLabel, getOptionValue]);
 
   const selectedLabels = React.useMemo(() => selected.map((v) => valueToLabel.get(v) ?? v), [selected, valueToLabel]);
 
@@ -92,9 +93,9 @@ function MultiSelectCombobox<T, V extends string = string>({
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
-                {options.map((opt) => {
-                  const val = getOptionValue(opt);
-                  const label = getOptionLabel(opt);
+                {allOptions.map((option) => {
+                  const val = getOptionValue(option);
+                  const label = getOptionLabel(option);
                   const isActive = selected.includes(val);
                   return (
                     <CommandItem key={val} value={label} onSelect={() => toggle(val)}>

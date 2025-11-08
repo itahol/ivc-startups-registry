@@ -41,4 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-scratch/
+.codex/
+!.codex/config.toml
+
+# typesense
+typesense-data/

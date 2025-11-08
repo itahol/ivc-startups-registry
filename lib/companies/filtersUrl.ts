@@ -1,20 +1,18 @@
-import type { Id } from '@/convex/_generated/dataModel';
-import { COMPANY_STAGE_VALUES, companyStageValidator, SECTOR_VALUES, sectorValidator } from '@/convex/schema';
-import { validate } from 'convex-helpers/validators';
-import { v } from 'convex/values';
+import { COMPANY_STAGE_VALUES, CompanyStageOption, SECTOR_VALUES, SectorOption } from '@/lib/model';
 
 export interface CompanyFilters {
-  techVerticals?: { ids: Id<'techVerticals'>[]; operator: 'AND' | 'OR' };
+  techVerticals?: { ids: string[]; operator: 'AND' | 'OR' };
   sectors?: (typeof SECTOR_VALUES)[number][];
   stages?: (typeof COMPANY_STAGE_VALUES)[number][];
   yearEstablished?: { min?: number; max?: number };
+  keyword?: string;
 }
 
-export const FILTER_PARAM_KEYS = ['tv', 'tvOp', 'sectors', 'stages', 'ymin', 'ymax'] as const;
+export const FILTER_PARAM_KEYS = ['tv', 'tvOp', 'sectors', 'stages', 'ymin', 'ymax', 'q'] as const;
 
-const isSector = (sector: unknown) => validate(sectorValidator, sector);
+const isSector = (sector: string): sector is SectorOption => SECTOR_VALUES.includes(sector as any);
 
-const isStage = (stage: unknown) => validate(companyStageValidator, stage);
+const isStage = (stage: string): stage is CompanyStageOption => COMPANY_STAGE_VALUES.includes(stage as any);
 
 export function readCompanyFilters(searchParams: URLSearchParams): CompanyFilters {
   const next: CompanyFilters = {};
@@ -24,7 +22,7 @@ export function readCompanyFilters(searchParams: URLSearchParams): CompanyFilter
     const ids = techVerticals
       .split(',')
       .map((s) => s.trim())
-      .filter((s) => validate(v.id('techVerticals'), s));
+      .filter((s) => s.length > 0);
     if (ids.length) {
       const op = searchParams.get('tvOp') === 'AND' ? 'AND' : 'OR';
       const cleanedIds = Array.from(new Set(ids)).sort();
@@ -59,6 +57,13 @@ export function readCompanyFilters(searchParams: URLSearchParams): CompanyFilter
   if (validMin !== undefined || validMax !== undefined) {
     next.yearEstablished = { min: validMin, max: validMax };
   }
+
+  // keyword
+  const keyword = searchParams.get('q');
+  if (keyword && keyword.trim()) {
+    next.keyword = keyword.trim();
+  }
+
   return next;
 }
 
@@ -73,10 +78,11 @@ export function encodeCompanyFilters(filters: CompanyFilters): URLSearchParams {
   if (filters.stages?.length) sp.set('stages', [...filters.stages].sort().join(','));
   if (filters.yearEstablished?.min !== undefined) sp.set('ymin', String(filters.yearEstablished.min));
   if (filters.yearEstablished?.max !== undefined) sp.set('ymax', String(filters.yearEstablished.max));
+  if (filters.keyword?.trim()) sp.set('q', filters.keyword.trim());
   sp.sort();
   return sp;
 }
 
 export function hasActiveCompanyFilters(f: CompanyFilters): boolean {
-  return !!(f.techVerticals || f.sectors || f.stages || f.yearEstablished);
+  return !!(f.techVerticals || f.sectors || f.stages || f.yearEstablished || f.keyword);
 }
