@@ -86,6 +86,72 @@ const personQueryBuilder: SelectQueryBuilder<DB, 'Contacts', Person> = db
   .where('Publish_in_Web', '=', 'Yes')
   .$narrowType<{ contactID: NotNull }>();
 
+const personPositionsQueryBuilder: SelectQueryBuilder<
+  DB,
+  'Management' | 'Profiles',
+  {
+    companyID: string;
+    positionTitle: string | null;
+    positionEndDate: Date | null;
+    companyName: string | null;
+    companyCeasedDate: Date | null;
+    companyType: string | null;
+    companySubType: string | null;
+    companyType2: string | null;
+  }
+> = db
+  .selectFrom('Management')
+  .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
+  .where('Management.Hide_Position', '=', 'No')
+  .where('Profiles.Published_Profile', '=', 'Yes')
+  .select([
+    'Management.Position_Title as positionTitle',
+    'Management.Position_End_Date as positionEndDate',
+    'Profiles.Company_ID as companyID',
+    'Profiles.Company_Name as companyName',
+    'Profiles.Ceased_Date as companyCeasedDate',
+    'Profiles.Company_Type as companyType',
+    'Profiles.Company_SubType as companySubType',
+    'Profiles.Company_Type2 as companyType2',
+  ])
+  .$narrowType<{ companyID: NotNull }>();
+
+const companiesQueryBuilder: SelectQueryBuilder<DB, 'Profiles', CompanyDetails> = db
+  .selectFrom('Profiles')
+  .select([
+    'Profiles.Company_ID as companyID',
+    'Company_Name as companyName',
+    'Short_Name as shortName',
+    'Website as website',
+    'Sector as sector',
+    'Stage as stage',
+    'Company_Description as companyDescription',
+    'Technology as technology',
+    'Employees as employees',
+    'Israeli_Employees as israeliEmployees',
+    'Reg_Number as regNumber',
+    'Established_Year as establishedYear',
+    'Tech_Verticals as techVerticalsNames',
+  ])
+  .where('Company_Type2', '=', 'HT');
+
+const companyDetailsQueryBuilder: SelectQueryBuilder<DB, 'Profiles', CompanyFullDetails> = db
+  .selectFrom('Profiles')
+  .select([
+    'Profiles.Company_ID as companyID',
+    'Company_Name as companyName',
+    'Short_Name as shortName',
+    'Website as website',
+    'Sector as sector',
+    'Stage as stage',
+    'Company_Description as companyDescription',
+    'Technology as technology',
+    'Employees as employees',
+    'Israeli_Employees as israeliEmployees',
+    'Reg_Number as regNumber',
+    'Established_Year as establishedYear',
+  ]);
+
 export const QUERIES = {
   paginatePeople: async function* (maxPageSize: number = 100): AsyncIterable<Person[]> {
     return paginateQuery({
@@ -162,24 +228,7 @@ export const QUERIES = {
       companyType2: string | null;
     }[]
   > {
-    return db
-      .selectFrom('Management')
-      .innerJoin('Profiles', 'Profiles.Company_ID', 'Management.Company_ID')
-      .where('Management.Contact_ID', '=', contactId)
-      .where('Management.Hide_Position', '=', 'No')
-      .where('Profiles.Published_Profile', '=', 'Yes')
-      .select([
-        'Management.Position_Title as positionTitle',
-        'Management.Position_End_Date as positionEndDate',
-        'Profiles.Company_ID as companyID',
-        'Profiles.Company_Name as companyName',
-        'Profiles.Ceased_Date as companyCeasedDate',
-        'Profiles.Company_Type as companyType',
-        'Profiles.Company_SubType as companySubType',
-        'Profiles.Company_Type2 as companyType2',
-      ])
-      .$narrowType<{ companyID: NotNull }>()
-      .execute();
+    return personPositionsQueryBuilder.where('Management.Contact_ID', '=', contactId).execute();
   },
 
   getTechVerticals: function () {
@@ -202,24 +251,7 @@ export const QUERIES = {
 
   getCompanies: function (options: CompaniesQueryOptions & PaginationOptions = {}): Promise<CompanyDetails[]> {
     return getPage({
-      queryBuilder: db
-        .selectFrom('Profiles')
-        .select([
-          'Profiles.Company_ID as companyID',
-          'Company_Name as companyName',
-          'Short_Name as shortName',
-          'Website as website',
-          'Sector as sector',
-          'Stage as stage',
-          'Company_Description as companyDescription',
-          'Technology as technology',
-          'Employees as employees',
-          'Israeli_Employees as israeliEmployees',
-          'Reg_Number as regNumber',
-          'Established_Year as establishedYear',
-          'Tech_Verticals as techVerticalsNames',
-        ])
-        .where('Company_Type2', '=', 'HT')
+      queryBuilder: companiesQueryBuilder
         .where((eb) => matchesCompanyFilters(eb, options))
         .orderBy('Profiles.Company_ID'),
       paginationOptions: options,
@@ -227,10 +259,8 @@ export const QUERIES = {
   },
 
   getCompaniesCount: async function (options: CompaniesQueryOptions = {}): Promise<number> {
-    return db
-      .selectFrom('Profiles')
+    return companiesQueryBuilder
       .select(({ fn }) => [fn.count<number>('Profiles.Company_ID').as('count')])
-      .where('Company_Type2', '=', 'HT')
       .where((eb) => matchesCompanyFilters(eb, options))
       .executeTakeFirst()
       ?.then((result) => result?.count ?? 0);
@@ -255,24 +285,7 @@ export const QUERIES = {
   },
 
   getCompanyDetails: function ({ companyId }: { companyId: CompanyID }): Promise<CompanyFullDetails | undefined> {
-    return db
-      .selectFrom('Profiles')
-      .select([
-        'Profiles.Company_ID as companyID',
-        'Company_Name as companyName',
-        'Short_Name as shortName',
-        'Website as website',
-        'Sector as sector',
-        'Stage as stage',
-        'Company_Description as companyDescription',
-        'Technology as technology',
-        'Employees as employees',
-        'Israeli_Employees as israeliEmployees',
-        'Reg_Number as regNumber',
-        'Established_Year as establishedYear',
-      ])
-      .where('Profiles.Company_ID', '=', companyId)
-      .executeTakeFirst();
+    return companyDetailsQueryBuilder.where('Profiles.Company_ID', '=', companyId).executeTakeFirst();
   },
 
   getCompanyContactInfo: async function ({
