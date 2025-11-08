@@ -1,18 +1,9 @@
-import * as React from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar as CalendarIcon,
-  X,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 export type YearRange = { start?: number | null; end?: number | null };
 
@@ -34,14 +25,14 @@ interface YearSelectProps {
   disabled?: boolean;
   minYear?: number;
   maxYear?: number;
-  align?: "start" | "center" | "end";
+  align?: 'start' | 'center' | 'end';
 }
 
 const thisYear = new Date().getFullYear();
 
 function clamp(value: number, min?: number, max?: number) {
-  if (typeof min === "number") value = Math.max(min, value);
-  if (typeof max === "number") value = Math.min(max, value);
+  if (typeof min === 'number') value = Math.max(min, value);
+  if (typeof max === 'number') value = Math.min(max, value);
   return value;
 }
 
@@ -52,11 +43,11 @@ function decadeStart(y: number) {
 const YearSelect: React.FC<YearSelectProps> = ({
   year,
   onSelect,
-  placeholder = "Any year",
+  placeholder = 'Any year',
   disabled,
   minYear = thisYear - 100,
   maxYear = thisYear + 10,
-  align = "start",
+  align = 'start',
 }) => {
   const initialPage = decadeStart(clamp(year ?? thisYear, minYear, maxYear));
   const [open, setOpen] = React.useState(false);
@@ -66,7 +57,7 @@ const YearSelect: React.FC<YearSelectProps> = ({
     if (open) {
       setPageStart(decadeStart(clamp(year ?? thisYear, minYear, maxYear)));
     }
-  }, [open]);
+  }, [open, year, minYear, maxYear]);
 
   const years = React.useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => pageStart + i);
@@ -81,11 +72,7 @@ const YearSelect: React.FC<YearSelectProps> = ({
         <Button
           type="button"
           variant="outline"
-          className={cn(
-            "w-[10.5rem] justify-between",
-            !year && "text-muted-foreground",
-            disabled && "opacity-60",
-          )}
+          className={cn('w-[10.5rem] justify-between', !year && 'text-muted-foreground', disabled && 'opacity-60')}
           disabled={disabled}
         >
           <span className="truncate">{year ?? placeholder}</span>
@@ -94,38 +81,27 @@ const YearSelect: React.FC<YearSelectProps> = ({
       </PopoverTrigger>
       <PopoverContent className="w-[18rem] p-2" align={align}>
         <div className="flex items-center justify-between px-2 py-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setPageStart((p) => p - 10)}
-            disabled={!canPrev}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setPageStart((p) => p - 10)} disabled={!canPrev}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div className="text-sm font-medium select-none">
             {pageStart} – {pageStart + 11}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setPageStart((p) => p + 10)}
-            disabled={!canNext}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setPageStart((p) => p + 10)} disabled={!canNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
         <div className="grid grid-cols-3 gap-2 p-2">
           {years.map((y) => {
             const isDisabled =
-              (typeof minYear === "number" && y < minYear) ||
-              (typeof maxYear === "number" && y > maxYear);
+              (typeof minYear === 'number' && y < minYear) || (typeof maxYear === 'number' && y > maxYear);
             const isActive = year === y;
             return (
               <Button
                 key={y}
                 type="button"
-                variant={isActive ? "default" : "secondary"}
-                className={cn("h-9", isDisabled && "opacity-40")}
+                variant={isActive ? 'default' : 'secondary'}
+                className={cn('h-9', isDisabled && 'opacity-40')}
                 disabled={isDisabled}
                 onClick={() => {
                   onSelect(y);
@@ -149,11 +125,7 @@ const YearSelect: React.FC<YearSelectProps> = ({
           >
             <X className="h-4 w-4" /> Clear
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setOpen(false)}
-          >
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Close
           </Button>
         </div>
@@ -165,8 +137,8 @@ const YearSelect: React.FC<YearSelectProps> = ({
 export const YearRangePicker: React.FC<YearRangePickerProps> = ({
   value,
   onChange,
-  placeholderStart = "Start year",
-  placeholderEnd = "End year",
+  placeholderStart = 'Start year',
+  placeholderEnd = 'End year',
   className,
   disabled,
   minYear = thisYear - 100,
@@ -179,7 +151,7 @@ export const YearRangePicker: React.FC<YearRangePickerProps> = ({
 
   React.useEffect(() => {
     if (value) setRange({ start: value.start ?? null, end: value.end ?? null });
-  }, [value?.start, value?.end]);
+  }, [value]);
 
   function commit(next: YearRange) {
     setRange(next);
@@ -203,7 +175,7 @@ export const YearRangePicker: React.FC<YearRangePickerProps> = ({
   }
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn('flex items-center gap-2', className)}>
       <YearSelect
         year={range.start ?? null}
         onSelect={setStart}
