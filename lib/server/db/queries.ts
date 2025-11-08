@@ -73,22 +73,23 @@ export interface CompaniesQueryOptions {
   };
 }
 
+const personQueryBuilder: SelectQueryBuilder<DB, 'Contacts', Person> = db
+  .selectFrom('Contacts')
+  .select([
+    'Contact_ID as contactID',
+    'Contact_Name as name',
+    'Email as email',
+    'Phone as phone',
+    'CV as cv',
+    'Social_Network as linkedInProfile',
+  ])
+  .where('Publish_in_Web', '=', 'Yes')
+  .$narrowType<{ contactID: NotNull }>();
+
 export const QUERIES = {
   paginatePeople: async function* (maxPageSize: number = 100): AsyncIterable<Person[]> {
     return paginateQuery({
-      queryBuilder: db
-        .selectFrom('Contacts')
-        .select([
-          'Contact_ID as contactID',
-          'Contact_Name as name',
-          'Email as email',
-          'Phone as phone',
-          'CV as cv',
-          'Social_Network as linkedInProfile',
-        ])
-        .where('Publish_in_Web', '=', 'Yes')
-        .orderBy('Contact_ID')
-        .$narrowType<{ contactID: NotNull }>(),
+      queryBuilder: personQueryBuilder.orderBy('Contact_ID').$narrowType<{ contactID: NotNull }>(),
       paginationOptions: { maxPageSize },
     });
   },
@@ -146,20 +147,7 @@ export const QUERIES = {
   },
 
   getPersonDetails: function ({ contactId }: { contactId: string }): Promise<Person | undefined> {
-    return db
-      .selectFrom('Contacts')
-      .select([
-        'Contact_ID as contactID',
-        'Contact_Name as name',
-        'Email as email',
-        'Phone as phone',
-        'CV as cv',
-        'Social_Network as linkedInProfile',
-      ])
-      .where('Contact_ID', '=', contactId)
-      .where('Publish_in_Web', '=', 'Yes')
-      .$narrowType<{ contactID: NotNull }>()
-      .executeTakeFirst();
+    return personQueryBuilder.where('Contact_ID', '=', contactId).executeTakeFirst();
   },
 
   getPersonPositions: function ({ contactId }: { contactId: string }): Promise<
