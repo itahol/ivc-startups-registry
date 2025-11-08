@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import CurrentPositionsSection from "./CurrentPositionsSection";
 import PreviousPositionsSection from "./PreviousPositionsSection";
 import BackgroundSection from "./BackgroundSection";
+import Link from "next/link";
 
 interface PersonDetailsClientProps {
   personPromise: Promise<Person | undefined>;
@@ -80,7 +81,7 @@ export default function PersonDetailsClient({
             Key Executive
           </Badge>
           {person.linkedInProfile && (
-            <a
+            <Link
               href={person.linkedInProfile}
               target="_blank"
               rel="noopener noreferrer"
@@ -89,7 +90,7 @@ export default function PersonDetailsClient({
               <Badge variant="outline" className="text-xs">
                 LinkedIn
               </Badge>
-            </a>
+            </Link>
           )}
         </div>
       </header>
