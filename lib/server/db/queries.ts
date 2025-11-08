@@ -123,7 +123,7 @@ const companyDetailsQueryBuilder: SelectQueryBuilder<DB, 'Profiles', CompanyFull
   ]);
 
 export const QUERIES = {
-  paginatePeople: async function* (maxPageSize: number = 100): AsyncIterable<Person[]> {
+  paginatePeople: function (maxPageSize: number = 100): AsyncIterable<Person[]> {
     return paginateQuery({
       queryBuilder: personQueryBuilder.orderBy('Contact_ID').$narrowType<{ contactID: NotNull }>(),
       paginationOptions: { maxPageSize },
@@ -157,7 +157,7 @@ export const QUERIES = {
     });
   },
 
-  paginateBoardMembers: async function* (maxPageSize: number = 100): AsyncIterable<BoardMemberCompanyRelation[]> {
+  paginateBoardMembers: function (maxPageSize: number = 100): AsyncIterable<BoardMemberCompanyRelation[]> {
     return paginateQuery({
       queryBuilder: db
         .selectFrom('Board')
