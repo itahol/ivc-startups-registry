@@ -29,15 +29,14 @@ export function CompanyCard({ company }: CompanyCardProps) {
   const websiteUrl = company.website
     ? new URL(
         company.website.startsWith("http://") ||
-        company.website.startsWith("https://")
+          company.website.startsWith("https://")
           ? company.website
           : `https://${company.website}`,
       )
     : undefined;
-  const techVerticals = company.techVerticalsNames
-    ? company.techVerticalsNames.split(",")
-    : [];
-  const tags = techVerticals.map((tv: string) => (
+  const tags = (
+    company.techVerticalsNames ? company.techVerticalsNames.split(",") : []
+  ).map((tv: string) => (
     <Badge variant="outline" key={tv} className="whitespace-nowrap">
       {tv}
     </Badge>
@@ -60,10 +59,13 @@ export function CompanyCard({ company }: CompanyCardProps) {
     if (d) {
       setDescOverflow(d.scrollHeight > d.clientHeight + 1);
     }
-  }, [techVerticals, description]);
+  }, [company]);
 
   const showToggle =
-    (tagsOverflow || descOverflow) && (description || techVerticals.length > 0);
+    (tagsOverflow || descOverflow) &&
+    (description ||
+      (company.techVerticalsNames ? company.techVerticalsNames.split(",") : [])
+        .length > 0);
 
   const toggle = () => setExpanded((e) => !e);
 
@@ -88,14 +90,14 @@ export function CompanyCard({ company }: CompanyCardProps) {
         </CardTitle>
         {websiteUrl ? (
           <CardDescription className="truncate">
-            <a
+            <Link
               href={websiteUrl.href}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline focus-visible:underline"
             >
               {websiteUrl.hostname.replace(/^www\./, "")}
-            </a>
+            </Link>
           </CardDescription>
         ) : null}
       </CardHeader>
@@ -110,7 +112,10 @@ export function CompanyCard({ company }: CompanyCardProps) {
           </dd>
           <dt className="font-medium">Sector</dt>
           <dd className="text-muted-foreground">{sectorName ?? "—"}</dd>
-          {techVerticals.length > 0 && (
+          {(company.techVerticalsNames
+            ? company.techVerticalsNames.split(",")
+            : []
+          ).length > 0 && (
             <>
               <dt className="font-medium">Tech</dt>
               <dd className="text-muted-foreground relative">
