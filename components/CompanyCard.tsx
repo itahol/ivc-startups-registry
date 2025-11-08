@@ -29,7 +29,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
   const websiteUrl = company.website
     ? new URL(
         company.website.startsWith("http://") ||
-          company.website.startsWith("https://")
+        company.website.startsWith("https://")
           ? company.website
           : `https://${company.website}`,
       )
