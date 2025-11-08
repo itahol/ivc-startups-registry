@@ -26,6 +26,7 @@ import {
 } from 'kysely';
 import { DB } from 'kysely-codegen';
 import { db } from './index';
+import { getPage, paginateQuery } from './pagination-utils';
 
 export const COMPANY_STAGE = {
   SEED: 'Seed',
@@ -543,33 +544,4 @@ function hasTechVerticals({
 
 function jsonArrayFrom<O>(expr: Expression<O>) {
   return sql<Simplify<O>[]>`(select coalesce((select * from ${expr} as agg for json path), '[]'))`;
-}
-
-async function getPage<DB, TB extends keyof DB, O>({
-  queryBuilder,
-  paginationOptions,
-}: {
-  queryBuilder: SelectQueryBuilder<DB, TB, O>;
-  paginationOptions: PaginationOptions;
-}): Promise<O[]> {
-  const { offset = 0, maxPageSize = 100 } = paginationOptions;
-  return await queryBuilder.offset(offset).fetch(maxPageSize).execute();
-}
-
-async function* paginateQuery<DB, TB extends keyof DB, O>({
-  queryBuilder,
-  paginationOptions,
-}: {
-  queryBuilder: SelectQueryBuilder<DB, TB, O>;
-  paginationOptions: PaginationOptions;
-}): AsyncIterable<O[]> {
-  const maxPageSize = paginationOptions.maxPageSize ?? 100;
-  let offset = paginationOptions.offset ?? 0;
-  let page: O[] = [];
-
-  do {
-    page = await getPage({ queryBuilder, paginationOptions: { offset, maxPageSize } });
-    yield page;
-    offset += page.length;
-  } while (page.length >= maxPageSize);
 }
