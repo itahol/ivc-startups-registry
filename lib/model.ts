@@ -142,6 +142,21 @@ export interface Person {
   linkedInProfile: string | null;
 }
 
+export type PersonCompanyRelationshipType =
+  | "executive"
+  | "board"
+  | "investor";
+
+export interface PersonCompanyRelationship {
+  companyID: string;
+  companyName: string | null;
+  relationships: PersonCompanyRelationshipType[];
+}
+
+export interface PersonSearchResult extends Person {
+  relatedCompanies: PersonCompanyRelationship[];
+}
+
 export interface PersonPosition {
   companyID: string;
   companyName: string | null;

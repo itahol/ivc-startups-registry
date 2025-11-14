@@ -12,6 +12,9 @@ import {
   DealID,
   ExecutiveCompanyRelation,
   Person,
+  PersonCompanyRelationship,
+  PersonCompanyRelationshipType,
+  PersonSearchResult,
   TechVertical,
 } from "@/lib/model";
 import {
@@ -50,6 +53,8 @@ export interface CompaniesQueryOptions {
     max?: number;
   };
 }
+
+export type PeopleSearchQueryOptions = CompaniesQueryOptions & PaginationOptions;
 
 const personQueryBuilder: SelectQueryBuilder<DB, "Contacts", Person> = db
   .selectFrom("Contacts")
@@ -245,6 +250,124 @@ export const QUERIES = {
     return personPositionsQueryBuilder
       .where("Management.Contact_ID", "=", contactId)
       .execute();
+  },
+
+  getPeopleByCompanyFilters: async function (
+    options: PeopleSearchQueryOptions = {},
+  ): Promise<PersonSearchResult[]> {
+    const { maxPageSize, offset, ...rawFilters } = options;
+    const companyFilters = rawFilters as CompaniesQueryOptions;
+    const filtersWithoutKeyword: CompaniesQueryOptions = {
+      ...companyFilters,
+      keyword: undefined,
+    };
+
+    let query = personQueryBuilder.where((eb) =>
+      contactHasRelatedCompanies({
+        eb,
+        contactIdRef: eb.ref("Contacts.Contact_ID"),
+        companyFilters: filtersWithoutKeyword,
+      }),
+    );
+
+    if (companyFilters.keyword) {
+      query = query.where((eb) =>
+        buildPeopleKeywordPredicate({
+          eb,
+          contactIdRef: eb.ref("Contacts.Contact_ID"),
+          keyword: companyFilters.keyword!,
+          companyFilters,
+        }),
+      );
+    }
+
+    query = query
+      .select(({ eb }) => [
+        jsonArrayFrom(
+          managementCompaniesBaseQuery({
+            contactId: eb.ref("Contacts.Contact_ID"),
+            companyFilters: filtersWithoutKeyword,
+          })
+            .select([
+              "Profiles.Company_ID as companyID",
+              "Profiles.Company_Name as companyName",
+            ])
+            .distinct()
+            .orderBy("Profiles.Company_Name"),
+        ).as("executiveCompanies"),
+        jsonArrayFrom(
+          boardCompaniesBaseQuery({
+            contactId: eb.ref("Contacts.Contact_ID"),
+            companyFilters: filtersWithoutKeyword,
+          })
+            .select([
+              "Profiles.Company_ID as companyID",
+              "Profiles.Company_Name as companyName",
+            ])
+            .distinct()
+            .orderBy("Profiles.Company_Name"),
+        ).as("boardCompanies"),
+        jsonArrayFrom(
+          investorCompaniesBaseQuery({
+            contactId: eb.ref("Contacts.Contact_ID"),
+            companyFilters: filtersWithoutKeyword,
+          })
+            .select([
+              "Profiles.Company_ID as companyID",
+              "Profiles.Company_Name as companyName",
+            ])
+            .distinct()
+            .orderBy("Profiles.Company_Name"),
+        ).as("investorCompanies"),
+      ])
+      .orderBy("Contacts.Contact_Name")
+      .$narrowType<PersonSearchRow>();
+
+    const rows = await getPage({
+      queryBuilder: query,
+      paginationOptions: { maxPageSize, offset },
+    });
+
+    return rows.map(mapPersonSearchRow);
+  },
+
+  getPeopleByCompanyFiltersCount: async function (
+    options: CompaniesQueryOptions = {},
+  ): Promise<number> {
+    const filtersWithoutKeyword: CompaniesQueryOptions = {
+      ...options,
+      keyword: undefined,
+    };
+
+    let query = db
+      .selectFrom("Contacts")
+      .where("Contacts.Publish_in_Web", "=", "Yes")
+      .where((eb) =>
+        contactHasRelatedCompanies({
+          eb,
+          contactIdRef: eb.ref("Contacts.Contact_ID"),
+          companyFilters: filtersWithoutKeyword,
+        }),
+      );
+
+    if (options.keyword) {
+      query = query.where((eb) =>
+        buildPeopleKeywordPredicate({
+          eb,
+          contactIdRef: eb.ref("Contacts.Contact_ID"),
+          keyword: options.keyword!,
+          companyFilters: options,
+        }),
+      );
+    }
+
+    const result = await query
+      .select(({ fn }) => [
+        fn.countDistinct<number>("Contacts.Contact_ID").as("count"),
+      ])
+      .executeTakeFirst();
+
+    return result?.count ?? 0;
   },
 
   getTechVerticals: function () {
@@ -553,6 +676,202 @@ function getDealInvestors({
         .$castTo<boolean>()
         .as("isPrivateInvestorPublished"),
     );
+}
+
+type CompanyReferenceRow = {
+  companyID: string | null;
+  companyName: string | null;
+};
+
+type PersonSearchRow = Person & {
+  executiveCompanies: CompanyReferenceRow[];
+  boardCompanies: CompanyReferenceRow[];
+  investorCompanies: CompanyReferenceRow[];
+};
+
+const RELATIONSHIP_ORDER: Record<PersonCompanyRelationshipType, number> = {
+  executive: 0,
+  board: 1,
+  investor: 2,
+};
+
+function mapPersonSearchRow(row: PersonSearchRow): PersonSearchResult {
+  const relatedCompaniesMap = new Map<string, PersonCompanyRelationship>();
+
+  const addCompany = (
+    company: CompanyReferenceRow,
+    relationship: PersonCompanyRelationshipType,
+  ) => {
+    if (!company?.companyID) return;
+
+    const existing = relatedCompaniesMap.get(company.companyID);
+    const nextRelationships = existing
+      ? existing.relationships
+      : ([] as PersonCompanyRelationshipType[]);
+
+    if (!nextRelationships.includes(relationship)) {
+      nextRelationships.push(relationship);
+    }
+
+    const companyName = company.companyName ?? existing?.companyName ?? null;
+
+    relatedCompaniesMap.set(company.companyID, {
+      companyID: company.companyID,
+      companyName,
+      relationships: nextRelationships,
+    });
+  };
+
+  row.executiveCompanies.forEach((company) => addCompany(company, "executive"));
+  row.boardCompanies.forEach((company) => addCompany(company, "board"));
+  row.investorCompanies.forEach((company) => addCompany(company, "investor"));
+
+  const relatedCompanies = Array.from(relatedCompaniesMap.values()).map(
+    (company) => ({
+      ...company,
+      relationships: [...company.relationships].sort(
+        (a, b) => RELATIONSHIP_ORDER[a] - RELATIONSHIP_ORDER[b],
+      ),
+    }),
+  );
+
+  relatedCompanies.sort((a, b) => {
+    const nameA = a.companyName?.toLocaleLowerCase() ?? "";
+    const nameB = b.companyName?.toLocaleLowerCase() ?? "";
+    if (nameA && nameB) return nameA.localeCompare(nameB);
+    if (nameA) return -1;
+    if (nameB) return 1;
+    return a.companyID.localeCompare(b.companyID);
+  });
+
+  return {
+    contactID: row.contactID,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    cv: row.cv,
+    linkedInProfile: row.linkedInProfile,
+    relatedCompanies,
+  };
+}
+
+function contactHasRelatedCompanies({
+  eb,
+  contactIdRef,
+  companyFilters,
+}: {
+  eb: ExpressionBuilder<DB, "Contacts">;
+  contactIdRef: Expression<string | null>;
+  companyFilters: CompaniesQueryOptions;
+}): Expression<SqlBool> {
+  return eb.or([
+    eb.exists(
+      managementCompaniesBaseQuery({
+        contactId: contactIdRef,
+        companyFilters,
+      }).select("Profiles.Company_ID"),
+    ),
+    eb.exists(
+      boardCompaniesBaseQuery({
+        contactId: contactIdRef,
+        companyFilters,
+      }).select("Profiles.Company_ID"),
+    ),
+    eb.exists(
+      investorCompaniesBaseQuery({
+        contactId: contactIdRef,
+        companyFilters,
+      }).select("Profiles.Company_ID"),
+    ),
+  ]);
+}
+
+function buildPeopleKeywordPredicate({
+  eb,
+  contactIdRef,
+  keyword,
+  companyFilters,
+}: {
+  eb: ExpressionBuilder<DB, "Contacts">;
+  contactIdRef: Expression<string | null>;
+  keyword: string;
+  companyFilters: CompaniesQueryOptions;
+}): Expression<SqlBool> {
+  const likeKeyword = `%${keyword}%`;
+  const nameMatches = eb("Contacts.Contact_Name", "like", likeKeyword);
+  const companyMatches = eb.or([
+    eb.exists(
+      managementCompaniesBaseQuery({
+        contactId: contactIdRef,
+        companyFilters,
+      }).select("Profiles.Company_ID"),
+    ),
+    eb.exists(
+      boardCompaniesBaseQuery({
+        contactId: contactIdRef,
+        companyFilters,
+      }).select("Profiles.Company_ID"),
+    ),
+    eb.exists(
+      investorCompaniesBaseQuery({
+        contactId: contactIdRef,
+        companyFilters,
+      }).select("Profiles.Company_ID"),
+    ),
+  ]);
+
+  return eb.or([nameMatches, companyMatches]);
+}
+
+function managementCompaniesBaseQuery({
+  contactId,
+  companyFilters,
+}: {
+  contactId: Expression<string | null>;
+  companyFilters: CompaniesQueryOptions;
+}) {
+  return db
+    .selectFrom("Management")
+    .innerJoin("Profiles", "Profiles.Company_ID", "Management.Company_ID")
+    .where("Management.Contact_ID", "=", contactId)
+    .where("Management.Hide_Position", "=", "No")
+    .where("Profiles.Company_Type2", "=", "HT")
+    .where("Profiles.Published_Profile", "=", "Yes")
+    .where((eb) => matchesCompanyFilters(eb, companyFilters));
+}
+
+function boardCompaniesBaseQuery({
+  contactId,
+  companyFilters,
+}: {
+  contactId: Expression<string | null>;
+  companyFilters: CompaniesQueryOptions;
+}) {
+  return db
+    .selectFrom("Board")
+    .innerJoin("Profiles", "Profiles.Company_ID", "Board.Company_ID")
+    .where("Board.Contact_ID", "=", contactId)
+    .where("Profiles.Company_Type2", "=", "HT")
+    .where("Profiles.Published_Profile", "=", "Yes")
+    .where((eb) => matchesCompanyFilters(eb, companyFilters));
+}
+
+function investorCompaniesBaseQuery({
+  contactId,
+  companyFilters,
+}: {
+  contactId: Expression<string | null>;
+  companyFilters: CompaniesQueryOptions;
+}) {
+  return db
+    .selectFrom("Investors")
+    .innerJoin("Deals", "Deals.Deal_ID", "Investors.Deal_ID")
+    .innerJoin("Profiles", "Profiles.Company_ID", "Deals.Company_ID")
+    .where("Investors.Private_Investor_ID", "=", contactId)
+    .where("Investors.Private_Investor_ID", "is not", null)
+    .where("Profiles.Company_Type2", "=", "HT")
+    .where("Profiles.Published_Profile", "=", "Yes")
+    .where((eb) => matchesCompanyFilters(eb, companyFilters));
 }
 
 const matchesCompanyFilters = (

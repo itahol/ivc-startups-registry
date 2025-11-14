@@ -6,7 +6,9 @@ import {
 } from "@/lib/companies/filtersUrl";
 import { QUERIES } from "@/lib/server/db/queries";
 import { CompaniesSkeleton } from "./_components/CompaniesSkeleton";
+import { PeopleSkeleton } from "./_components/PeopleSkeleton";
 import { CompaniesResults } from "./_components/CompaniesResults";
+import { PeopleResults } from "./_components/PeopleResults";
 import { SearchControls } from "./_components/SearchControls";
 import {
   Empty,
@@ -15,7 +17,8 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Filter, Search, Building2 } from "lucide-react";
+import { Filter, Search, Building2, Users } from "lucide-react";
+import { parseSearchEntity, type SearchEntity } from "./constants";
 
 export const experimental_ppr = true;
 
@@ -51,9 +54,12 @@ export default function CompaniesPage({
             `}
             >
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  Search the registry
+                </h1>
                 <p className="mt-1 text-lg text-muted-foreground">
-                  Discover and explore the companies in our dataset.
+                  Discover companies and the people behind them using advanced
+                  filters.
                 </p>
               </div>
             </div>
@@ -77,11 +83,12 @@ async function ResultsSection({
     | Record<string, string | string[] | undefined>;
 }) {
   const usp = await normalizeSearchParams(searchParamsPromise);
+  const entity = parseSearchEntity(usp.get("entity"));
   const filters = readCompanyFilters(usp);
   const hasFilters = hasActiveCompanyFilters(filters);
 
   if (!hasFilters) {
-    return <NoFiltersCallout />;
+    return <NoFiltersCallout entity={entity} />;
   }
 
   const pageSizeParam = usp.get("limit");
@@ -113,6 +120,31 @@ async function ResultsSection({
     return buildHref(sp);
   })();
 
+  const clearHref = (() => {
+    if (entity === "people") {
+      const sp = new URLSearchParams();
+      sp.set("entity", "people");
+      return `${PATHNAME}?${sp.toString()}`;
+    }
+    return PATHNAME;
+  })();
+
+  if (entity === "people") {
+    return (
+      <Suspense fallback={<PeopleSkeleton />}>
+        <PeopleResults
+          filters={filters}
+          page={page}
+          pageSize={pageSize}
+          prevHref={prevHref}
+          nextHref={nextHref}
+          clearHref={clearHref}
+          hasActiveFilters={hasFilters}
+        />
+      </Suspense>
+    );
+  }
+
   return (
     <Suspense fallback={<CompaniesSkeleton />}>
       <CompaniesResults
@@ -121,20 +153,25 @@ async function ResultsSection({
         pageSize={pageSize}
         prevHref={prevHref}
         nextHref={nextHref}
-        clearHref={PATHNAME}
+        clearHref={clearHref}
         hasActiveFilters={hasFilters}
       />
     </Suspense>
   );
 }
 
-function NoFiltersCallout() {
+function NoFiltersCallout({ entity }: { entity: SearchEntity }) {
+  const isPeople = entity === "people";
   return (
     <Empty className="border border-dashed bg-gradient-to-br from-muted/30 via-background to-muted/20">
       <EmptyHeader>
-        <EmptyTitle className="text-xl">Start exploring companies</EmptyTitle>
+        <EmptyTitle className="text-xl">
+          {isPeople ? "Start exploring people" : "Start exploring companies"}
+        </EmptyTitle>
         <EmptyDescription className="text-base">
-          Use the filters above to discover companies that match your criteria
+          {isPeople
+            ? "Use the filters above to find people connected to companies that match your criteria."
+            : "Use the filters above to discover companies that match your criteria."}
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="max-w-3xl">
@@ -157,18 +194,28 @@ function NoFiltersCallout() {
             <div className="space-y-1">
               <p className="text-sm font-semibold">Search by keyword</p>
               <p className="text-xs text-muted-foreground">
-                Find companies by their name, description, and more
+                {isPeople
+                  ? "Find people by their name or by the companies they support"
+                  : "Find companies by their name, description, and more"}
               </p>
             </div>
           </div>
           <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-6 text-center">
             <div className="rounded-md bg-primary/10 p-2.5 text-primary">
-              <Building2 className="size-5" />
+              {isPeople ? (
+                <Users className="size-5" />
+              ) : (
+                <Building2 className="size-5" />
+              )}
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold">View results</p>
+              <p className="text-sm font-semibold">
+                {isPeople ? "Meet the people" : "View results"}
+              </p>
               <p className="text-xs text-muted-foreground">
-                Browse matching companies
+                {isPeople
+                  ? "Browse matching people and their company connections"
+                  : "Browse matching companies"}
               </p>
             </div>
           </div>
