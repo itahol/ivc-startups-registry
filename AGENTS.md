@@ -1,18 +1,20 @@
 # Agent Development Guide
+## Repo
+This project is a monorepo managed with turborepo and pnpm. The main application is a Next.js 15 app located in the `apps/web` directory.
 
 ## Commands
 
-- **Build**: `pnpm build`
-- **Lint**: `pnpm lint`
-- **Format**: `pnpm format` (Prettier)
-- **Type check**: `tsc --noEmit` 
+- **Build**: `turbo build`
+- **Lint**: `turbo lint`
+- **Format**: `turbo format`
+- **Type check**: `turbo check-types` 
 - NEVER run the dev server, assume it is already running. If you suspect it's not, ask the user.
+- you can use `--filter` to target specific packages, e.g. `turbo lint --filter=web`
 
 ## Code Style
 
 - **Prettier**: Single quotes, trailing commas, 120 char width, semicolons
 - **ESLint**: Next.js + TypeScript rules (extends `next/core-web-vitals`, `next/typescript`)
-- **Imports**: Use `@/*` path alias for local imports
 - **Types**: Strict TypeScript enabled, no implicit any
 
 ## Architecture
