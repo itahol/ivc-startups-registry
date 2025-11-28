@@ -1,5 +1,5 @@
 {
-  "name": "ivc-startups-registry",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -19,6 +19,7 @@
     "fix": "npx oxlint --fix",
     "format": "npx oxfmt",
     "test": "playwright test",
+    "generate-db-types": "kysely-codegen",
     "prepare": "husky"
   },
   "lint-staged": {

@@ -1,0 +1,23 @@
+{
+  "camelCase": false,
+  "customImports": {},
+  "dateParser": "timestamp",
+  "defaultSchemas": [],
+  "dialect": "mssql",
+  "domains": true,
+  "envFile": ".env",
+  "excludePattern": null,
+  "includePattern": null,
+  "logLevel": "warn",
+  "numericParser": "string",
+  "outFile": "./lib/server/db/db-types.d.ts",
+  "overrides": {},
+  "partitions": false,
+  "print": false,
+  "runtimeEnums": false,
+  "singularize": false,
+  "typeMapping": {},
+  "typeOnlyImports": true,
+  "url": "env(DATABASE_URL)",
+  "verify": false
+}
