@@ -1,0 +1,22 @@
+{
+  "name": "@repo/model",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "lint": "npx oxlint",
+    "fix": "npx oxlint --fix",
+    "format": "npx oxfmt"
+  },
+  "exports": {
+    "./model": {
+      "types": "./src/model.ts",
+      "default": "./dist/model.js"
+    }
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "latest"
+  }
+}
