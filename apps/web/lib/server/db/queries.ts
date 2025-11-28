@@ -1,4 +1,17 @@
 import {
+  Expression,
+  ExpressionBuilder,
+  expressionBuilder,
+  NotNull,
+  SelectQueryBuilder,
+  sql,
+  SqlBool,
+} from "kysely";
+import { db } from "@repo/db/db";
+import { jsonArrayFrom } from "@repo/db/json-utils";
+import { paginateQuery, type PaginationOptions, getPage } from "@repo/db/pagination-utils";
+import type { DB } from "@repo/db/db-types";
+import {
   BoardMemberCompanyRelation,
   CompanyBoardMember,
   CompanyContactInfo,
@@ -13,20 +26,7 @@ import {
   ExecutiveCompanyRelation,
   Person,
   TechVertical,
-} from "@/lib/model";
-import {
-  Expression,
-  ExpressionBuilder,
-  expressionBuilder,
-  NotNull,
-  SelectQueryBuilder,
-  sql,
-  SqlBool,
-} from "kysely";
-import { db } from "./index";
-import { jsonArrayFrom } from "./json-utils";
-import { getPage, paginateQuery } from "./pagination-utils";
-import { DB } from "./db-types";
+} from "@repo/model/model";
 
 export type FilterOperator = "AND" | "OR";
 
@@ -34,11 +34,6 @@ export type ManyFilter<T> = {
   ids: T[];
   operator: FilterOperator;
 };
-
-export interface PaginationOptions {
-  maxPageSize?: number;
-  offset?: number;
-}
 
 export interface CompaniesQueryOptions {
   keyword?: string;
