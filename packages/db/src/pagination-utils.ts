@@ -1,4 +1,4 @@
-import { SelectQueryBuilder } from "kysely";
+import type { SelectQueryBuilder } from "kysely";
 
 export interface PaginationOptions {
   maxPageSize?: number;
