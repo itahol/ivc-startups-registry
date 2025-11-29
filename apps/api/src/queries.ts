@@ -126,6 +126,15 @@ const companyDetailsQueryBuilder: SelectQueryBuilder<DB, "Profiles", CompanyFull
   ]);
 
 export const QUERIES = {
+  getPeople: function (
+    options: PaginationOptions = {},
+  ): Promise<Person[]> {
+    return getPage({
+      queryBuilder: personQueryBuilder.orderBy("Contact_ID").$narrowType<{ contactID: NotNull }>(),
+      paginationOptions: options,
+    });
+  },
+
   paginatePeople: function (maxPageSize: number = 100): AsyncIterable<Person[]> {
     return paginateQuery({
       queryBuilder: personQueryBuilder.orderBy("Contact_ID").$narrowType<{ contactID: NotNull }>(),

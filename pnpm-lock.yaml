@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
       turbo:
         specifier: ^2.6.1
         version: 2.6.1
@@ -17,9 +20,36 @@ importers:
       '@hono/node-server':
         specifier: ^1.19.6
         version: 1.19.6(hono@4.10.7)
+      '@hono/zod-validator':
+        specifier: ^0.7.5
+        version: 0.7.5(hono@4.10.7)(zod@4.1.13)
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@repo/model':
+        specifier: workspace:*
+        version: link:../../packages/model
+      '@tediousjs/connection-string':
+        specifier: 0.5.0
+        version: 0.5.0
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       hono:
         specifier: ^4.10.7
         version: 4.10.7
+      kysely:
+        specifier: ^0.28.8
+        version: 0.28.8
+      tarn:
+        specifier: ^3.0.2
+        version: 3.0.2
+      tedious:
+        specifier: ^18.6.1
+        version: 18.6.2
+      zod:
+        specifier: ^4.1.13
+        version: 4.1.13
     devDependencies:
       '@types/node':
         specifier: ^20.11.17
@@ -72,9 +102,12 @@ importers:
       '@radix-ui/react-toggle-group':
         specifier: ^1.1.11
         version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@tediousjs/connection-string':
-        specifier: 0.5.0
-        version: 0.5.0
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@repo/model':
+        specifier: workspace:*
+        version: link:../../packages/model
       '@workos-inc/authkit-nextjs':
         specifier: ^2.7.1
         version: 2.11.1(next@15.4.3(@playwright/test@1.57.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -103,7 +136,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       kysely:
-        specifier: ^0.28.7
+        specifier: ^0.28.8
         version: 0.28.8
       lucide-react:
         specifier: ^0.544.0
@@ -129,12 +162,6 @@ importers:
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.4.0
-      tarn:
-        specifier: ^3.0.2
-        version: 3.0.2
-      tedious:
-        specifier: ^18.6.1
-        version: 18.6.2
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -190,6 +217,39 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/db:
+    dependencies:
+      '@tediousjs/connection-string':
+        specifier: 0.5.0
+        version: 0.5.0
+      kysely:
+        specifier: ^0.28.7
+        version: 0.28.8
+      tarn:
+        specifier: ^3.0.2
+        version: 3.0.2
+      tedious:
+        specifier: ^18.6.1
+        version: 18.6.2
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: latest
+        version: 5.9.3
+
+  packages/model:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: latest
+        version: 5.9.3
+
+  packages/typescript-config: {}
 
 packages:
 
@@ -511,6 +571,12 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/zod-validator@0.7.5':
+    resolution: {integrity: sha512-n4l4hutkfYU07PzRUHBOVzUEn38VSfrh+UVE5d0w4lyfWDOEhzxIupqo5iakRiJL44c3vTuFJBvcmUl8b9agIA==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.25.0 || ^4.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -4191,6 +4257,11 @@ snapshots:
   '@hono/node-server@1.19.6(hono@4.10.7)':
     dependencies:
       hono: 4.10.7
+
+  '@hono/zod-validator@0.7.5(hono@4.10.7)(zod@4.1.13)':
+    dependencies:
+      hono: 4.10.7
+      zod: 4.1.13
 
   '@humanfs/core@0.19.1': {}
 
