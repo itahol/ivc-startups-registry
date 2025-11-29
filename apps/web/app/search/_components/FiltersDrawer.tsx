@@ -21,7 +21,7 @@ import {
   SECTOR_VALUES,
   COMPANY_STAGE_VALUES,
   CompanyStageOption,
-} from "@/lib/model";
+} from "@repo/model/model";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface FiltersDrawerProps {

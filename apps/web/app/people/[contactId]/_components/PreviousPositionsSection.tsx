@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PersonPosition } from "@/lib/model";
+import { PersonPosition } from "@repo/model/model";
 import Link from "next/link";
 
 const PREVIOUS_POSITIONS_PREVIEW = 5;

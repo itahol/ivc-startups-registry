@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CompanyBoardMember } from "@/lib/model";
+import { CompanyBoardMember } from "@repo/model/model";
 
 const BOARD_PREVIEW = 5;
 

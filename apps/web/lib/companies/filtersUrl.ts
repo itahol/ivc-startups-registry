@@ -3,7 +3,7 @@ import {
   CompanyStageOption,
   SECTOR_VALUES,
   SectorOption,
-} from "@/lib/model";
+} from "@repo/model/model";
 
 export interface CompanyFilters {
   techVerticals?: { ids: string[]; operator: "AND" | "OR" };

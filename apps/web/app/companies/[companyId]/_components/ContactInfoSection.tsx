@@ -2,7 +2,10 @@
 import { use, useState, useMemo } from "react";
 import Link from "next/link";
 import { Item, ItemTitle, ItemContent } from "@/components/ui/item";
-import { CompanyContactInfo, CompanyPrimaryContactInfo } from "@/lib/model";
+import {
+  CompanyContactInfo,
+  CompanyPrimaryContactInfo,
+} from "@repo/model/model";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import {
   Collapsible,

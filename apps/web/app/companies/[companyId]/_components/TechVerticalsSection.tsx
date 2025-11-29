@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Item, ItemTitle, ItemContent } from "@/components/ui/item";
 import { Badge } from "@/components/ui/badge";
-import { TechVertical } from "../../../../lib/model";
+import { TechVertical } from "@repo/model/model";
 
 const TECH_PREVIEW = 8;
 

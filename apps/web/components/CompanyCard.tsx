@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
-import { CompanyDetails } from "../lib/model";
+import { CompanyDetails } from "@repo/model/model";
 
 export interface CompanyCardProps {
   company: CompanyDetails;

@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CompanyExecutive } from "@/lib/model";
+import { CompanyExecutive } from "@repo/model/model";
 import Link from "next/link";
 
 const MANAGEMENT_PREVIEW = 5;

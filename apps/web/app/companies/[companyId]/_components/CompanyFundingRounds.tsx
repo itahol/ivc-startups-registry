@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { CompanyDealInvestor, CompanyFundingDeal } from "@/lib/model";
+import { CompanyDealInvestor, CompanyFundingDeal } from "@repo/model/model";
 import { Item, ItemTitle, ItemContent } from "@/components/ui/item";
 import {
   Table,

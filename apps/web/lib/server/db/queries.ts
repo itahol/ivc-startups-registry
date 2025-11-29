@@ -9,7 +9,11 @@ import {
 } from "kysely";
 import { db } from "@repo/db/db";
 import { jsonArrayFrom } from "@repo/db/json-utils";
-import { paginateQuery, type PaginationOptions, getPage } from "@repo/db/pagination-utils";
+import {
+  paginateQuery,
+  type PaginationOptions,
+  getPage,
+} from "@repo/db/pagination-utils";
 import type { DB } from "@repo/db/db-types";
 import {
   BoardMemberCompanyRelation,

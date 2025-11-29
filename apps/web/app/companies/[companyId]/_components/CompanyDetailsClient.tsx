@@ -17,7 +17,7 @@ import {
   CompanyFundingDeal,
   CompanyPrimaryContactInfo,
   TechVertical,
-} from "../../../../lib/model";
+} from "@repo/model/model";
 import ContactInfoSection from "./ContactInfoSection";
 import { notFound } from "next/navigation";
 import BoardSection from "./BoardSection";

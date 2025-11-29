@@ -1,6 +1,6 @@
 "use client";
 import { use } from "react";
-import { Person, PersonPosition } from "@/lib/model";
+import { Person, PersonPosition } from "@repo/model/model";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";

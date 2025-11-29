@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/empty";
 import type { CompanyFilters } from "@/lib/companies/filtersUrl";
 import { QUERIES } from "@/lib/server/db/queries";
-import { CompanyDetails } from "@/lib/model";
+import { CompanyDetails } from "@repo/model/model";
 
 interface CompaniesResultsProps {
   filters: CompanyFilters;
