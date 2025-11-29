@@ -126,9 +126,7 @@ const companyDetailsQueryBuilder: SelectQueryBuilder<DB, "Profiles", CompanyFull
   ]);
 
 export const QUERIES = {
-  getPeople: function (
-    options: PaginationOptions = {},
-  ): Promise<Person[]> {
+  getPeople: function (options: PaginationOptions = {}): Promise<Person[]> {
     return getPage({
       queryBuilder: personQueryBuilder.orderBy("Contact_ID").$narrowType<{ contactID: NotNull }>(),
       paginationOptions: options,
