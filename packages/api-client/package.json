@@ -1,0 +1,26 @@
+{
+  "name": "@repo/api-client",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "lint": "npx oxlint",
+    "fix": "npx oxlint --fix",
+    "format": "npx oxfmt"
+  },
+  "exports": {
+    "default": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "api": "workspace:*",
+    "hono": "^4.10.7"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "latest"
+  }
+}
