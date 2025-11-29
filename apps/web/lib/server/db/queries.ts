@@ -23,10 +23,10 @@ import {
   sql,
   SqlBool,
 } from "kysely";
-import { DB } from "kysely-codegen";
 import { db } from "./index";
 import { jsonArrayFrom } from "./json-utils";
 import { getPage, paginateQuery } from "./pagination-utils";
+import { DB } from "./db-types";
 
 export type FilterOperator = "AND" | "OR";
 

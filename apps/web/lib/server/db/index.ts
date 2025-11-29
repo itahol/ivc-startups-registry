@@ -1,5 +1,5 @@
 import { Kysely, MssqlDialect, ParseJSONResultsPlugin } from "kysely";
-import type { DB } from "kysely-codegen";
+import type { DB } from "./db-types";
 import * as tarn from "tarn";
 import * as tedious from "tedious";
 
