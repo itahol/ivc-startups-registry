@@ -13,7 +13,7 @@ services:
         DB_SERVER: 172.17.0.19
     restart: always
     ports:
-      - 5555:3000
+      - 5555:5555
     networks:
       - dokploy-network
     # networks:
