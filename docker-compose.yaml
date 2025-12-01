@@ -1,0 +1,30 @@
+services:
+  next-app:
+    build:
+      dockerfile: Dockerfile
+      args:
+        ENV_VARIABLE: ${ENV_VARIABLE}
+        NEXT_PUBLIC_ENV_VARIABLE: ${NEXT_PUBLIC_ENV_VARIABLE}
+        NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://localhost:3000/callback
+        DB_USER: itamar2
+        DB_PASSWORD: newR@y9779
+        DB_INSTANCE_NAME: IVC_BI_SQL
+        DB_NAME: ERG_CRM_Extended
+        DB_SERVER: 172.17.0.19
+    restart: always
+    ports:
+      - 5555:5555
+    networks:
+      - dokploy-network
+    # networks:
+    #   - my_network
+
+  # Add more containers below (nginx, postgres, etc.)
+# Define a network, which allows containers to communicate
+# with each other, by using their container name as a hostname
+# networks:
+#   my_network:
+#     external: true
+networks:
+  dokploy-network:
+    external: true
